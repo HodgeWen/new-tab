@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  build-and-release:
     runs-on: ubuntu-latest
 
     steps:
@@ -25,14 +25,23 @@ jobs:
         run: bun install
 
       - name: Build Chrome extension
-        run: bun run zip
+        run: bun run build
 
       - name: Build Firefox extension
+        run: bun run build:firefox
+
+      - name: Create Chrome zip
+        run: bun run zip
+
+      - name: Create Firefox zip
         run: bun run zip:firefox
 
       - name: Get version from tag
         id: version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: List output files
+        run: ls -la .output/
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -57,9 +66,8 @@ jobs:
 
             ---
 
-            查看 [CHANGELOG.md](CHANGELOG.md) 了解详细变更内容。
-          files: |
-            .output/*.zip
+            查看 [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) 了解详细变更内容。
+          files: .output/*.zip
           draft: false
           prerelease: false
           generate_release_notes: true

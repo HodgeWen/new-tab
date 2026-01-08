@@ -12,7 +12,7 @@
     "build:firefox": "wxt build -b firefox",
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
-    "release": "./scripts/release.sh",
+    "release": "bun scripts/release.ts",
     "postinstall": "wxt prepare"
   },
   "devDependencies": {
