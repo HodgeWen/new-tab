@@ -3,6 +3,12 @@
   "name": "New Tab",
   "description": "美观实用的浏览器新标签页扩展",
   "version": "1.0.0",
+  "icons": {
+    "16": "/icons/icon-16.png",
+    "32": "/icons/icon-32.png",
+    "48": "/icons/icon-48.png",
+    "128": "/icons/icon-128.png"
+  },
   "permissions": [
     "storage",
     "tabs",
@@ -28,7 +34,7 @@
     "service_worker": "background.js"
   },
   "content_security_policy": {
-    "extension_pages": "script-src 'self' 'wasm-unsafe-eval' http://localhost:3001; object-src 'self';",
-    "sandbox": "script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:3001; sandbox allow-scripts allow-forms allow-popups allow-modals; child-src 'self';"
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval' http://localhost:3000; object-src 'self';",
+    "sandbox": "script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:3000; sandbox allow-scripts allow-forms allow-popups allow-modals; child-src 'self';"
   }
 }
