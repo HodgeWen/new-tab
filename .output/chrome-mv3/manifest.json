@@ -1,0 +1,1 @@
+{"manifest_version":3,"name":"New Tab","description":"美观实用的浏览器新标签页扩展","version":"1.0.0","permissions":["storage"],"host_permissions":["https://picsum.photos/*","https://fastly.picsum.photos/*"],"chrome_url_overrides":{"newtab":"newtab.html"}}
