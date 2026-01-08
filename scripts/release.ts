@@ -12,26 +12,10 @@
  */
 
 import { $ } from 'bun'
+import chalk from 'chalk'
+import { confirm, select, input } from '@inquirer/prompts'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-
-// ANSI 颜色代码
-const colors = {
-  reset: '\x1b[0m',
-  red: '\x1b[31m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  blue: '\x1b[34m',
-  cyan: '\x1b[36m',
-  dim: '\x1b[2m',
-} as const
-
-const log = {
-  info: (msg: string) => console.log(`${colors.blue}ℹ${colors.reset} ${msg}`),
-  success: (msg: string) => console.log(`${colors.green}✔${colors.reset} ${msg}`),
-  warn: (msg: string) => console.log(`${colors.yellow}⚠${colors.reset} ${msg}`),
-  error: (msg: string) => console.log(`${colors.red}✖${colors.reset} ${msg}`),
-}
 
 interface Version {
   major: number
@@ -84,131 +68,128 @@ async function isGitClean(): Promise<boolean> {
   return result.stdout.toString().trim() === ''
 }
 
-async function prompt(question: string): Promise<string> {
-  process.stdout.write(question)
-  for await (const line of console) {
-    return line.trim()
-  }
-  return ''
-}
-
-async function selectVersion(currentVersion: string): Promise<string | null> {
-  const current = parseVersion(currentVersion)
-
-  const options = [
-    { type: 'patch' as const, version: formatVersion(bumpVersion(current, 'patch')) },
-    { type: 'minor' as const, version: formatVersion(bumpVersion(current, 'minor')) },
-    { type: 'major' as const, version: formatVersion(bumpVersion(current, 'major')) },
-  ]
-
-  console.log('')
-  console.log(`${colors.cyan}当前版本: ${colors.reset}${currentVersion}`)
-  console.log('')
-  console.log(`${colors.dim}选择新版本:${colors.reset}`)
-  console.log('')
-
-  options.forEach((opt, index) => {
-    const typeLabel = opt.type.padEnd(5)
-    console.log(`  ${colors.cyan}${index + 1}${colors.reset}) ${typeLabel}  ${currentVersion} → ${colors.green}${opt.version}${colors.reset}`)
-  })
-
-  console.log(`  ${colors.cyan}4${colors.reset}) custom 自定义版本`)
-  console.log(`  ${colors.cyan}0${colors.reset}) cancel 取消`)
-  console.log('')
-
-  const choice = await prompt(`${colors.blue}?${colors.reset} 请选择 [1-4, 0]: `)
-
-  switch (choice) {
-    case '1':
-      return options[0].version
-    case '2':
-      return options[1].version
-    case '3':
-      return options[2].version
-    case '4': {
-      const customVersion = await prompt(`${colors.blue}?${colors.reset} 输入版本号 (x.y.z): `)
-      if (!/^\d+\.\d+\.\d+$/.test(customVersion)) {
-        log.error('无效的版本号格式')
-        return null
-      }
-      return customVersion
-    }
-    case '0':
-    case '':
-      return null
-    default:
-      log.error('无效的选择')
-      return null
-  }
-}
-
 async function main() {
-  console.log('')
-  console.log(`${colors.cyan}━━━ New Tab Extension Release ━━━${colors.reset}`)
+  console.log()
+  console.log(chalk.cyan.bold('━━━ New Tab Extension Release ━━━'))
+  console.log()
 
   // 检查 Git 状态
   if (!(await isGitClean())) {
-    log.warn('工作区有未提交的更改')
-    const confirm = await prompt('是否继续? (y/N): ')
-    if (confirm.toLowerCase() !== 'y') {
-      log.info('已取消')
+    console.log(chalk.yellow('⚠ 工作区有未提交的更改'))
+    const shouldContinue = await confirm({
+      message: '是否继续?',
+      default: false,
+    })
+    if (!shouldContinue) {
+      console.log(chalk.gray('已取消'))
       process.exit(0)
     }
+    console.log()
   }
 
   // 获取当前版本
   const currentVersion = getCurrentVersion()
+  const current = parseVersion(currentVersion)
 
-  // 选择新版本
-  const newVersion = await selectVersion(currentVersion)
-  if (!newVersion) {
-    log.info('已取消')
-    process.exit(0)
+  console.log(`${chalk.dim('当前版本:')} ${chalk.white.bold(currentVersion)}`)
+  console.log()
+
+  // 计算各版本选项
+  const patchVersion = formatVersion(bumpVersion(current, 'patch'))
+  const minorVersion = formatVersion(bumpVersion(current, 'minor'))
+  const majorVersion = formatVersion(bumpVersion(current, 'major'))
+
+  // 选择版本类型
+  const versionChoice = await select({
+    message: '选择新版本',
+    choices: [
+      {
+        name: `patch  ${chalk.gray(currentVersion)} → ${chalk.green(patchVersion)}`,
+        value: patchVersion,
+        description: '修复问题，小改动',
+      },
+      {
+        name: `minor  ${chalk.gray(currentVersion)} → ${chalk.green(minorVersion)}`,
+        value: minorVersion,
+        description: '新增功能，向后兼容',
+      },
+      {
+        name: `major  ${chalk.gray(currentVersion)} → ${chalk.green(majorVersion)}`,
+        value: majorVersion,
+        description: '重大更新，可能不兼容',
+      },
+      {
+        name: `custom ${chalk.gray('自定义版本号')}`,
+        value: 'custom',
+        description: '手动输入版本号',
+      },
+    ],
+  })
+
+  let newVersion: string
+
+  if (versionChoice === 'custom') {
+    newVersion = await input({
+      message: '输入版本号 (x.y.z)',
+      validate: (value) => {
+        if (!/^\d+\.\d+\.\d+$/.test(value)) {
+          return '请输入有效的版本号格式 (例如: 1.2.3)'
+        }
+        return true
+      },
+    })
+  } else {
+    newVersion = versionChoice
   }
 
-  console.log('')
-  log.info(`准备发布 v${newVersion}`)
+  console.log()
+  console.log(`${chalk.blue('ℹ')} 准备发布 ${chalk.cyan.bold(`v${newVersion}`)}`)
 
   // 确认发布
-  const confirm = await prompt(`${colors.blue}?${colors.reset} 确认发布? (y/N): `)
-  if (confirm.toLowerCase() !== 'y') {
-    log.info('已取消')
+  const shouldRelease = await confirm({
+    message: '确认发布?',
+    default: true,
+  })
+
+  if (!shouldRelease) {
+    console.log(chalk.gray('已取消'))
     process.exit(0)
   }
 
-  console.log('')
+  console.log()
 
   // 更新版本号
-  log.info('更新版本号...')
+  console.log(`${chalk.blue('ℹ')} 更新版本号...`)
   updatePackageVersion(newVersion)
   updateWxtVersion(newVersion)
-  log.success('版本号已更新')
+  console.log(`${chalk.green('✔')} 版本号已更新`)
 
-  // Git 操作
-  log.info('提交更改...')
+  // Git 提交
+  console.log(`${chalk.blue('ℹ')} 提交更改...`)
   await $`git add package.json wxt.config.ts CHANGELOG.md`.quiet()
   await $`git commit -m ${'chore: release v' + newVersion}`.quiet()
-  log.success('更改已提交')
+  console.log(`${chalk.green('✔')} 更改已提交`)
 
-  log.info(`创建标签 v${newVersion}...`)
+  // 创建标签
+  console.log(`${chalk.blue('ℹ')} 创建标签 ${chalk.cyan(`v${newVersion}`)}...`)
   await $`git tag -a ${'v' + newVersion} -m ${'Release v' + newVersion}`.quiet()
-  log.success('标签已创建')
+  console.log(`${chalk.green('✔')} 标签已创建`)
 
-  console.log('')
-  log.success('发布准备完成!')
-  console.log('')
-  console.log(`${colors.dim}下一步操作:${colors.reset}`)
-  console.log('')
-  console.log(`  1. 更新 ${colors.cyan}CHANGELOG.md${colors.reset} 添加版本变更说明`)
+  console.log()
+  console.log(chalk.green.bold('✔ 发布准备完成!'))
+  console.log()
+  console.log(chalk.dim('下一步操作:'))
+  console.log()
+  console.log(`  1. 更新 ${chalk.cyan('CHANGELOG.md')} 添加版本变更说明`)
   console.log(`  2. 推送到远程仓库:`)
-  console.log(`     ${colors.dim}git push origin main${colors.reset}`)
-  console.log(`     ${colors.dim}git push origin v${newVersion}${colors.reset}`)
-  console.log('')
-  console.log(`${colors.green}推送标签后，GitHub Actions 将自动构建并创建 Release${colors.reset}`)
-  console.log('')
+  console.log(chalk.gray(`     git push origin main`))
+  console.log(chalk.gray(`     git push origin v${newVersion}`))
+  console.log()
+  console.log(chalk.green('推送标签后，GitHub Actions 将自动构建并创建 Release'))
+  console.log()
 }
 
 main().catch((err) => {
-  log.error(err.message)
+  console.log(`${chalk.red('✖')} ${err.message}`)
   process.exit(1)
 })
