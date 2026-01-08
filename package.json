@@ -1,6 +1,6 @@
 {
   "name": "new-tab",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "美观实用的浏览器新标签页扩展",
   "type": "module",
   "private": true,
