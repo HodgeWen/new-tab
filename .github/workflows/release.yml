@@ -1,0 +1,67 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build Chrome extension
+        run: bun run zip
+
+      - name: Build Firefox extension
+        run: bun run zip:firefox
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release v${{ steps.version.outputs.VERSION }}
+          body: |
+            ## New Tab Extension v${{ steps.version.outputs.VERSION }}
+
+            ### 安装说明
+
+            #### Chrome / Edge / Brave
+            1. 下载 `new-tab-${{ steps.version.outputs.VERSION }}-chrome.zip`
+            2. 打开浏览器扩展页面 (`chrome://extensions`)
+            3. 启用"开发者模式"
+            4. 将 zip 文件解压后，点击"加载已解压的扩展程序"选择解压目录
+
+            #### Firefox
+            1. 下载 `new-tab-${{ steps.version.outputs.VERSION }}-firefox.zip`
+            2. 打开 `about:debugging#/runtime/this-firefox`
+            3. 点击"临时载入附加组件"
+            4. 选择 zip 文件中的 manifest.json
+
+            ---
+
+            查看 [CHANGELOG.md](CHANGELOG.md) 了解详细变更内容。
+          files: |
+            .output/*.zip
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
