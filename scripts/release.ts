@@ -135,6 +135,9 @@ async function main() {
         if (!/^\d+\.\d+\.\d+$/.test(value)) {
           return '请输入有效的版本号格式 (例如: 1.2.3)'
         }
+        if (value === currentVersion) {
+          return `版本号不能与当前版本相同 (${currentVersion})`
+        }
         return true
       },
     })
@@ -167,13 +170,34 @@ async function main() {
   // Git 提交
   console.log(`${chalk.blue('ℹ')} 提交更改...`)
   await $`git add package.json wxt.config.ts CHANGELOG.md`.quiet()
-  await $`git commit -m ${'chore: release v' + newVersion}`.quiet()
-  console.log(`${chalk.green('✔')} 更改已提交`)
+
+  try {
+    await $`git commit -m ${'chore: release v' + newVersion}`.quiet()
+    console.log(`${chalk.green('✔')} 更改已提交`)
+  } catch (error) {
+    // 检查是否因为没有更改而失败
+    const status = await $`git status --porcelain`.quiet()
+    if (status.stdout.toString().trim() === '') {
+      console.log(`${chalk.yellow('⚠')} 没有需要提交的更改，跳过提交`)
+    } else {
+      throw new Error(`Git 提交失败: ${(error as Error).message}`)
+    }
+  }
 
   // 创建标签
   console.log(`${chalk.blue('ℹ')} 创建标签 ${chalk.cyan(`v${newVersion}`)}...`)
-  await $`git tag -a ${'v' + newVersion} -m ${'Release v' + newVersion}`.quiet()
-  console.log(`${chalk.green('✔')} 标签已创建`)
+
+  try {
+    await $`git tag -a ${'v' + newVersion} -m ${'Release v' + newVersion}`.quiet()
+    console.log(`${chalk.green('✔')} 标签已创建`)
+  } catch (error) {
+    // 检查标签是否已存在
+    const tagExists = await $`git tag -l ${'v' + newVersion}`.quiet()
+    if (tagExists.stdout.toString().trim()) {
+      throw new Error(`标签 v${newVersion} 已存在，请选择其他版本号`)
+    }
+    throw new Error(`创建标签失败: ${(error as Error).message}`)
+  }
 
   console.log()
   console.log(chalk.green.bold('✔ 发布准备完成!'))
@@ -193,3 +217,4 @@ main().catch((err) => {
   console.log(`${chalk.red('✖')} ${err.message}`)
   process.exit(1)
 })
+
