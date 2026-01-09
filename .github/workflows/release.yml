@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -40,6 +42,32 @@ jobs:
         id: version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
+      - name: Extract changelog for this version
+        id: changelog
+        run: |
+          # 从 CHANGELOG.md 中提取当前版本的变更内容
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          # 使用 awk 提取对应版本的 section
+          CHANGELOG=$(awk -v ver="$VERSION" '
+            /^## \[/ {
+              if (found) exit
+              if ($0 ~ "\\[" ver "\\]") found=1
+              next
+            }
+            found && /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md)
+
+          # 如果没有找到，使用默认信息
+          if [ -z "$CHANGELOG" ]; then
+            CHANGELOG="查看 [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) 了解详细变更内容。"
+          fi
+
+          # 设置多行输出
+          echo "CONTENT<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: List output files
         run: ls -la .output/
 
@@ -50,7 +78,11 @@ jobs:
           body: |
             ## New Tab Extension v${{ steps.version.outputs.VERSION }}
 
-            ### 安装说明
+            ${{ steps.changelog.outputs.CONTENT }}
+
+            ---
+
+            ### 📦 安装说明
 
             #### Chrome / Edge / Brave
             1. 下载 `new-tab-${{ steps.version.outputs.VERSION }}-chrome.zip`
@@ -63,13 +95,8 @@ jobs:
             2. 打开 `about:debugging#/runtime/this-firefox`
             3. 点击"临时载入附加组件"
             4. 选择 zip 文件中的 manifest.json
-
-            ---
-
-            查看 [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) 了解详细变更内容。
           files: .output/*.zip
           draft: false
           prerelease: false
-          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

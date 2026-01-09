@@ -82,6 +82,61 @@ new-tab/
 - Brave Browser
 - 等其他基于 Chromium 的浏览器
 
+## 🤝 贡献指南
+
+### 提交规范
+
+本项目使用 [Conventional Commits](https://www.conventionalcommits.org/zh-hans/) 规范。提交信息格式：
+
+```
+<type>(<scope>): <subject>
+
+[body]
+
+[footer]
+```
+
+**允许的 type：**
+
+| Type | 说明 |
+|------|------|
+| `feat` | 新功能 |
+| `fix` | 修复 Bug |
+| `docs` | 文档更新 |
+| `style` | 代码格式（不影响功能） |
+| `refactor` | 重构 |
+| `perf` | 性能优化 |
+| `test` | 测试相关 |
+| `build` | 构建系统 |
+| `ci` | CI/CD 配置 |
+| `chore` | 其他杂项 |
+
+**示例：**
+```bash
+git commit -m "feat(bookmark): 添加批量删除功能"
+git commit -m "fix: 修复书签加载失败的问题"
+git commit -m "docs: 更新 README 安装说明"
+```
+
+### 发布流程
+
+1. 确保所有更改已提交
+2. 运行发布命令：
+   ```bash
+   bun run release
+   ```
+3. Release-it 会自动：
+   - 根据提交类型计算新版本号
+   - 更新 `CHANGELOG.md`
+   - 同步 `wxt.config.ts` 版本
+   - 创建 Git 标签并推送
+4. GitHub Actions 将自动构建并创建 Release
+
+**预览发布：**
+```bash
+bun run release:dry
+```
+
 ## 📝 License
 
 MIT

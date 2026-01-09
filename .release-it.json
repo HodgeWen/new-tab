@@ -1,0 +1,43 @@
+{
+  "$schema": "https://unpkg.com/release-it/schema/release-it.json",
+  "git": {
+    "commitMessage": "chore(release): v${version}",
+    "tagName": "v${version}",
+    "tagAnnotation": "Release v${version}",
+    "requireCleanWorkingDir": true,
+    "requireBranch": "main",
+    "push": true,
+    "pushArgs": ["--follow-tags"]
+  },
+  "github": {
+    "release": false
+  },
+  "npm": {
+    "publish": false
+  },
+  "hooks": {
+    "before:init": ["bun run build"],
+    "after:bump": "node scripts/sync-wxt-version.js ${version}"
+  },
+  "plugins": {
+    "@release-it/conventional-changelog": {
+      "preset": {
+        "name": "conventionalcommits",
+        "types": [
+          { "type": "feat", "section": "✨ 新功能" },
+          { "type": "fix", "section": "🐛 问题修复" },
+          { "type": "perf", "section": "⚡ 性能优化" },
+          { "type": "refactor", "section": "♻️ 重构" },
+          { "type": "docs", "section": "📝 文档" },
+          { "type": "style", "section": "💄 样式" },
+          { "type": "test", "section": "✅ 测试" },
+          { "type": "build", "section": "📦 构建" },
+          { "type": "ci", "section": "🔧 CI/CD" },
+          { "type": "chore", "section": "🔨 其他", "hidden": true }
+        ]
+      },
+      "infile": "CHANGELOG.md",
+      "header": "# Changelog\n\n本项目的所有重要变更都将记录在此文件中。\n\n格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，\n版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。\n"
+    }
+  }
+}
