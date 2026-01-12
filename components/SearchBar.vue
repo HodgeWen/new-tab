@@ -1,39 +1,28 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useSettingsStore } from '@/stores/settings'
-
-const settingsStore = useSettingsStore()
+import { ref, onMounted, onUnmounted } from 'vue'
 const searchInput = ref('')
 const inputRef = ref<HTMLInputElement>()
-
-const searchEngineUrl = computed(() => {
-  return settingsStore.settings.searchEngine === 'google'
-    ? 'https://www.google.com/search?q='
-    : 'https://www.bing.com/search?q='
-})
-
-const searchEngineLogo = computed(() => {
-  return settingsStore.settings.searchEngine === 'google'
-    ? 'i-logos-google-icon'
-    : 'i-logos-bing'
-})
 
 function handleSearch() {
   const query = searchInput.value.trim()
   if (query) {
-    window.location.href = searchEngineUrl.value + encodeURIComponent(query)
+    // 使用 Chrome Search API 以符合商店政策（Red Argon）
+    // 这将使用用户在浏览器中设置的默认搜索引擎
+    if (typeof browser !== 'undefined' && browser.search) {
+      browser.search.query({
+        text: query,
+        disposition: 'CURRENT_TAB'
+      })
+    } else {
+      // 回退方案（如果是普通网页预览环境）
+      window.location.href = `https://www.google.com/search?q=${encodeURIComponent(query)}`
+    }
   }
 }
 
 function clearInput() {
   searchInput.value = ''
   inputRef.value?.focus()
-}
-
-function toggleSearchEngine() {
-  settingsStore.setSearchEngine(
-    settingsStore.settings.searchEngine === 'google' ? 'bing' : 'google'
-  )
 }
 
 function handleKeydown(event: KeyboardEvent) {
@@ -64,15 +53,13 @@ onUnmounted(() => {
 
 <template>
   <div class="search-bar w-full max-w-xl">
-    <div class="glass rounded-2xl px-4 py-3 flex items-center gap-3 transition-all duration-300 focus-within:ring-2 focus-within:ring-white/30">
-      <!-- 搜索引擎切换按钮 -->
-      <button
-        class="flex-shrink-0 p-2 rounded-lg hover:bg-white/10 transition-colors"
-        :title="`切换到 ${settingsStore.settings.searchEngine === 'google' ? 'Bing' : 'Google'}`"
-        @click="toggleSearchEngine"
-      >
-        <div :class="searchEngineLogo" class="w-5 h-5" />
-      </button>
+    <div
+      class="glass rounded-2xl px-4 py-3 flex items-center gap-3 transition-all duration-300 focus-within:ring-2 focus-within:ring-white/30"
+    >
+      <!-- 搜索图标 -->
+      <div class="flex-shrink-0 p-2">
+        <div class="i-lucide-search w-5 h-5 text-white/70" />
+      </div>
 
       <!-- 搜索输入框 -->
       <input
@@ -82,7 +69,7 @@ onUnmounted(() => {
         class="flex-1 bg-transparent border-none outline-none text-white text-base placeholder-white/50"
         placeholder="搜索网页..."
         @keyup.enter="handleSearch"
-      >
+      />
 
       <!-- 清除按钮 -->
       <button
@@ -107,8 +94,8 @@ onUnmounted(() => {
     <!-- 快捷键提示 -->
     <div class="mt-2 text-center text-white/40 text-xs">
       按 <kbd class="px-1.5 py-0.5 rounded bg-white/10 font-mono">/</kbd> 或
-      <kbd class="px-1.5 py-0.5 rounded bg-white/10 font-mono">Ctrl+K</kbd> 聚焦搜索框
+      <kbd class="px-1.5 py-0.5 rounded bg-white/10 font-mono">Ctrl+K</kbd>
+      聚焦搜索框
     </div>
   </div>
 </template>
-

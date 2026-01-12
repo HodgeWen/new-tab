@@ -6,7 +6,6 @@ import { useWallpaperStore } from '@/stores/wallpaper'
 import { useBookmarkStore } from '@/stores/bookmarks'
 import { webdavService } from '@/services/webdav'
 import { db } from '@/services/database'
-import type { SearchEngine } from '@/types'
 
 const uiStore = useUIStore()
 const settingsStore = useSettingsStore()
@@ -36,11 +35,6 @@ const isVisible = computed(() => uiStore.settingsPanelOpen)
 // 关闭面板
 function closePanel() {
   uiStore.closeSettingsPanel()
-}
-
-// 切换搜索引擎
-async function setSearchEngine(engine: SearchEngine) {
-  await settingsStore.setSearchEngine(engine)
 }
 
 // 切换搜索栏
@@ -272,37 +266,6 @@ function formatDate(date: Date): string {
           <div class="flex-1 overflow-y-auto p-6">
             <!-- 通用设置 -->
             <div v-show="activeTab === 'general'" class="space-y-6">
-              <!-- 搜索引擎 -->
-              <div class="space-y-3">
-                <label class="text-sm text-white/70">搜索引擎</label>
-                <div class="flex gap-3">
-                  <button
-                    class="flex-1 px-4 py-3 rounded-xl flex items-center justify-center gap-2 transition-all"
-                    :class="
-                      settingsStore.settings.searchEngine === 'google'
-                        ? 'bg-white/20 ring-2 ring-white/30'
-                        : 'bg-white/5 hover:bg-white/10'
-                    "
-                    @click="setSearchEngine('google')"
-                  >
-                    <div class="i-logos-google-icon w-5 h-5" />
-                    <span class="text-white">Google</span>
-                  </button>
-                  <button
-                    class="flex-1 px-4 py-3 rounded-xl flex items-center justify-center gap-2 transition-all"
-                    :class="
-                      settingsStore.settings.searchEngine === 'bing'
-                        ? 'bg-white/20 ring-2 ring-white/30'
-                        : 'bg-white/5 hover:bg-white/10'
-                    "
-                    @click="setSearchEngine('bing')"
-                  >
-                    <div class="i-logos-bing w-5 h-5" />
-                    <span class="text-white">Bing</span>
-                  </button>
-                </div>
-              </div>
-
               <!-- 搜索栏显示 -->
               <div class="flex items-center justify-between">
                 <div>
@@ -467,8 +430,8 @@ function formatDate(date: Date): string {
                     webdavTesting
                       ? '连接中...'
                       : webdavConnected
-                      ? '已连接'
-                      : '测试连接'
+                        ? '已连接'
+                        : '测试连接'
                   }}
                 </button>
                 <p

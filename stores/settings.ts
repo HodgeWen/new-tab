@@ -1,10 +1,9 @@
 import { defineStore } from 'pinia'
 import { ref, toRaw } from 'vue'
-import type { Settings, SearchEngine } from '@/types'
+import type { Settings } from '@/types'
 import { db } from '@/services/database'
 
 const defaultSettings: Settings = {
-  searchEngine: 'bing',
   showSearchBar: true,
   webdav: {
     enabled: false,
@@ -25,7 +24,6 @@ function deepMergeSettings(
   saved: Partial<Settings>
 ): Settings {
   return {
-    searchEngine: saved.searchEngine ?? defaults.searchEngine,
     showSearchBar: saved.showSearchBar ?? defaults.showSearchBar,
     webdav: {
       ...defaults.webdav,
@@ -71,10 +69,6 @@ export const useSettingsStore = defineStore('settings', () => {
     }
   }
 
-  async function setSearchEngine(engine: SearchEngine) {
-    settings.value.searchEngine = engine
-    await saveSettings()
-  }
 
   async function toggleSearchBar() {
     settings.value.showSearchBar = !settings.value.showSearchBar
@@ -98,7 +92,6 @@ export const useSettingsStore = defineStore('settings', () => {
     loading,
     loadSettings,
     saveSettings,
-    setSearchEngine,
     toggleSearchBar,
     updateWallpaperSettings,
     updateWebDAVSettings

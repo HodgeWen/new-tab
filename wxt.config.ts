@@ -17,7 +17,7 @@ export default defineConfig({
       48: '/icons/icon-48.png',
       128: '/icons/icon-128.png'
     },
-    permissions: ['storage'],
+    permissions: ['search'],
     host_permissions: [
       'https://picsum.photos/*',
       'https://fastly.picsum.photos/*'

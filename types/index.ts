@@ -45,10 +45,6 @@ export interface FolderItem extends BookmarkItem {
   children: string[] // 子项 ID 列表
 }
 
-/**
- * 搜索引擎类型
- */
-export type SearchEngine = 'bing' | 'google'
 
 /**
  * WebDAV 配置
@@ -73,7 +69,6 @@ export interface WallpaperConfig {
  * 应用设置
  */
 export interface Settings {
-  searchEngine: SearchEngine
   showSearchBar: boolean
   webdav: WebDAVConfig
   wallpaper: WallpaperConfig
