@@ -1,38 +1,66 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useUIStore } from '@/stores/ui'
-import { useBookmarkStore } from '@/stores/bookmarks'
-import { isFolderItem, type FolderSize } from '@/types'
+import { useGridItemStore } from '@/stores/grid-items'
+import {
+  isFolderItem,
+  FOLDER_SIZE_PRESETS,
+  type GridSize,
+  type FolderSizePreset
+} from '@/types'
 
 const uiStore = useUIStore()
-const bookmarkStore = useBookmarkStore()
+const gridItemStore = useGridItemStore()
 
-const isVisible = computed(() =>
-  uiStore.modalType === 'addFolder' || uiStore.modalType === 'editFolder'
+const isVisible = computed(
+  () => uiStore.modalType === 'addFolder' || uiStore.modalType === 'editFolder'
 )
 const isEdit = computed(() => uiStore.modalType === 'editFolder')
 
 const title = ref('')
-const size = ref<FolderSize>('2x2')
+const selectedPreset = ref<FolderSizePreset>('square')
 const loading = ref(false)
 
-const sizeOptions: Array<{ value: FolderSize; label: string; desc: string }> = [
-  { value: '1x2', label: '1×2', desc: '窄高型' },
-  { value: '2x2', label: '2×2', desc: '正方形' },
-  { value: '2x1', label: '2×1', desc: '宽扁型' },
-]
+// 尺寸选项
+const sizeOptions = Object.entries(FOLDER_SIZE_PRESETS).map(([key, value]) => ({
+  key: key as FolderSizePreset,
+  ...value
+}))
+
+// 获取当前选中的 GridSize
+const currentSize = computed<GridSize>(() => {
+  const preset = FOLDER_SIZE_PRESETS[selectedPreset.value]
+  return { w: preset.w, h: preset.h }
+})
+
+/**
+ * 根据 GridSize 反推预设 key
+ */
+function findPresetBySize(size: GridSize): FolderSizePreset {
+  for (const [key, preset] of Object.entries(FOLDER_SIZE_PRESETS)) {
+    if (preset.w === size.w && preset.h === size.h) {
+      return key as FolderSizePreset
+    }
+  }
+  return 'square' // 默认
+}
 
 // 重置表单
 function resetForm() {
   title.value = ''
-  size.value = '2x2'
+  selectedPreset.value = 'square'
 }
 
 // 监听模态框打开
 watch(isVisible, visible => {
-  if (visible && isEdit.value && uiStore.modalData && isFolderItem(uiStore.modalData)) {
+  if (
+    visible &&
+    isEdit.value &&
+    uiStore.modalData &&
+    isFolderItem(uiStore.modalData)
+  ) {
     title.value = uiStore.modalData.title
-    size.value = uiStore.modalData.size
+    selectedPreset.value = findPresetBySize(uiStore.modalData.size)
   } else if (!visible) {
     resetForm()
   }
@@ -51,17 +79,20 @@ async function handleSubmit() {
   loading.value = true
   try {
     if (isEdit.value && uiStore.modalData) {
-      await bookmarkStore.updateBookmark(uiStore.modalData.id, {
-        title: title.value.trim(),
+      await gridItemStore.updateGridItem(uiStore.modalData.id, {
+        title: title.value.trim()
       })
       if (isFolderItem(uiStore.modalData)) {
-        await bookmarkStore.updateFolderSize(uiStore.modalData.id, size.value)
+        await gridItemStore.updateFolderSize(
+          uiStore.modalData.id,
+          currentSize.value
+        )
       }
     } else {
-      await bookmarkStore.addFolder({
+      await gridItemStore.addFolder({
         title: title.value.trim(),
-        size: size.value,
-        parentId: null,
+        size: currentSize.value,
+        parentId: null
       })
     }
 
@@ -87,7 +118,9 @@ async function handleSubmit() {
       >
         <div class="w-full max-w-md mx-4 rounded-2xl glass overflow-hidden">
           <!-- 标题栏 -->
-          <div class="flex items-center justify-between px-6 py-4 border-b border-white/10">
+          <div
+            class="flex items-center justify-between px-6 py-4 border-b border-white/10"
+          >
             <h2 class="text-lg font-semibold text-white">
               {{ isEdit ? '编辑文件夹' : '新建文件夹' }}
             </h2>
@@ -103,12 +136,16 @@ async function handleSubmit() {
           <form class="p-6 space-y-4" @submit.prevent="handleSubmit">
             <!-- 预览 -->
             <div class="flex items-center gap-4 p-4 rounded-xl bg-white/5">
-              <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center">
+              <div
+                class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center"
+              >
                 <div class="i-lucide-folder w-6 h-6 text-white/50" />
               </div>
               <div class="flex-1">
                 <p class="text-white">{{ title || '文件夹名称' }}</p>
-                <p class="text-xs text-white/50">尺寸: {{ size }}</p>
+                <p class="text-xs text-white/50">
+                  尺寸: {{ FOLDER_SIZE_PRESETS[selectedPreset].label }}
+                </p>
               </div>
             </div>
 
@@ -120,7 +157,7 @@ async function handleSubmit() {
                 type="text"
                 placeholder="输入文件夹名称"
                 class="w-full px-4 py-3 rounded-xl bg-white/10 text-white placeholder-white/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
-              >
+              />
             </div>
 
             <!-- 尺寸选择 -->
@@ -129,13 +166,15 @@ async function handleSubmit() {
               <div class="grid grid-cols-3 gap-3">
                 <button
                   v-for="option in sizeOptions"
-                  :key="option.value"
+                  :key="option.key"
                   type="button"
                   class="px-3 py-4 rounded-xl flex flex-col items-center gap-1 transition-all"
-                  :class="size === option.value
-                    ? 'bg-white/20 ring-2 ring-white/30'
-                    : 'bg-white/5 hover:bg-white/10'"
-                  @click="size = option.value"
+                  :class="
+                    selectedPreset === option.key
+                      ? 'bg-white/20 ring-2 ring-white/30'
+                      : 'bg-white/5 hover:bg-white/10'
+                  "
+                  @click="selectedPreset = option.key"
                 >
                   <span class="text-white font-medium">{{ option.label }}</span>
                   <span class="text-xs text-white/50">{{ option.desc }}</span>
@@ -157,7 +196,7 @@ async function handleSubmit() {
                 class="flex-1 px-4 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white transition-colors disabled:opacity-50"
                 :disabled="loading || !title.trim()"
               >
-                {{ loading ? '保存中...' : (isEdit ? '保存' : '创建') }}
+                {{ loading ? '保存中...' : isEdit ? '保存' : '创建' }}
               </button>
             </div>
           </form>
@@ -166,4 +205,3 @@ async function handleSubmit() {
     </Transition>
   </Teleport>
 </template>
-

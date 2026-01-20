@@ -1,18 +1,18 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useUIStore } from '@/stores/ui'
-import { useBookmarkStore } from '@/stores/bookmarks'
+import { useGridItemStore } from '@/stores/grid-items'
 import { isSiteItem } from '@/types'
 
 const uiStore = useUIStore()
-const bookmarkStore = useBookmarkStore()
+const gridItemStore = useGridItemStore()
 
 // 下拉菜单状态
 const showFolderMenu = ref(false)
 
-// 获取可选中的书签（只有普通网站，不包含文件夹）
+// 获取可选中的网格项（只有普通网站，不包含文件夹）
 const selectableSites = computed(() => {
-  return bookmarkStore.rootBookmarks.filter(isSiteItem)
+  return gridItemStore.rootGridItems.filter(isSiteItem)
 })
 
 // 是否全选
@@ -35,11 +35,13 @@ function toggleSelectAll() {
 async function deleteSelected() {
   if (uiStore.selectedCount === 0) return
 
-  const confirmed = confirm(`确定要删除选中的 ${uiStore.selectedCount} 个书签吗？`)
+  const confirmed = confirm(
+    `确定要删除选中的 ${uiStore.selectedCount} 个书签吗？`
+  )
   if (!confirmed) return
 
   const ids = Array.from(uiStore.selectedIds)
-  await bookmarkStore.batchDeleteBookmarks(ids)
+  await gridItemStore.batchDeleteGridItems(ids)
   uiStore.clearSelection()
 }
 
@@ -48,7 +50,7 @@ async function moveToFolder(folderId: string) {
   if (uiStore.selectedCount === 0) return
 
   const ids = Array.from(uiStore.selectedIds)
-  await bookmarkStore.batchMoveToFolder(ids, folderId)
+  await gridItemStore.batchMoveToFolder(ids, folderId)
   uiStore.clearSelection()
   showFolderMenu.value = false
 }
@@ -75,7 +77,9 @@ function closeFolderMenu() {
         class="flex items-center gap-3 px-6 py-3 rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl"
       >
         <!-- 已选数量 -->
-        <div class="flex items-center gap-2 text-white/80 text-sm pr-3 border-r border-white/20">
+        <div
+          class="flex items-center gap-2 text-white/80 text-sm pr-3 border-r border-white/20"
+        >
           <span class="font-medium">{{ uiStore.selectedCount }}</span>
           <span>已选</span>
         </div>
@@ -107,13 +111,12 @@ function closeFolderMenu() {
           <Transition name="fade-scale">
             <div
               v-if="showFolderMenu"
-              class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 min-w-[180px] max-h-[240px] overflow-y-auto
-                     bg-black/80 backdrop-blur-xl rounded-xl border border-white/10 shadow-2xl py-2"
+              class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 min-w-[180px] max-h-[240px] overflow-y-auto bg-black/80 backdrop-blur-xl rounded-xl border border-white/10 shadow-2xl py-2"
             >
               <!-- 现有文件夹列表 -->
-              <template v-if="bookmarkStore.allFolders.length > 0">
+              <template v-if="gridItemStore.allFolders.length > 0">
                 <button
-                  v-for="folder in bookmarkStore.allFolders"
+                  v-for="folder in gridItemStore.allFolders"
                   :key="folder.id"
                   class="folder-menu-item"
                   @click="moveToFolder(folder.id)"
@@ -125,7 +128,10 @@ function closeFolderMenu() {
               </template>
 
               <!-- 创建新分组 -->
-              <button class="folder-menu-item text-blue-400" @click="createNewFolder">
+              <button
+                class="folder-menu-item text-blue-400"
+                @click="createNewFolder"
+              >
                 <div class="i-lucide-folder-plus w-4 h-4" />
                 <span>创建新分组</span>
               </button>

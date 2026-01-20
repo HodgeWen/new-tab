@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { FolderItem } from '@/types'
-import { useBookmarkStore } from '@/stores/bookmarks'
+import type { FolderItem, GridSize } from '@/types'
+import { useGridItemStore } from '@/stores/grid-items'
 import { faviconService } from '@/services/favicon'
 import { isSiteItem } from '@/types'
 
@@ -15,67 +15,69 @@ const emit = defineEmits<{
   contextmenu: [event: MouseEvent]
 }>()
 
-const bookmarkStore = useBookmarkStore()
+const gridItemStore = useGridItemStore()
+
+/**
+ * 根据文件夹尺寸计算布局配置
+ */
+function getLayoutConfig(size: GridSize) {
+  const { w, h } = size
+
+  // 2x2 正方形
+  if (w === 2 && h === 2) {
+    return {
+      maxItems: 9, // 3x3 网格
+      cols: 3,
+      rows: 3,
+      iconSize: 'w-6 h-6',
+      gap: '0.5rem'
+    }
+  }
+
+  // 2x1 宽扁型
+  if (w === 2 && h === 1) {
+    return {
+      maxItems: 3, // 1x3 横向
+      cols: 3,
+      rows: 1,
+      iconSize: 'w-7 h-7',
+      gap: '0.75rem'
+    }
+  }
+
+  // 1x2 窄高型（默认）
+  return {
+    maxItems: 3, // 3x1 纵向
+    cols: 1,
+    rows: 3,
+    iconSize: 'w-7 h-7',
+    gap: '0.5rem'
+  }
+}
 
 // 根据文件夹尺寸计算显示数量和网格配置
-const layoutConfig = computed(() => {
-  switch (props.item.size) {
-    case '2x2':
-      return {
-        maxItems: 9, // 3x3 网格
-        cols: 3,
-        rows: 3,
-        iconSize: 'w-6 h-6',
-        gap: '0.5rem'
-      }
-    case '2x1':
-      return {
-        maxItems: 3, // 1x3 横向
-        cols: 3,
-        rows: 1,
-        iconSize: 'w-7 h-7',
-        gap: '0.75rem'
-      }
-    case '1x2':
-    default:
-      return {
-        maxItems: 3, // 3x1 纵向
-        cols: 1,
-        rows: 3,
-        iconSize: 'w-7 h-7',
-        gap: '0.5rem'
-      }
-  }
-})
+const layoutConfig = computed(() => getLayoutConfig(props.item.size))
 
-// 根据文件夹尺寸计算样式
-const sizeStyles = computed(() => {
+/**
+ * 根据文件夹尺寸计算样式
+ */
+function getSizeStyles(size: GridSize) {
   const baseSize = 72
   const gap = 16
+  const { w, h } = size
 
-  switch (props.item.size) {
-    case '2x2':
-      return {
-        width: `${baseSize * 2 + gap}px`,
-        height: `${baseSize * 2 + gap + 20}px`,
-      }
-    case '2x1':
-      return {
-        width: `${baseSize * 2 + gap}px`,
-        height: `${baseSize + 20}px`,
-      }
-    case '1x2':
-    default:
-      return {
-        width: `${baseSize}px`,
-        height: `${baseSize * 2 + gap + 20}px`,
-      }
+  return {
+    width: `${baseSize * w + gap * (w - 1)}px`,
+    height: `${baseSize * h + gap * (h - 1) + 20}px`
   }
-})
+}
+
+// 根据文件夹尺寸计算样式
+const sizeStyles = computed(() => getSizeStyles(props.item.size))
 
 // 获取文件夹内的预览项目
 const previewItems = computed(() => {
-  const children = bookmarkStore.getFolderChildren(props.item.id)
+  const children = gridItemStore.getFolderChildren(props.item.id)
   const config = layoutConfig.value
 
   return children.slice(0, config.maxItems).map(child => {
@@ -120,9 +122,7 @@ function handleContextMenu(event: MouseEvent) {
     @contextmenu="handleContextMenu"
   >
     <!-- 文件夹容器 -->
-    <div
-      class="flex-1 rounded-2xl glass glass-hover p-3 transition-transform group-hover:scale-[1.02] overflow-hidden"
-    >
+    <div class="flex-1 rounded-2xl glass p-3 overflow-hidden">
       <!-- 预览网格 - 使用 flex 布局实现居中 -->
       <div class="w-full h-full flex items-center justify-center">
         <div
@@ -143,7 +143,10 @@ function handleContextMenu(event: MouseEvent) {
             class="flex items-center justify-center"
           >
             <template v-if="preview.isFolder">
-              <div class="i-lucide-folder text-white/60" :class="layoutConfig.iconSize" />
+              <div
+                class="i-lucide-folder text-white/60"
+                :class="layoutConfig.iconSize"
+              />
             </template>
             <template v-else>
               <img
@@ -161,10 +164,7 @@ function handleContextMenu(event: MouseEvent) {
         </div>
 
         <!-- 空文件夹提示 -->
-        <div
-          v-else
-          class="flex items-center justify-center w-full h-full"
-        >
+        <div v-else class="flex items-center justify-center w-full h-full">
           <div class="i-lucide-folder-open w-8 h-8 text-white/30" />
         </div>
       </div>
@@ -175,7 +175,10 @@ function handleContextMenu(event: MouseEvent) {
       <span class="text-xs text-white/80 line-clamp-1 text-shadow">
         {{ item.title }}
       </span>
-      <span v-if="itemCount > layoutConfig.maxItems" class="text-xs text-white/50">
+      <span
+        v-if="itemCount > layoutConfig.maxItems"
+        class="text-xs text-white/50"
+      >
         +{{ itemCount - layoutConfig.maxItems }}
       </span>
     </div>

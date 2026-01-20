@@ -1,16 +1,23 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { BookmarkItem, SiteItem, FolderItem } from '@/types'
+import type { GridItem, SiteItem, FolderItem } from '@/types'
 
 export type ContextMenuTarget = 'blank' | 'site' | 'folder'
-export type ModalType = 'addSite' | 'editSite' | 'addFolder' | 'editFolder' | 'settings' | 'folder' | null
+export type ModalType =
+  | 'addSite'
+  | 'editSite'
+  | 'addFolder'
+  | 'editFolder'
+  | 'settings'
+  | 'folder'
+  | null
 
 export interface ContextMenuState {
   visible: boolean
   x: number
   y: number
   target: ContextMenuTarget
-  targetItem: BookmarkItem | null
+  targetItem: GridItem | null
 }
 
 export const useUIStore = defineStore('ui', () => {
@@ -20,12 +27,12 @@ export const useUIStore = defineStore('ui', () => {
     x: 0,
     y: 0,
     target: 'blank',
-    targetItem: null,
+    targetItem: null
   })
 
   // 模态框状态
   const modalType = ref<ModalType>(null)
-  const modalData = ref<BookmarkItem | null>(null)
+  const modalData = ref<GridItem | null>(null)
 
   // 当前展开的文件夹
   const openFolderId = ref<string | null>(null)
@@ -42,13 +49,18 @@ export const useUIStore = defineStore('ui', () => {
 
   const isContextMenuVisible = computed(() => contextMenu.value.visible)
 
-  function openContextMenu(x: number, y: number, target: ContextMenuTarget, item: BookmarkItem | null = null) {
+  function openContextMenu(
+    x: number,
+    y: number,
+    target: ContextMenuTarget,
+    item: GridItem | null = null
+  ) {
     contextMenu.value = {
       visible: true,
       x,
       y,
       target,
-      targetItem: item,
+      targetItem: item
     }
   }
 
@@ -57,7 +69,7 @@ export const useUIStore = defineStore('ui', () => {
     contextMenu.value.targetItem = null
   }
 
-  function openModal(type: ModalType, data: BookmarkItem | null = null) {
+  function openModal(type: ModalType, data: GridItem | null = null) {
     modalType.value = type
     modalData.value = data
   }
@@ -176,7 +188,6 @@ export const useUIStore = defineStore('ui', () => {
     unselectItem,
     selectAll,
     clearSelection,
-    isSelected,
+    isSelected
   }
 })
-

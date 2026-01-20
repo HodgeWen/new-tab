@@ -1,23 +1,23 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useUIStore } from '@/stores/ui'
-import { useBookmarkStore } from '@/stores/bookmarks'
-import { isSiteItem, isFolderItem, type BookmarkItem, type SiteItem } from '@/types'
+import { useGridItemStore } from '@/stores/grid-items'
+import { isSiteItem, isFolderItem, type GridItem, type SiteItem } from '@/types'
 import { faviconService } from '@/services/favicon'
 
 const uiStore = useUIStore()
-const bookmarkStore = useBookmarkStore()
+const gridItemStore = useGridItemStore()
 
 const isVisible = computed(() => uiStore.openFolderId !== null)
 const folder = computed(() => {
   if (!uiStore.openFolderId) return null
-  const item = bookmarkStore.bookmarks[uiStore.openFolderId]
+  const item = gridItemStore.gridItems[uiStore.openFolderId]
   return item && isFolderItem(item) ? item : null
 })
 
 const children = computed(() => {
   if (!folder.value) return []
-  return bookmarkStore.getFolderChildren(folder.value.id)
+  return gridItemStore.getFolderChildren(folder.value.id)
 })
 
 // 拖拽状态
@@ -64,7 +64,7 @@ async function handleDrop(event: DragEvent, targetId: string) {
     // 移动元素
     currentOrder.splice(oldIndex, 1)
     currentOrder.splice(newIndex, 0, draggedId.value)
-    await bookmarkStore.reorder(currentOrder, folder.value.id)
+    await gridItemStore.reorder(currentOrder, folder.value.id)
   }
 
   draggedId.value = null
@@ -82,7 +82,7 @@ function closeFolder() {
 }
 
 // 右键菜单
-function handleContextMenu(event: MouseEvent, item: BookmarkItem) {
+function handleContextMenu(event: MouseEvent, item: GridItem) {
   event.preventDefault()
   event.stopPropagation()
 
@@ -111,7 +111,9 @@ function openSite(site: SiteItem) {
       >
         <div class="w-full max-w-md mx-4 rounded-2xl glass overflow-hidden">
           <!-- 标题栏 -->
-          <div class="flex items-center justify-between px-6 py-4 border-b border-white/10">
+          <div
+            class="flex items-center justify-between px-6 py-4 border-b border-white/10"
+          >
             <h2 class="text-lg font-semibold text-white">{{ folder.title }}</h2>
             <button
               class="p-2 rounded-lg hover:bg-white/10 transition-colors"
@@ -141,15 +143,24 @@ function openSite(site: SiteItem) {
                   @click="openSite(item)"
                   @contextmenu="handleContextMenu($event, item)"
                 >
-                  <div class="w-14 h-14 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center mb-2 transition-all group-hover:scale-105">
+                  <div
+                    class="w-14 h-14 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center mb-2 transition-all group-hover:scale-105"
+                  >
                     <img
-                      :src="item.favicon || faviconService.getFaviconUrl(item.url)"
+                      :src="
+                        item.favicon || faviconService.getFaviconUrl(item.url)
+                      "
                       :alt="item.title"
                       class="w-8 h-8 rounded pointer-events-none"
-                      @error="($event.target as HTMLImageElement).src = faviconService.generateDefaultIcon(item.title)"
-                    >
+                      @error="
+                        ($event.target as HTMLImageElement).src =
+                          faviconService.generateDefaultIcon(item.title)
+                      "
+                    />
                   </div>
-                  <span class="text-xs text-white/80 text-center line-clamp-2 max-w-[72px]">
+                  <span
+                    class="text-xs text-white/80 text-center line-clamp-2 max-w-[72px]"
+                  >
                     {{ item.title }}
                   </span>
                 </div>

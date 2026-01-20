@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useUIStore } from '@/stores/ui'
-import { useBookmarkStore } from '@/stores/bookmarks'
+import { useGridItemStore } from '@/stores/grid-items'
 import { faviconService } from '@/services/favicon'
 import { isSiteItem } from '@/types'
 
 const uiStore = useUIStore()
-const bookmarkStore = useBookmarkStore()
+const gridItemStore = useGridItemStore()
 
-const isVisible = computed(() =>
-  uiStore.modalType === 'addSite' || uiStore.modalType === 'editSite'
+const isVisible = computed(
+  () => uiStore.modalType === 'addSite' || uiStore.modalType === 'editSite'
 )
 const isEdit = computed(() => uiStore.modalType === 'editSite')
 
@@ -27,7 +27,12 @@ function resetForm() {
 
 // 监听模态框打开
 watch(isVisible, visible => {
-  if (visible && isEdit.value && uiStore.modalData && isSiteItem(uiStore.modalData)) {
+  if (
+    visible &&
+    isEdit.value &&
+    uiStore.modalData &&
+    isSiteItem(uiStore.modalData)
+  ) {
     title.value = uiStore.modalData.title
     url.value = uiStore.modalData.url
     favicon.value = uiStore.modalData.favicon
@@ -42,7 +47,7 @@ function closeModal() {
   resetForm()
 }
 
-// URL 变化时自动获取 favicon
+// URL 变化时自动获取 favicon（使用缓存）
 async function handleUrlChange() {
   if (!url.value) return
 
@@ -58,14 +63,15 @@ async function handleUrlChange() {
     if (!title.value) {
       try {
         const domain = new URL(fullUrl).hostname.replace('www.', '')
-        title.value = domain.charAt(0).toUpperCase() + domain.slice(1).split('.')[0]
+        title.value =
+          domain.charAt(0).toUpperCase() + domain.slice(1).split('.')[0]
       } catch {
         // 忽略解析错误
       }
     }
 
-    // 获取 favicon
-    favicon.value = await faviconService.fetchFavicon(fullUrl)
+    // 获取并缓存 favicon
+    favicon.value = await faviconService.fetchAndCacheFavicon(fullUrl)
   } catch {
     // 忽略错误
   }
@@ -83,18 +89,23 @@ async function handleSubmit() {
       fullUrl = `https://${fullUrl}`
     }
 
+    // 确保 favicon 已缓存
+    if (!favicon.value) {
+      favicon.value = await faviconService.fetchAndCacheFavicon(fullUrl)
+    }
+
     if (isEdit.value && uiStore.modalData) {
-      await bookmarkStore.updateBookmark(uiStore.modalData.id, {
+      await gridItemStore.updateGridItem(uiStore.modalData.id, {
         title: title.value.trim(),
         url: fullUrl,
-        favicon: favicon.value,
+        favicon: favicon.value
       })
     } else {
-      await bookmarkStore.addSite({
+      await gridItemStore.addSite({
         title: title.value.trim(),
         url: fullUrl,
         favicon: favicon.value,
-        parentId: null,
+        parentId: null
       })
     }
 
@@ -120,7 +131,9 @@ async function handleSubmit() {
       >
         <div class="w-full max-w-md mx-4 rounded-2xl glass overflow-hidden">
           <!-- 标题栏 -->
-          <div class="flex items-center justify-between px-6 py-4 border-b border-white/10">
+          <div
+            class="flex items-center justify-between px-6 py-4 border-b border-white/10"
+          >
             <h2 class="text-lg font-semibold text-white">
               {{ isEdit ? '编辑网站' : '添加网站' }}
             </h2>
@@ -136,18 +149,22 @@ async function handleSubmit() {
           <form class="p-6 space-y-4" @submit.prevent="handleSubmit">
             <!-- 预览 -->
             <div class="flex items-center gap-4 p-4 rounded-xl bg-white/5">
-              <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center">
+              <div
+                class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center"
+              >
                 <img
                   v-if="favicon"
                   :src="favicon"
                   class="w-8 h-8 rounded"
                   @error="favicon = ''"
-                >
+                />
                 <div v-else class="i-lucide-globe w-6 h-6 text-white/50" />
               </div>
               <div class="flex-1 min-w-0">
                 <p class="text-white truncate">{{ title || '网站名称' }}</p>
-                <p class="text-xs text-white/50 truncate">{{ url || 'https://example.com' }}</p>
+                <p class="text-xs text-white/50 truncate">
+                  {{ url || 'https://example.com' }}
+                </p>
               </div>
             </div>
 
@@ -160,7 +177,7 @@ async function handleSubmit() {
                 placeholder="https://example.com"
                 class="w-full px-4 py-3 rounded-xl bg-white/10 text-white placeholder-white/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
                 @blur="handleUrlChange"
-              >
+              />
             </div>
 
             <!-- 标题输入 -->
@@ -171,7 +188,7 @@ async function handleSubmit() {
                 type="text"
                 placeholder="网站名称"
                 class="w-full px-4 py-3 rounded-xl bg-white/10 text-white placeholder-white/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
-              >
+              />
             </div>
 
             <!-- 提交按钮 -->
@@ -188,7 +205,7 @@ async function handleSubmit() {
                 class="flex-1 px-4 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white transition-colors disabled:opacity-50"
                 :disabled="loading || !title.trim() || !url.trim()"
               >
-                {{ loading ? '保存中...' : (isEdit ? '保存' : '添加') }}
+                {{ loading ? '保存中...' : isEdit ? '保存' : '添加' }}
               </button>
             </div>
           </form>
@@ -197,4 +214,3 @@ async function handleSubmit() {
     </Transition>
   </Teleport>
 </template>
-

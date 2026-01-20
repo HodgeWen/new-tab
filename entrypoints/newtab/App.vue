@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { onMounted, computed } from 'vue'
-import { useBookmarkStore } from '@/stores/bookmarks'
+import { useGridItemStore } from '@/stores/grid-items'
 import { useSettingsStore } from '@/stores/settings'
 import { useWallpaperStore } from '@/stores/wallpaper'
 import { useUIStore } from '@/stores/ui'
 
 import SearchBar from '@/components/SearchBar.vue'
-import BookmarkGrid from '@/components/BookmarkGrid.vue'
+import TabGrid from '@/components/TabGrid.vue'
 import SettingsPanel from '@/components/SettingsPanel.vue'
 import ContextMenu from '@/components/ui/ContextMenu.vue'
 import FolderModal from '@/components/FolderModal.vue'
@@ -14,7 +14,7 @@ import AddSiteModal from '@/components/AddSiteModal.vue'
 import AddFolderModal from '@/components/AddFolderModal.vue'
 import EditToolbar from '@/components/EditToolbar.vue'
 
-const bookmarkStore = useBookmarkStore()
+const gridItemStore = useGridItemStore()
 const settingsStore = useSettingsStore()
 const wallpaperStore = useWallpaperStore()
 const uiStore = useUIStore()
@@ -49,7 +49,7 @@ const showWallpaper = computed(() => {
 
 onMounted(async () => {
   await Promise.all([
-    bookmarkStore.loadBookmarks(),
+    gridItemStore.loadGridItems(),
     settingsStore.loadSettings()
   ])
 
@@ -140,8 +140,8 @@ function handleContextMenu(event: MouseEvent) {
       <!-- 搜索栏 -->
       <SearchBar v-if="settingsStore.settings.showSearchBar" class="mb-12" />
 
-      <!-- 书签网格 -->
-      <BookmarkGrid class="w-full max-w-6xl" />
+      <!-- 网格布局 -->
+      <TabGrid class="w-full max-w-6xl" />
 
       <!-- 壁纸信息 -->
       <div

@@ -1,13 +1,13 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { BookmarkItem, Settings, WallpaperInfo } from '@/types'
+import type { GridItem, Settings, WallpaperInfo } from '@/types'
 
 /**
- * 书签数据表记录
+ * 网格项数据表记录
  */
-interface BookmarkRecord {
+interface GridItemRecord {
   /** 固定 ID，只有一条记录 */
   id: 'data'
-  bookmarks: Record<string, BookmarkItem>
+  bookmarks: Record<string, GridItem>
   rootOrder: string[]
   updatedAt: number
 }
@@ -45,19 +45,33 @@ interface WebDAVRecord {
 }
 
 /**
+ * Favicon 缓存表记录
+ */
+interface FaviconRecord {
+  /** 网站域名作为主键 */
+  domain: string
+  /** Base64 图标数据 */
+  dataUrl: string
+  /** 缓存时间戳 */
+  timestamp: number
+}
+
+/**
  * 应用数据库 - 使用 Dexie.js
  *
  * 所有数据统一存储在 IndexedDB 中：
- * - bookmarks: 书签数据
+ * - bookmarks: 网格项数据
  * - settings: 应用设置
  * - wallpapers: 壁纸缓存（Blob）
  * - webdav: WebDAV 配置
+ * - favicons: 网站图标缓存
  */
 class AppDatabase extends Dexie {
-  bookmarks!: EntityTable<BookmarkRecord, 'id'>
+  bookmarks!: EntityTable<GridItemRecord, 'id'>
   settings!: EntityTable<SettingsRecord, 'id'>
   wallpapers!: EntityTable<WallpaperRecord, 'id'>
   webdav!: EntityTable<WebDAVRecord, 'id'>
+  favicons!: EntityTable<FaviconRecord, 'domain'>
 
   constructor() {
     super('new-tab-db')
@@ -68,12 +82,21 @@ class AppDatabase extends Dexie {
       wallpapers: 'id',
       webdav: 'id'
     })
+
+    // 版本 2：添加 favicon 缓存表
+    this.version(2).stores({
+      bookmarks: 'id',
+      settings: 'id',
+      wallpapers: 'id',
+      webdav: 'id',
+      favicons: 'domain'
+    })
   }
 
-  // ==================== 书签操作 ====================
+  // ==================== 网格项操作 ====================
 
   async getBookmarks(): Promise<{
-    bookmarks: Record<string, BookmarkItem>
+    bookmarks: Record<string, GridItem>
     rootOrder: string[]
   }> {
     const record = await this.bookmarks.get('data')
@@ -84,7 +107,7 @@ class AppDatabase extends Dexie {
   }
 
   async saveBookmarks(
-    bookmarks: Record<string, BookmarkItem>,
+    bookmarks: Record<string, GridItem>,
     rootOrder: string[]
   ): Promise<void> {
     await this.bookmarks.put({
@@ -195,6 +218,54 @@ class AppDatabase extends Dexie {
     await this.webdav.delete('config')
   }
 
+  // ==================== Favicon 缓存操作 ====================
+
+  /**
+   * 获取缓存的 favicon
+   * @param domain 网站域名
+   * @returns favicon 的 Base64 数据，如果不存在则返回 null
+   */
+  async getFavicon(domain: string): Promise<string | null> {
+    try {
+      const record = await this.favicons.get(domain)
+      return record?.dataUrl ?? null
+    } catch (error) {
+      console.error('[Database] getFavicon error:', error)
+      return null
+    }
+  }
+
+  /**
+   * 保存 favicon 到缓存
+   * @param domain 网站域名
+   * @param dataUrl Base64 格式的图标数据
+   */
+  async saveFavicon(domain: string, dataUrl: string): Promise<void> {
+    try {
+      await this.favicons.put({
+        domain,
+        dataUrl,
+        timestamp: Date.now()
+      })
+    } catch (error) {
+      console.error('[Database] saveFavicon error:', error)
+    }
+  }
+
+  /**
+   * 清除所有 favicon 缓存
+   */
+  async clearFaviconCache(): Promise<void> {
+    await this.favicons.clear()
+  }
+
+  /**
+   * 获取 favicon 缓存数量
+   */
+  async getFaviconCacheCount(): Promise<number> {
+    return await this.favicons.count()
+  }
+
   // ==================== 工具方法 ====================
 
   /**
@@ -256,7 +327,7 @@ class AppDatabase extends Dexie {
         bookmarks: bookmarksData,
         settings: settingsData,
         exportedAt: new Date().toISOString(),
-        version: '1.0.0'
+        version: '2.0.0'
       },
       null,
       2
@@ -296,7 +367,8 @@ class AppDatabase extends Dexie {
       this.bookmarks.clear(),
       this.settings.clear(),
       this.wallpapers.clear(),
-      this.webdav.clear()
+      this.webdav.clear(),
+      this.favicons.clear()
     ])
   }
 }

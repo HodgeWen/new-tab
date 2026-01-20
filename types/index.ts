@@ -1,23 +1,40 @@
 /**
- * 网格位置信息
+ * 网格尺寸
  */
-export interface GridPosition {
-  x: number  // 列位置 (0-based)
-  y: number  // 行位置 (0-based)
-  w: number  // 宽度 (网格单位)
-  h: number  // 高度 (网格单位)
+export interface GridSize {
+  w: number
+  h: number
 }
 
 /**
- * 书签项的基础接口
+ * 网格位置信息
  */
-export interface BookmarkItem {
+export interface GridPosition extends GridSize {
+  x: number // 列位置 (0-based)
+  y: number // 行位置 (0-based)
+}
+
+/**
+ * 预设文件夹尺寸配置
+ */
+export const FOLDER_SIZE_PRESETS = {
+  narrow: { w: 1, h: 2, label: '1×2', desc: '窄高型' },
+  square: { w: 2, h: 2, label: '2×2', desc: '正方形' },
+  wide: { w: 2, h: 1, label: '2×1', desc: '宽扁型' }
+} as const
+
+export type FolderSizePreset = keyof typeof FOLDER_SIZE_PRESETS
+
+/**
+ * 网格项的基础接口
+ */
+export interface GridItem {
   id: string
   type: 'site' | 'folder'
   title: string
   order: number
   parentId: string | null // null 表示根级别
-  gridPosition?: GridPosition  // 网格位置（可选，用于迁移兼容）
+  gridPosition?: GridPosition // 网格位置（可选，用于迁移兼容）
   createdAt: number
   updatedAt: number
 }
@@ -25,26 +42,20 @@ export interface BookmarkItem {
 /**
  * 网站收藏项
  */
-export interface SiteItem extends BookmarkItem {
+export interface SiteItem extends GridItem {
   type: 'site'
   url: string
   favicon: string // favicon URL 或 base64
 }
 
 /**
- * 文件夹尺寸类型
- */
-export type FolderSize = '1x2' | '2x2' | '2x1'
-
-/**
  * 文件夹项
  */
-export interface FolderItem extends BookmarkItem {
+export interface FolderItem extends GridItem {
   type: 'folder'
-  size: FolderSize
+  size: GridSize
   children: string[] // 子项 ID 列表
 }
-
 
 /**
  * WebDAV 配置
@@ -90,7 +101,7 @@ export interface WallpaperInfo {
  * 应用持久化状态
  */
 export interface AppState {
-  bookmarks: Record<string, BookmarkItem>
+  gridItems: Record<string, GridItem>
   rootOrder: string[] // 根级别的排序
   settings: Settings
 }
@@ -98,14 +109,17 @@ export interface AppState {
 /**
  * 判断是否为网站项
  */
-export function isSiteItem(item: BookmarkItem): item is SiteItem {
+export function isSiteItem(item: GridItem): item is SiteItem {
   return item.type === 'site'
 }
 
 /**
  * 判断是否为文件夹项
  */
-export function isFolderItem(item: BookmarkItem): item is FolderItem {
+export function isFolderItem(item: GridItem): item is FolderItem {
   return item.type === 'folder'
 }
 
+// ============== 兼容性别名（用于平滑迁移） ==============
+/** @deprecated 使用 GridItem 替代 */
+export type BookmarkItem = GridItem
