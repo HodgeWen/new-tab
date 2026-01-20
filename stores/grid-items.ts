@@ -513,12 +513,6 @@ export const useGridItemStore = defineStore('gridItems', () => {
     rootGridItems,
     allFolders,
 
-    // 兼容性别名
-    /** @deprecated 使用 gridItems 替代 */
-    bookmarks: gridItems,
-    /** @deprecated 使用 rootGridItems 替代 */
-    rootBookmarks: rootGridItems,
-
     // Methods
     getFolderChildren,
     loadGridItems,
@@ -533,22 +527,6 @@ export const useGridItemStore = defineStore('gridItems', () => {
     batchUpdateGridPositions,
     migrateToGridLayout,
     batchDeleteGridItems,
-    batchMoveToFolder,
-
-    // 兼容性别名
-    /** @deprecated 使用 loadGridItems 替代 */
-    loadBookmarks: loadGridItems,
-    /** @deprecated 使用 updateGridItem 替代 */
-    updateBookmark: updateGridItem,
-    /** @deprecated 使用 deleteGridItem 替代 */
-    deleteBookmark: deleteGridItem,
-    /** @deprecated 使用 moveGridItem 替代 */
-    moveBookmark: moveGridItem,
-    /** @deprecated 使用 batchDeleteGridItems 替代 */
-    batchDeleteBookmarks: batchDeleteGridItems
+    batchMoveToFolder
   }
 })
-
-// 兼容性别名
-/** @deprecated 使用 useGridItemStore 替代 */
-export const useBookmarkStore = useGridItemStore

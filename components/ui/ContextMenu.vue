@@ -1,11 +1,16 @@
 <script setup lang="ts">
 import { computed, watch, onUnmounted, ref } from 'vue'
 import { useUIStore } from '@/stores/ui'
-import { useBookmarkStore } from '@/stores/bookmarks'
-import { isFolderItem, type FolderSize, type FolderItem } from '@/types'
+import { useGridItemStore } from '@/stores/grid-items'
+import {
+  isFolderItem,
+  type GridSize,
+  type FolderItem,
+  FOLDER_SIZE_PRESETS
+} from '@/types'
 
 const uiStore = useUIStore()
-const bookmarkStore = useBookmarkStore()
+const gridItemStore = useGridItemStore()
 const menuRef = ref<HTMLDivElement>()
 
 const isVisible = computed(() => uiStore.contextMenu.visible)
@@ -15,7 +20,7 @@ const targetItem = computed(() => uiStore.contextMenu.targetItem)
 // 获取所有文件夹（用于"移动到分组"功能）
 const availableFolders = computed(() => {
   const folders: FolderItem[] = []
-  for (const item of Object.values(bookmarkStore.bookmarks)) {
+  for (const item of Object.values(gridItemStore.gridItems)) {
     // 排除当前项目本身（如果是文件夹）和当前项目所在的文件夹
     if (isFolderItem(item)) {
       // 如果目标项目在这个文件夹内，不显示该文件夹
@@ -51,7 +56,7 @@ const menuStyle = computed(() => {
 
   return {
     left: `${x}px`,
-    top: `${y}px`,
+    top: `${y}px`
   }
 })
 
@@ -60,15 +65,19 @@ const menuItems = computed(() => {
   if (target.value === 'blank') {
     return [
       { icon: 'i-lucide-plus', label: '新增网站', action: 'addSite' },
-      { icon: 'i-lucide-folder-plus', label: '新增文件夹', action: 'addFolder' },
+      {
+        icon: 'i-lucide-folder-plus',
+        label: '新增文件夹',
+        action: 'addFolder'
+      },
       { type: 'divider' },
-      { icon: 'i-lucide-settings', label: '设置', action: 'openSettings' },
+      { icon: 'i-lucide-settings', label: '设置', action: 'openSettings' }
     ]
   }
 
   if (target.value === 'site') {
     const items: any[] = [
-      { icon: 'i-lucide-pencil', label: '编辑', action: 'editSite' },
+      { icon: 'i-lucide-pencil', label: '编辑', action: 'editSite' }
     ]
 
     // 如果有可用的文件夹，添加"移动到分组"选项
@@ -80,7 +89,7 @@ const menuItems = computed(() => {
         submenu: availableFolders.value.map(folder => ({
           label: folder.title,
           action: 'moveToFolder',
-          value: folder.id,
+          value: folder.id
         }))
       })
     }
@@ -90,13 +99,18 @@ const menuItems = computed(() => {
       items.push({
         icon: 'i-lucide-folder-output',
         label: '移出分组',
-        action: 'moveOutOfFolder',
+        action: 'moveOutOfFolder'
       })
     }
 
     items.push(
       { type: 'divider' },
-      { icon: 'i-lucide-trash-2', label: '删除', action: 'deleteSite', danger: true },
+      {
+        icon: 'i-lucide-trash-2',
+        label: '删除',
+        action: 'deleteSite',
+        danger: true
+      }
     )
 
     return items
@@ -105,13 +119,35 @@ const menuItems = computed(() => {
   if (target.value === 'folder') {
     return [
       { icon: 'i-lucide-pencil', label: '编辑', action: 'editFolder' },
-      { type: 'submenu', icon: 'i-lucide-maximize-2', label: '调整尺寸', submenu: [
-        { label: '1×2', action: 'resizeFolder', value: '1x2' as FolderSize },
-        { label: '2×2', action: 'resizeFolder', value: '2x2' as FolderSize },
-        { label: '2×1', action: 'resizeFolder', value: '2x1' as FolderSize },
-      ] },
+      {
+        type: 'submenu',
+        icon: 'i-lucide-maximize-2',
+        label: '调整尺寸',
+        submenu: [
+          {
+            label: '1×2',
+            action: 'resizeFolder',
+            value: FOLDER_SIZE_PRESETS.narrow
+          },
+          {
+            label: '2×2',
+            action: 'resizeFolder',
+            value: FOLDER_SIZE_PRESETS.square
+          },
+          {
+            label: '2×1',
+            action: 'resizeFolder',
+            value: FOLDER_SIZE_PRESETS.wide
+          }
+        ]
+      },
       { type: 'divider' },
-      { icon: 'i-lucide-trash-2', label: '删除', action: 'deleteFolder', danger: true },
+      {
+        icon: 'i-lucide-trash-2',
+        label: '删除',
+        action: 'deleteFolder',
+        danger: true
+      }
     ]
   }
 
@@ -141,7 +177,7 @@ async function handleAction(action: string, value?: unknown) {
       break
     case 'deleteSite':
       if (item && confirm('确定要删除这个网站吗？')) {
-        await bookmarkStore.deleteBookmark(item.id)
+        await gridItemStore.deleteGridItem(item.id)
       }
       break
     case 'editFolder':
@@ -150,29 +186,40 @@ async function handleAction(action: string, value?: unknown) {
       }
       break
     case 'deleteFolder':
-      if (item && confirm('确定要删除这个文件夹吗？文件夹内的网站将移到外部。')) {
-        await bookmarkStore.deleteBookmark(item.id)
+      if (
+        item &&
+        confirm('确定要删除这个文件夹吗？文件夹内的网站将移到外部。')
+      ) {
+        await gridItemStore.deleteGridItem(item.id)
       }
       break
     case 'resizeFolder':
       if (item && isFolderItem(item) && value) {
-        await bookmarkStore.updateFolderSize(item.id, value as FolderSize)
+        await gridItemStore.updateFolderSize(item.id, value as GridSize)
       }
       break
     case 'moveToFolder':
       if (item && value) {
         // 获取目标文件夹
-        const targetFolder = bookmarkStore.bookmarks[value as string]
+        const targetFolder = gridItemStore.gridItems[value as string]
         if (targetFolder && isFolderItem(targetFolder)) {
           // 移动到文件夹末尾
-          await bookmarkStore.moveBookmark(item.id, value as string, targetFolder.children.length)
+          await gridItemStore.moveGridItem(
+            item.id,
+            value as string,
+            targetFolder.children.length
+          )
         }
       }
       break
     case 'moveOutOfFolder':
       if (item) {
         // 移动到根级别末尾
-        await bookmarkStore.moveBookmark(item.id, null, bookmarkStore.rootOrder.length)
+        await gridItemStore.moveGridItem(
+          item.id,
+          null,
+          gridItemStore.rootOrder.length
+        )
       }
       break
   }
@@ -224,7 +271,10 @@ onUnmounted(() => {
       >
         <template v-for="(item, index) in menuItems" :key="index">
           <!-- 分隔线 -->
-          <div v-if="item.type === 'divider'" class="my-1.5 border-t border-white/10" />
+          <div
+            v-if="item.type === 'divider'"
+            class="my-1.5 border-t border-white/10"
+          />
 
           <!-- 子菜单 -->
           <div
@@ -258,8 +308,16 @@ onUnmounted(() => {
             :class="{ 'text-red-400 hover:text-red-300': item.danger }"
             @click="handleAction(item.action!)"
           >
-            <div :class="[item.icon, 'w-4 h-4', item.danger ? '' : 'text-white/70']" />
-            <span class="text-sm" :class="item.danger ? '' : 'text-white/90'">{{ item.label }}</span>
+            <div
+              :class="[
+                item.icon,
+                'w-4 h-4',
+                item.danger ? '' : 'text-white/70'
+              ]"
+            />
+            <span class="text-sm" :class="item.danger ? '' : 'text-white/90'">{{
+              item.label
+            }}</span>
           </button>
         </template>
       </div>

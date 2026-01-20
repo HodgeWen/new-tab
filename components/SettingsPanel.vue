@@ -3,14 +3,14 @@ import { ref, computed, watch } from 'vue'
 import { useUIStore } from '@/stores/ui'
 import { useSettingsStore } from '@/stores/settings'
 import { useWallpaperStore } from '@/stores/wallpaper'
-import { useBookmarkStore } from '@/stores/bookmarks'
+import { useGridItemStore } from '@/stores/grid-items'
 import { webdavService } from '@/services/webdav'
 import { db } from '@/services/database'
 
 const uiStore = useUIStore()
 const settingsStore = useSettingsStore()
 const wallpaperStore = useWallpaperStore()
-const bookmarkStore = useBookmarkStore()
+const gridItemStore = useGridItemStore()
 
 // 当前标签页
 const activeTab = ref<'general' | 'wallpaper' | 'backup'>('general')
@@ -58,6 +58,12 @@ async function updateWallpaperInterval(interval: number) {
 async function switchWallpaper() {
   await wallpaperStore.switchToNext()
 }
+
+// 壁纸来源选项
+const wallpaperSources = [
+  { value: 'bing', label: 'Bing 每日壁纸' },
+  { value: 'picsum', label: 'Picsum 随机图片' }
+]
 
 // 测试 WebDAV 连接
 async function testWebdavConnection() {
@@ -124,7 +130,7 @@ async function restoreBackup(filepath: string) {
   const result = await webdavService.restore(filepath)
   if (result.success) {
     webdavMessage.value = '恢复成功，请刷新页面'
-    await bookmarkStore.loadBookmarks()
+    await gridItemStore.loadGridItems()
     await settingsStore.loadSettings()
   } else {
     webdavMessage.value = result.message || '恢复失败'
@@ -166,7 +172,7 @@ async function importLocalData() {
     const text = await file.text()
     const success = await db.importData(text)
     if (success) {
-      await bookmarkStore.loadBookmarks()
+      await gridItemStore.loadGridItems()
       await settingsStore.loadSettings()
       alert('导入成功！')
     } else {
@@ -324,6 +330,30 @@ function formatDate(date: Date): string {
               </div>
 
               <template v-if="settingsStore.settings.wallpaper.enabled">
+                <div class="space-y-2">
+                  <label class="text-sm text-white/70">壁纸来源</label>
+                  <select
+                    class="w-full px-4 py-2 rounded-xl bg-white/10 text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
+                    :value="settingsStore.settings.wallpaper.source || 'bing'"
+                    @change="
+                      async e => {
+                        const source = (e.target as HTMLSelectElement)
+                          .value as any
+                        await settingsStore.updateWallpaperSettings({ source })
+                        await wallpaperStore.fetchNewWallpaper()
+                      }
+                    "
+                  >
+                    <option
+                      v-for="src in wallpaperSources"
+                      :key="src.value"
+                      :value="src.value"
+                    >
+                      {{ src.label }}
+                    </option>
+                  </select>
+                </div>
+
                 <!-- 轮播间隔 -->
                 <div class="space-y-2">
                   <label class="text-sm text-white/70">轮播间隔</label>
@@ -362,20 +392,21 @@ function formatDate(date: Date): string {
             </div>
 
             <!-- 备份设置 -->
-            <div v-show="activeTab === 'backup'" class="space-y-6">
+            <!-- 备份设置 -->
+            <div v-show="activeTab === 'backup'" class="space-y-4">
               <!-- 本地备份 -->
-              <div class="space-y-3">
+              <div class="space-y-2">
                 <label class="text-sm text-white/70">本地备份</label>
-                <div class="flex gap-3">
+                <div class="flex gap-2">
                   <button
-                    class="flex-1 px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors flex items-center justify-center gap-2"
+                    class="flex-1 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm transition-colors flex items-center justify-center gap-2"
                     @click="exportLocalData"
                   >
                     <div class="i-lucide-download w-4 h-4" />
                     导出数据
                   </button>
                   <button
-                    class="flex-1 px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors flex items-center justify-center gap-2"
+                    class="flex-1 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm transition-colors flex items-center justify-center gap-2"
                     @click="importLocalData"
                   >
                     <div class="i-lucide-upload w-4 h-4" />
@@ -385,30 +416,30 @@ function formatDate(date: Date): string {
               </div>
 
               <!-- WebDAV 配置 -->
-              <div class="space-y-3">
+              <div class="space-y-2">
                 <label class="text-sm text-white/70">WebDAV 云备份</label>
                 <input
                   v-model="webdavUrl"
                   type="url"
                   placeholder="WebDAV 服务器地址"
-                  class="w-full px-4 py-2 rounded-xl bg-white/10 text-white placeholder-white/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
+                  class="w-full px-3 py-2 rounded-lg bg-white/10 text-white text-sm placeholder-white/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
                 />
-                <div class="flex gap-3">
+                <div class="flex gap-2">
                   <input
                     v-model="webdavUsername"
                     type="text"
                     placeholder="用户名"
-                    class="flex-1 px-4 py-2 rounded-xl bg-white/10 text-white placeholder-white/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
+                    class="flex-1 min-w-0 px-3 py-2 rounded-lg bg-white/10 text-white text-sm placeholder-white/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
                   />
                   <input
                     v-model="webdavPassword"
                     type="password"
                     placeholder="密码"
-                    class="flex-1 px-4 py-2 rounded-xl bg-white/10 text-white placeholder-white/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
+                    class="flex-1 min-w-0 px-3 py-2 rounded-lg bg-white/10 text-white text-sm placeholder-white/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
                   />
                 </div>
                 <button
-                  class="w-full px-4 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                  class="w-full px-3 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                   :disabled="
                     webdavTesting ||
                     !webdavUrl ||
@@ -445,21 +476,21 @@ function formatDate(date: Date): string {
 
               <!-- WebDAV 备份操作 -->
               <template v-if="webdavConnected">
-                <div class="space-y-3">
+                <div class="space-y-2">
                   <div class="flex items-center justify-between">
                     <label class="text-sm text-white/70">云端备份</label>
                     <button
-                      class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm transition-colors flex items-center gap-2"
+                      class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm transition-colors flex items-center gap-1.5"
                       :disabled="backupLoading"
                       @click="createBackup"
                     >
-                      <div class="i-lucide-cloud-upload w-4 h-4" />
+                      <div class="i-lucide-cloud-upload w-3.5 h-3.5" />
                       立即备份
                     </button>
                   </div>
 
                   <!-- 备份列表 -->
-                  <div class="max-h-48 overflow-y-auto rounded-xl bg-white/5">
+                  <div class="max-h-36 overflow-y-auto rounded-lg bg-white/5">
                     <div
                       v-if="backupLoading"
                       class="p-4 text-center text-white/50"
@@ -475,7 +506,7 @@ function formatDate(date: Date): string {
                     <div
                       v-for="backup in backupList"
                       :key="backup.path"
-                      class="px-4 py-3 flex items-center justify-between border-b border-white/5 last:border-0 hover:bg-white/5"
+                      class="px-3 py-2 flex items-center justify-between border-b border-white/5 last:border-0 hover:bg-white/5"
                     >
                       <div>
                         <p class="text-sm text-white/80">{{ backup.name }}</p>

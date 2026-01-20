@@ -313,12 +313,21 @@ onBeforeUnmount(() => {
 /* 拖拽时的样式 */
 .grid-stack-item.ui-draggable-dragging {
   z-index: 1000 !important;
+  cursor: grabbing !important;
 }
 
 .grid-stack-item.ui-draggable-dragging > .grid-stack-item-content {
-  opacity: 0.9;
+  opacity: 1 !important;
   transform: scale(1.05);
-  transition: transform 0.15s ease;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  filter: none !important;
+  box-shadow: none !important;
+}
+
+/* 移除拖动元素内部所有元素的阴影 */
+.grid-stack-item.ui-draggable-dragging * {
+  box-shadow: none !important;
+  filter: none !important;
 }
 
 /* 隐藏 GridStack 默认的调整大小手柄 */

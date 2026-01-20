@@ -14,7 +14,8 @@ const defaultSettings: Settings = {
   wallpaper: {
     enabled: true,
     interval: 30, // 30 分钟
-    category: 'nature'
+    category: '',
+    source: 'bing'
   }
 }
 
@@ -68,7 +69,6 @@ export const useSettingsStore = defineStore('settings', () => {
       console.error('[Settings] Failed to save settings:', error)
     }
   }
-
 
   async function toggleSearchBar() {
     settings.value.showSearchBar = !settings.value.showSearchBar

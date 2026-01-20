@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, onUnmounted } from 'vue'
 import type { WallpaperInfo } from '@/types'
-import { unsplashService } from '@/services/unsplash'
+import { wallpaperService } from '@/services/wallpaper-service'
 import { db, revokeObjectUrl, fetchImageAsBlob } from '@/services/database'
 import { useSettingsStore } from './settings'
 
@@ -76,7 +76,8 @@ export const useWallpaperStore = defineStore('wallpaper', () => {
   async function fetchNewWallpaperInBackground() {
     const settingsStore = useSettingsStore()
     try {
-      const wallpaper = await unsplashService.getRandomPhoto(
+      const wallpaper = await wallpaperService.getRandomPhoto(
+        settingsStore.settings.wallpaper.source,
         settingsStore.settings.wallpaper.category
       )
       if (wallpaper) {
@@ -96,7 +97,8 @@ export const useWallpaperStore = defineStore('wallpaper', () => {
     loading.value = true
 
     try {
-      const wallpaper = await unsplashService.getRandomPhoto(
+      const wallpaper = await wallpaperService.getRandomPhoto(
+        settingsStore.settings.wallpaper.source,
         settingsStore.settings.wallpaper.category
       )
 
@@ -142,7 +144,8 @@ export const useWallpaperStore = defineStore('wallpaper', () => {
     const settingsStore = useSettingsStore()
 
     try {
-      const wallpaper = await unsplashService.getRandomPhoto(
+      const wallpaper = await wallpaperService.getRandomPhoto(
+        settingsStore.settings.wallpaper.source,
         settingsStore.settings.wallpaper.category
       )
       if (wallpaper) {

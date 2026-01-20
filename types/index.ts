@@ -73,7 +73,8 @@ export interface WebDAVConfig {
 export interface WallpaperConfig {
   enabled: boolean
   interval: number // 轮播间隔（分钟）
-  category: string // Unsplash 分类
+  category: string // 分类（仅支持分类的提供者使用）
+  source: 'bing' | 'picsum' // 壁纸来源
 }
 
 /**
