@@ -8,7 +8,7 @@
 - 📁 **文件夹分组** - 类 iOS 风格的文件夹管理，支持多种尺寸
 - 🔀 **拖拽排序** - 流畅的拖拽体验，自由排列图标位置
 - 🔍 **搜索栏** - 支持 Bing/Google 快速搜索
-- 🖼️ **动态壁纸** - Unsplash 高质量背景图自动轮播
+- 🖼️ **动态壁纸** - Picsum 高质量背景图自动轮播
 - 💾 **数据同步** - 本地存储 + WebDAV 云备份
 - 🎨 **毛玻璃 UI** - 现代化的玻璃拟态视觉效果
 
@@ -42,16 +42,16 @@ bun run zip
 
 ## 🛠️ 技术栈
 
-| 分类 | 技术 |
-|------|------|
-| 包管理器 | Bun 1.3 |
-| 扩展框架 | WXT |
-| 前端框架 | Vue 3 |
-| 构建工具 | Vite |
-| CSS 引擎 | UnoCSS |
-| 状态管理 | Pinia |
-| 拖拽库 | Vue DnD Kit |
-| 图标库 | Iconify (Lucide) |
+| 分类     | 技术             |
+| -------- | ---------------- |
+| 包管理器 | Bun 1.3          |
+| 扩展框架 | WXT              |
+| 前端框架 | Vue 3            |
+| 构建工具 | Vite             |
+| CSS 引擎 | UnoCSS           |
+| 状态管理 | Pinia            |
+| 网格布局 | GridStack        |
+| 图标库   | Iconify (Lucide) |
 
 ## 📦 项目结构
 
@@ -76,6 +76,7 @@ new-tab/
 ## 🎯 浏览器支持
 
 仅支持 Chromium 内核浏览器：
+
 - Google Chrome
 - Microsoft Edge
 - Arc Browser
@@ -98,20 +99,21 @@ new-tab/
 
 **允许的 type：**
 
-| Type | 说明 |
-|------|------|
-| `feat` | 新功能 |
-| `fix` | 修复 Bug |
-| `docs` | 文档更新 |
-| `style` | 代码格式（不影响功能） |
-| `refactor` | 重构 |
-| `perf` | 性能优化 |
-| `test` | 测试相关 |
-| `build` | 构建系统 |
-| `ci` | CI/CD 配置 |
-| `chore` | 其他杂项 |
+| Type       | 说明                   |
+| ---------- | ---------------------- |
+| `feat`     | 新功能                 |
+| `fix`      | 修复 Bug               |
+| `docs`     | 文档更新               |
+| `style`    | 代码格式（不影响功能） |
+| `refactor` | 重构                   |
+| `perf`     | 性能优化               |
+| `test`     | 测试相关               |
+| `build`    | 构建系统               |
+| `ci`       | CI/CD 配置             |
+| `chore`    | 其他杂项               |
 
 **示例：**
+
 ```bash
 git commit -m "feat(bookmark): 添加批量删除功能"
 git commit -m "fix: 修复书签加载失败的问题"
@@ -133,6 +135,7 @@ git commit -m "docs: 更新 README 安装说明"
 4. GitHub Actions 将自动构建并创建 Release
 
 **预览发布：**
+
 ```bash
 bun run release:dry
 ```
@@ -140,4 +143,3 @@ bun run release:dry
 ## 📝 License
 
 MIT
-
