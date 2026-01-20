@@ -47,8 +47,6 @@ export const useUIStore = defineStore('ui', () => {
   const isEditMode = ref(false)
   const selectedIds = ref<Set<string>>(new Set())
 
-  const isContextMenuVisible = computed(() => contextMenu.value.visible)
-
   function openContextMenu(
     x: number,
     y: number,
@@ -86,10 +84,6 @@ export const useUIStore = defineStore('ui', () => {
 
   function closeFolder() {
     openFolderId.value = null
-  }
-
-  function toggleSettingsPanel() {
-    settingsPanelOpen.value = !settingsPanelOpen.value
   }
 
   function openSettingsPanel() {
@@ -133,18 +127,6 @@ export const useUIStore = defineStore('ui', () => {
     selectedIds.value = newSet
   }
 
-  function selectItem(id: string) {
-    const newSet = new Set(selectedIds.value)
-    newSet.add(id)
-    selectedIds.value = newSet
-  }
-
-  function unselectItem(id: string) {
-    const newSet = new Set(selectedIds.value)
-    newSet.delete(id)
-    selectedIds.value = newSet
-  }
-
   function selectAll(ids: string[]) {
     selectedIds.value = new Set(ids)
   }
@@ -166,7 +148,6 @@ export const useUIStore = defineStore('ui', () => {
     openFolderId,
     settingsPanelOpen,
     editingItem,
-    isContextMenuVisible,
     isEditMode,
     selectedIds,
     selectedCount,
@@ -176,7 +157,6 @@ export const useUIStore = defineStore('ui', () => {
     closeModal,
     openFolder,
     closeFolder,
-    toggleSettingsPanel,
     openSettingsPanel,
     closeSettingsPanel,
     setEditingItem,
@@ -184,8 +164,6 @@ export const useUIStore = defineStore('ui', () => {
     exitEditMode,
     toggleEditMode,
     toggleSelectItem,
-    selectItem,
-    unselectItem,
     selectAll,
     clearSelection,
     isSelected

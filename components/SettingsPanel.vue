@@ -5,6 +5,7 @@ import { useSettingsStore } from '@/stores/settings'
 import { useWallpaperStore } from '@/stores/wallpaper'
 import { useGridItemStore } from '@/stores/grid-items'
 import { webdavService } from '@/services/webdav'
+import { wallpaperService } from '@/services/wallpaper-service'
 import { db } from '@/services/database'
 
 const uiStore = useUIStore()
@@ -60,10 +61,7 @@ async function switchWallpaper() {
 }
 
 // 壁纸来源选项
-const wallpaperSources = [
-  { value: 'bing', label: 'Bing 每日壁纸' },
-  { value: 'picsum', label: 'Picsum 随机图片' }
-]
+const wallpaperSources = wallpaperService.getProviders()
 
 // 测试 WebDAV 连接
 async function testWebdavConnection() {
@@ -303,7 +301,6 @@ function formatDate(date: Date): string {
               <div class="flex items-center justify-between">
                 <div>
                   <label class="text-sm text-white/70">启用背景壁纸</label>
-                  <p class="text-xs text-white/50">使用 Picsum 随机壁纸</p>
                 </div>
                 <button
                   class="w-12 h-6 rounded-full transition-colors relative"
@@ -346,10 +343,10 @@ function formatDate(date: Date): string {
                   >
                     <option
                       v-for="src in wallpaperSources"
-                      :key="src.value"
-                      :value="src.value"
+                      :key="src.id"
+                      :value="src.id"
                     >
-                      {{ src.label }}
+                      {{ src.name }}
                     </option>
                   </select>
                 </div>
@@ -391,7 +388,6 @@ function formatDate(date: Date): string {
               </template>
             </div>
 
-            <!-- 备份设置 -->
             <!-- 备份设置 -->
             <div v-show="activeTab === 'backup'" class="space-y-4">
               <!-- 本地备份 -->

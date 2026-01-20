@@ -137,7 +137,6 @@ class AppDatabase extends Dexie {
         settings,
         updatedAt: Date.now()
       })
-      console.log('[Database] saveSettings success')
     } catch (error) {
       console.error('[Database] saveSettings error:', error)
       throw error
@@ -172,15 +171,6 @@ class AppDatabase extends Dexie {
       blob,
       timestamp: Date.now()
     })
-  }
-
-  async clearWallpaperCache(): Promise<void> {
-    await this.wallpapers.clear()
-  }
-
-  async getWallpaperCacheSize(): Promise<number> {
-    const records = await this.wallpapers.toArray()
-    return records.reduce((total, record) => total + record.blob.size, 0)
   }
 
   // ==================== WebDAV 配置操作 ====================
@@ -252,66 +242,7 @@ class AppDatabase extends Dexie {
     }
   }
 
-  /**
-   * 清除所有 favicon 缓存
-   */
-  async clearFaviconCache(): Promise<void> {
-    await this.favicons.clear()
-  }
-
-  /**
-   * 获取 favicon 缓存数量
-   */
-  async getFaviconCacheCount(): Promise<number> {
-    return await this.favicons.count()
-  }
-
   // ==================== 工具方法 ====================
-
-  /**
-   * 获取数据库使用量（估算）
-   */
-  async getStorageUsage(): Promise<{
-    used: number
-    quota: number
-    percentage: number
-  }> {
-    try {
-      // 使用 Storage API 估算（如果可用）
-      if (navigator.storage?.estimate) {
-        const estimate = await navigator.storage.estimate()
-        const used = estimate.usage || 0
-        const quota = estimate.quota || 0
-        return {
-          used,
-          quota,
-          percentage: quota > 0 ? (used / quota) * 100 : 0
-        }
-      }
-
-      // 回退：手动计算
-      const [bookmarks, settings, wallpapers] = await Promise.all([
-        this.bookmarks.toArray(),
-        this.settings.toArray(),
-        this.wallpapers.toArray()
-      ])
-
-      const bookmarksSize = JSON.stringify(bookmarks).length
-      const settingsSize = JSON.stringify(settings).length
-      const wallpapersSize = wallpapers.reduce((sum, w) => sum + w.blob.size, 0)
-      const used = bookmarksSize + settingsSize + wallpapersSize
-
-      // 假设 100MB 配额
-      const quota = 100 * 1024 * 1024
-      return {
-        used,
-        quota,
-        percentage: (used / quota) * 100
-      }
-    } catch {
-      return { used: 0, quota: 0, percentage: 0 }
-    }
-  }
 
   /**
    * 导出所有数据（不含壁纸 Blob）
@@ -357,19 +288,6 @@ class AppDatabase extends Dexie {
       console.error('[Database] Import failed:', error)
       return false
     }
-  }
-
-  /**
-   * 清除所有数据
-   */
-  async clearAll(): Promise<void> {
-    await Promise.all([
-      this.bookmarks.clear(),
-      this.settings.clear(),
-      this.wallpapers.clear(),
-      this.webdav.clear(),
-      this.favicons.clear()
-    ])
   }
 }
 

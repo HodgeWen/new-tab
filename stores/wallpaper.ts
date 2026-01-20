@@ -75,6 +75,7 @@ export const useWallpaperStore = defineStore('wallpaper', () => {
    */
   async function fetchNewWallpaperInBackground() {
     const settingsStore = useSettingsStore()
+
     try {
       const wallpaper = await wallpaperService.getRandomPhoto(
         settingsStore.settings.wallpaper.source,

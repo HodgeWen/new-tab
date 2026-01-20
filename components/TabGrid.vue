@@ -283,21 +283,13 @@ onBeforeUnmount(() => {
 
 /* 强制隐藏所有子元素滚动条 */
 .grid-stack,
-.grid-stack *,
-.grid-stack-item,
-.grid-stack-item *,
-.grid-stack-item-content,
-.grid-stack-item-content * {
+.grid-stack * {
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
 }
 
 .grid-stack::-webkit-scrollbar,
-.grid-stack *::-webkit-scrollbar,
-.grid-stack-item::-webkit-scrollbar,
-.grid-stack-item *::-webkit-scrollbar,
-.grid-stack-item-content::-webkit-scrollbar,
-.grid-stack-item-content *::-webkit-scrollbar {
+.grid-stack *::-webkit-scrollbar {
   display: none !important;
   width: 0 !important;
   height: 0 !important;

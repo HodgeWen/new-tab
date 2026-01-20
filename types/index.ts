@@ -99,15 +99,6 @@ export interface WallpaperInfo {
 }
 
 /**
- * 应用持久化状态
- */
-export interface AppState {
-  gridItems: Record<string, GridItem>
-  rootOrder: string[] // 根级别的排序
-  settings: Settings
-}
-
-/**
  * 判断是否为网站项
  */
 export function isSiteItem(item: GridItem): item is SiteItem {
@@ -120,7 +111,3 @@ export function isSiteItem(item: GridItem): item is SiteItem {
 export function isFolderItem(item: GridItem): item is FolderItem {
   return item.type === 'folder'
 }
-
-// ============== 兼容性别名（用于平滑迁移） ==============
-/** @deprecated 使用 GridItem 替代 */
-export type BookmarkItem = GridItem

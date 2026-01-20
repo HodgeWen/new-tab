@@ -44,6 +44,13 @@ class WallpaperService {
   }
 
   /**
+   * 获取所有壁纸提供者
+   */
+  getProviders() {
+    return Array.from(this.providers.values())
+  }
+
+  /**
    * 获取指定提供者支持的分类
    */
   getCategories(providerId: string): WallpaperCategory[] {

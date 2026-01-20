@@ -49,7 +49,6 @@ export const useSettingsStore = defineStore('settings', () => {
         settings.value = deepMergeSettings(defaultSettings, saved)
       } else {
         // 首次运行，保存默认设置到数据库
-        console.log('[Settings] No saved settings, initializing with defaults')
         await saveSettings()
       }
     } catch (error) {
