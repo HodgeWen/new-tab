@@ -4,6 +4,8 @@ import { useGridItemStore } from '@/stores/grid-items'
 import { useSettingsStore } from '@/stores/settings'
 import { useWallpaperStore } from '@/stores/wallpaper'
 import { useUIStore } from '@/stores/ui'
+import { RefreshCw, Pencil, Settings } from 'lucide-vue-next'
+import { Button } from '@/shadcn/ui/button'
 
 import SearchBar from '@/components/SearchBar.vue'
 import TabGrid from '@/components/TabGrid.vue'
@@ -95,42 +97,40 @@ function handleContextMenu(event: MouseEvent) {
     <!-- 右上角按钮组 -->
     <div class="fixed top-4 right-4 z-20 flex items-center gap-2">
       <!-- 换壁纸按钮（仅在壁纸启用时显示） -->
-      <button
+      <Button
         v-if="settingsStore.settings.wallpaper.enabled"
-        class="p-3 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-all duration-200 group"
+        variant="glass"
+        size="icon"
         title="换一张壁纸"
         :disabled="wallpaperStore.loading"
         @click="wallpaperStore.switchToNext()"
       >
-        <div
-          class="i-lucide-refresh-cw w-5 h-5 text-white/70 group-hover:text-white transition-colors duration-300"
+        <RefreshCw
+          class="size-5"
           :class="{ 'animate-spin': wallpaperStore.loading }"
         />
-      </button>
+      </Button>
 
       <!-- 编辑按钮 -->
-      <button
-        class="p-3 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-all duration-200 group"
+      <Button
+        variant="glass"
+        size="icon"
         :class="{ 'bg-white/25': uiStore.isEditMode }"
         title="编辑书签"
         @click="uiStore.toggleEditMode()"
       >
-        <div
-          class="i-lucide-pencil w-5 h-5 text-white/70 group-hover:text-white transition-colors duration-300"
-          :class="{ 'text-white': uiStore.isEditMode }"
-        />
-      </button>
+        <Pencil class="size-5" />
+      </Button>
 
       <!-- 设置按钮 -->
-      <button
-        class="p-3 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-all duration-200 group"
+      <Button
+        variant="glass"
+        size="icon"
         title="设置"
         @click="uiStore.openSettingsPanel()"
       >
-        <div
-          class="i-lucide-settings w-5 h-5 text-white/70 group-hover:text-white transition-colors duration-300"
-        />
-      </button>
+        <Settings class="size-5" />
+      </Button>
     </div>
 
     <!-- 主内容区域 -->

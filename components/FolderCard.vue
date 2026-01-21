@@ -4,6 +4,7 @@ import type { FolderItem, GridSize } from '@/types'
 import { useGridItemStore } from '@/stores/grid-items'
 import { faviconService } from '@/services/favicon'
 import { isSiteItem } from '@/types'
+import { Folder, FolderOpen } from 'lucide-vue-next'
 
 interface Props {
   item: FolderItem
@@ -29,7 +30,7 @@ function getLayoutConfig(size: GridSize) {
       maxItems: 9, // 3x3 网格
       cols: 3,
       rows: 3,
-      iconSize: 'w-6 h-6',
+      iconSize: 'size-6',
       gap: '0.5rem'
     }
   }
@@ -40,7 +41,7 @@ function getLayoutConfig(size: GridSize) {
       maxItems: 3, // 1x3 横向
       cols: 3,
       rows: 1,
-      iconSize: 'w-7 h-7',
+      iconSize: 'size-7',
       gap: '0.75rem'
     }
   }
@@ -50,7 +51,7 @@ function getLayoutConfig(size: GridSize) {
     maxItems: 3, // 3x1 纵向
     cols: 1,
     rows: 3,
-    iconSize: 'w-7 h-7',
+    iconSize: 'size-7',
     gap: '0.5rem'
   }
 }
@@ -143,8 +144,8 @@ function handleContextMenu(event: MouseEvent) {
             class="flex items-center justify-center"
           >
             <template v-if="preview.isFolder">
-              <div
-                class="i-lucide-folder text-white/60"
+              <Folder
+                class="text-white/60"
                 :class="layoutConfig.iconSize"
               />
             </template>
@@ -165,7 +166,7 @@ function handleContextMenu(event: MouseEvent) {
 
         <!-- 空文件夹提示 -->
         <div v-else class="flex items-center justify-center w-full h-full">
-          <div class="i-lucide-folder-open w-8 h-8 text-white/30" />
+          <FolderOpen class="size-8 text-white/30" />
         </div>
       </div>
     </div>

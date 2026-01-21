@@ -8,13 +8,45 @@ import { webdavService } from '@/services/webdav'
 import { wallpaperService } from '@/services/wallpaper-service'
 import { db } from '@/services/database'
 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle
+} from '@/shadcn/ui/dialog'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shadcn/ui/tabs'
+import { Switch } from '@/shadcn/ui/switch'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/shadcn/ui/select'
+import { Button } from '@/shadcn/ui/button'
+import { Input } from '@/shadcn/ui/input'
+import {
+  Settings,
+  Image,
+  Cloud,
+  RefreshCw,
+  Download,
+  Upload,
+  Plug,
+  Check,
+  Loader2,
+  CloudUpload,
+  Trash2
+} from 'lucide-vue-next'
+
 const uiStore = useUIStore()
 const settingsStore = useSettingsStore()
 const wallpaperStore = useWallpaperStore()
 const gridItemStore = useGridItemStore()
 
 // 当前标签页
-const activeTab = ref<'general' | 'wallpaper' | 'backup'>('general')
+const activeTab = ref<string>('general')
 
 // WebDAV 配置
 const webdavUrl = ref('')
@@ -31,16 +63,16 @@ const backupList = ref<
 const backupLoading = ref(false)
 
 // 是否显示面板
-const isVisible = computed(() => uiStore.settingsPanelOpen)
-
-// 关闭面板
-function closePanel() {
-  uiStore.closeSettingsPanel()
-}
+const isVisible = computed({
+  get: () => uiStore.settingsPanelOpen,
+  set: (value: boolean) => {
+    if (!value) uiStore.closeSettingsPanel()
+  }
+})
 
 // 切换搜索栏
-async function toggleSearchBar() {
-  await settingsStore.toggleSearchBar()
+async function toggleSearchBar(checked: boolean) {
+  await settingsStore.updateSettings({ showSearchBar: checked })
 }
 
 // 更新壁纸设置
@@ -51,8 +83,15 @@ async function updateWallpaperEnabled(enabled: boolean) {
   }
 }
 
-async function updateWallpaperInterval(interval: number) {
-  await settingsStore.updateWallpaperSettings({ interval })
+async function updateWallpaperSource(source: unknown) {
+  if (!source) return
+  await settingsStore.updateWallpaperSettings({ source: String(source) as any })
+  await wallpaperStore.fetchNewWallpaper()
+}
+
+async function updateWallpaperInterval(interval: unknown) {
+  if (!interval) return
+  await settingsStore.updateWallpaperSettings({ interval: Number(interval) })
 }
 
 // 切换壁纸
@@ -216,334 +255,323 @@ function formatDate(date: Date): string {
 </script>
 
 <template>
-  <Teleport to="body">
-    <Transition
-      enter-active-class="transition-all duration-300 ease-out"
-      leave-active-class="transition-all duration-200 ease-in"
-      enter-from-class="opacity-0"
-      leave-to-class="opacity-0"
+  <Dialog v-model:open="isVisible">
+    <DialogContent
+      class="glass-dialog max-w-2xl h-[520px] max-h-[80vh] p-0 text-white border-white/25 bg-black/50 backdrop-blur-2xl overflow-hidden flex flex-col shadow-2xl"
     >
-      <div
-        v-if="isVisible"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-        @click.self="closePanel"
+      <DialogHeader
+        class="px-6 py-4 border-b border-white/15 shrink-0 bg-white/5"
       >
-        <div
-          class="w-full max-w-2xl max-h-[80vh] mx-4 rounded-2xl glass overflow-hidden flex flex-col"
+        <DialogTitle class="text-xl font-semibold text-white">设置</DialogTitle>
+        <DialogDescription class="sr-only">
+          配置新标签页的各项设置
+        </DialogDescription>
+      </DialogHeader>
+
+      <Tabs
+        v-model="activeTab"
+        class="flex flex-col flex-1 min-h-0 overflow-hidden"
+      >
+        <TabsList
+          class="flex bg-black/20 rounded-none h-auto mx-4 py-2 rounded-lg shrink-0"
         >
-          <!-- 标题栏 -->
-          <div
-            class="flex items-center justify-between px-6 py-4 border-b border-white/10"
+          <TabsTrigger
+            value="general"
+            class="flex-1 px-4 py-2.5 flex items-center justify-center gap-2 text-sm rounded-md data-[state=active]:bg-white/15 data-[state=active]:text-white data-[state=active]:shadow-sm text-white/60 hover:text-white/80 transition-all"
           >
-            <h2 class="text-xl font-semibold text-white">设置</h2>
-            <button
-              class="p-2 rounded-lg hover:bg-white/10 transition-colors"
-              @click="closePanel"
-            >
-              <div class="i-lucide-x w-5 h-5 text-white/70" />
-            </button>
-          </div>
+            <Settings class="size-4" />
+            通用
+          </TabsTrigger>
+          <TabsTrigger
+            value="wallpaper"
+            class="flex-1 px-4 py-2.5 flex items-center justify-center gap-2 text-sm rounded-md data-[state=active]:bg-white/15 data-[state=active]:text-white data-[state=active]:shadow-sm text-white/60 hover:text-white/80 transition-all"
+          >
+            <Image class="size-4" />
+            壁纸
+          </TabsTrigger>
+          <TabsTrigger
+            value="backup"
+            class="flex-1 px-4 py-2.5 flex items-center justify-center gap-2 text-sm rounded-md data-[state=active]:bg-white/15 data-[state=active]:text-white data-[state=active]:shadow-sm text-white/60 hover:text-white/80 transition-all"
+          >
+            <Cloud class="size-4" />
+            备份
+          </TabsTrigger>
+        </TabsList>
 
-          <!-- 标签页导航 -->
-          <div class="flex border-b border-white/10">
-            <button
-              v-for="tab in [
-                { key: 'general', label: '通用', icon: 'i-lucide-settings' },
-                { key: 'wallpaper', label: '壁纸', icon: 'i-lucide-image' },
-                { key: 'backup', label: '备份', icon: 'i-lucide-cloud' }
-              ]"
-              :key="tab.key"
-              class="flex-1 px-4 py-3 flex items-center justify-center gap-2 text-sm transition-colors"
-              :class="
-                activeTab === tab.key
-                  ? 'text-white bg-white/10'
-                  : 'text-white/60 hover:text-white/80'
-              "
-              @click="activeTab = tab.key as typeof activeTab"
-            >
-              <div :class="tab.icon" class="w-4 h-4" />
-              {{ tab.label }}
-            </button>
-          </div>
-
-          <!-- 内容区域 -->
-          <div class="flex-1 overflow-y-auto p-6">
-            <!-- 通用设置 -->
-            <div v-show="activeTab === 'general'" class="space-y-6">
-              <!-- 搜索栏显示 -->
-              <div class="flex items-center justify-between">
-                <div>
-                  <label class="text-sm text-white/70">显示搜索栏</label>
-                  <p class="text-xs text-white/50">在页面顶部显示搜索输入框</p>
-                </div>
-                <button
-                  class="w-12 h-6 rounded-full transition-colors relative"
-                  :class="
-                    settingsStore.settings.showSearchBar
-                      ? 'bg-blue-500'
-                      : 'bg-white/20'
-                  "
-                  @click="toggleSearchBar"
-                >
-                  <div
-                    class="absolute top-1 w-4 h-4 rounded-full bg-white transition-transform"
-                    :class="
-                      settingsStore.settings.showSearchBar ? 'left-7' : 'left-1'
-                    "
-                  />
-                </button>
+        <div class="flex-1 min-h-0 overflow-y-auto p-6 bg-white/[0.03]">
+          <!-- 通用设置 -->
+          <TabsContent value="general" class="mt-0 space-y-6">
+            <!-- 搜索栏显示 -->
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="text-sm text-white/70">显示搜索栏</label>
+                <p class="text-xs text-white/50">在页面顶部显示搜索输入框</p>
               </div>
+              <Switch
+                :model-value="settingsStore.settings.showSearchBar"
+                class="data-[state=checked]:bg-blue-500 data-[state=unchecked]:bg-white/20"
+                @update:model-value="toggleSearchBar"
+              />
+            </div>
+          </TabsContent>
+
+          <!-- 壁纸设置 -->
+          <TabsContent value="wallpaper" class="mt-0 space-y-6">
+            <!-- 启用壁纸 -->
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="text-sm text-white/70">启用背景壁纸</label>
+              </div>
+              <Switch
+                :model-value="settingsStore.settings.wallpaper.enabled"
+                class="data-[state=checked]:bg-blue-500 data-[state=unchecked]:bg-white/20"
+                @update:model-value="updateWallpaperEnabled"
+              />
             </div>
 
-            <!-- 壁纸设置 -->
-            <div v-show="activeTab === 'wallpaper'" class="space-y-6">
-              <!-- 启用壁纸 -->
-              <div class="flex items-center justify-between">
-                <div>
-                  <label class="text-sm text-white/70">启用背景壁纸</label>
-                </div>
-                <button
-                  class="w-12 h-6 rounded-full transition-colors relative"
-                  :class="
-                    settingsStore.settings.wallpaper.enabled
-                      ? 'bg-blue-500'
-                      : 'bg-white/20'
+            <template v-if="settingsStore.settings.wallpaper.enabled">
+              <div class="space-y-2">
+                <label class="text-sm text-white/70">壁纸来源</label>
+                <Select
+                  :model-value="
+                    settingsStore.settings.wallpaper.source || 'bing'
                   "
-                  @click="
-                    updateWallpaperEnabled(
-                      !settingsStore.settings.wallpaper.enabled
-                    )
-                  "
+                  @update:model-value="updateWallpaperSource"
                 >
-                  <div
-                    class="absolute top-1 w-4 h-4 rounded-full bg-white transition-transform"
-                    :class="
-                      settingsStore.settings.wallpaper.enabled
-                        ? 'left-7'
-                        : 'left-1'
-                    "
-                  />
-                </button>
-              </div>
-
-              <template v-if="settingsStore.settings.wallpaper.enabled">
-                <div class="space-y-2">
-                  <label class="text-sm text-white/70">壁纸来源</label>
-                  <select
-                    class="w-full px-4 py-2 rounded-xl bg-white/10 text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
-                    :value="settingsStore.settings.wallpaper.source || 'bing'"
-                    @change="
-                      async e => {
-                        const source = (e.target as HTMLSelectElement)
-                          .value as any
-                        await settingsStore.updateWallpaperSettings({ source })
-                        await wallpaperStore.fetchNewWallpaper()
-                      }
-                    "
+                  <SelectTrigger
+                    class="w-full bg-white/10 border-white/10 text-white focus:ring-white/20"
                   >
-                    <option
+                    <SelectValue placeholder="选择壁纸来源" />
+                  </SelectTrigger>
+                  <SelectContent class="glass border-white/15 text-white">
+                    <SelectItem
                       v-for="src in wallpaperSources"
                       :key="src.id"
                       :value="src.id"
+                      class="focus:bg-white/20 focus:text-white"
                     >
                       {{ src.name }}
-                    </option>
-                  </select>
-                </div>
-
-                <!-- 轮播间隔 -->
-                <div class="space-y-2">
-                  <label class="text-sm text-white/70">轮播间隔</label>
-                  <select
-                    class="w-full px-4 py-2 rounded-xl bg-white/10 text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
-                    :value="settingsStore.settings.wallpaper.interval"
-                    @change="
-                      updateWallpaperInterval(
-                        Number(($event.target as HTMLSelectElement).value)
-                      )
-                    "
-                  >
-                    <option value="15">15 分钟</option>
-                    <option value="30">30 分钟</option>
-                    <option value="60">1 小时</option>
-                    <option value="180">3 小时</option>
-                    <option value="360">6 小时</option>
-                    <option value="720">12 小时</option>
-                    <option value="1440">24 小时</option>
-                  </select>
-                </div>
-
-                <!-- 手动切换 -->
-                <button
-                  class="w-full px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors flex items-center justify-center gap-2"
-                  :disabled="wallpaperStore.loading"
-                  @click="switchWallpaper"
-                >
-                  <div
-                    class="i-lucide-refresh-cw w-4 h-4"
-                    :class="{ 'animate-spin': wallpaperStore.loading }"
-                  />
-                  换一张壁纸
-                </button>
-              </template>
-            </div>
-
-            <!-- 备份设置 -->
-            <div v-show="activeTab === 'backup'" class="space-y-4">
-              <!-- 本地备份 -->
-              <div class="space-y-2">
-                <label class="text-sm text-white/70">本地备份</label>
-                <div class="flex gap-2">
-                  <button
-                    class="flex-1 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm transition-colors flex items-center justify-center gap-2"
-                    @click="exportLocalData"
-                  >
-                    <div class="i-lucide-download w-4 h-4" />
-                    导出数据
-                  </button>
-                  <button
-                    class="flex-1 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm transition-colors flex items-center justify-center gap-2"
-                    @click="importLocalData"
-                  >
-                    <div class="i-lucide-upload w-4 h-4" />
-                    导入数据
-                  </button>
-                </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
-              <!-- WebDAV 配置 -->
+              <!-- 轮播间隔 -->
               <div class="space-y-2">
-                <label class="text-sm text-white/70">WebDAV 云备份</label>
-                <input
-                  v-model="webdavUrl"
-                  type="url"
-                  placeholder="WebDAV 服务器地址"
-                  class="w-full px-3 py-2 rounded-lg bg-white/10 text-white text-sm placeholder-white/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
-                />
-                <div class="flex gap-2">
-                  <input
-                    v-model="webdavUsername"
-                    type="text"
-                    placeholder="用户名"
-                    class="flex-1 min-w-0 px-3 py-2 rounded-lg bg-white/10 text-white text-sm placeholder-white/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
-                  />
-                  <input
-                    v-model="webdavPassword"
-                    type="password"
-                    placeholder="密码"
-                    class="flex-1 min-w-0 px-3 py-2 rounded-lg bg-white/10 text-white text-sm placeholder-white/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
-                  />
-                </div>
-                <button
-                  class="w-full px-3 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                  :disabled="
-                    webdavTesting ||
-                    !webdavUrl ||
-                    !webdavUsername ||
-                    !webdavPassword
+                <label class="text-sm text-white/70">轮播间隔</label>
+                <Select
+                  :model-value="
+                    String(settingsStore.settings.wallpaper.interval)
                   "
-                  @click="testWebdavConnection"
+                  @update:model-value="updateWallpaperInterval"
                 >
-                  <div
-                    v-if="webdavTesting"
-                    class="i-lucide-loader-2 w-4 h-4 animate-spin"
-                  />
-                  <div
-                    v-else-if="webdavConnected"
-                    class="i-lucide-check w-4 h-4"
-                  />
-                  <div v-else class="i-lucide-plug w-4 h-4" />
-                  {{
-                    webdavTesting
-                      ? '连接中...'
-                      : webdavConnected
-                        ? '已连接'
-                        : '测试连接'
-                  }}
-                </button>
-                <p
-                  v-if="webdavMessage"
-                  class="text-xs"
-                  :class="webdavConnected ? 'text-green-400' : 'text-red-400'"
-                >
-                  {{ webdavMessage }}
-                </p>
+                  <SelectTrigger
+                    class="w-full bg-white/10 border-white/10 text-white focus:ring-white/20"
+                  >
+                    <SelectValue placeholder="选择轮播间隔" />
+                  </SelectTrigger>
+                  <SelectContent class="glass border-white/15 text-white">
+                    <SelectItem
+                      value="15"
+                      class="focus:bg-white/20 focus:text-white"
+                      >15 分钟</SelectItem
+                    >
+                    <SelectItem
+                      value="30"
+                      class="focus:bg-white/20 focus:text-white"
+                      >30 分钟</SelectItem
+                    >
+                    <SelectItem
+                      value="60"
+                      class="focus:bg-white/20 focus:text-white"
+                      >1 小时</SelectItem
+                    >
+                    <SelectItem
+                      value="180"
+                      class="focus:bg-white/20 focus:text-white"
+                      >3 小时</SelectItem
+                    >
+                    <SelectItem
+                      value="360"
+                      class="focus:bg-white/20 focus:text-white"
+                      >6 小时</SelectItem
+                    >
+                    <SelectItem
+                      value="720"
+                      class="focus:bg-white/20 focus:text-white"
+                      >12 小时</SelectItem
+                    >
+                    <SelectItem
+                      value="1440"
+                      class="focus:bg-white/20 focus:text-white"
+                      >24 小时</SelectItem
+                    >
+                  </SelectContent>
+                </Select>
               </div>
 
-              <!-- WebDAV 备份操作 -->
-              <template v-if="webdavConnected">
-                <div class="space-y-2">
-                  <div class="flex items-center justify-between">
-                    <label class="text-sm text-white/70">云端备份</label>
-                    <button
-                      class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm transition-colors flex items-center gap-1.5"
-                      :disabled="backupLoading"
-                      @click="createBackup"
-                    >
-                      <div class="i-lucide-cloud-upload w-3.5 h-3.5" />
-                      立即备份
-                    </button>
-                  </div>
+              <!-- 手动切换 -->
+              <Button
+                variant="glass"
+                class="w-full"
+                :disabled="wallpaperStore.loading"
+                @click="switchWallpaper"
+              >
+                <RefreshCw
+                  class="size-4"
+                  :class="{ 'animate-spin': wallpaperStore.loading }"
+                />
+                换一张壁纸
+              </Button>
+            </template>
+          </TabsContent>
 
-                  <!-- 备份列表 -->
-                  <div class="max-h-36 overflow-y-auto rounded-lg bg-white/5">
-                    <div
-                      v-if="backupLoading"
-                      class="p-4 text-center text-white/50"
-                    >
-                      加载中...
+          <!-- 备份设置 -->
+          <TabsContent value="backup" class="mt-0 space-y-4">
+            <!-- 本地备份 -->
+            <div class="space-y-2">
+              <label class="text-sm text-white/70">本地备份</label>
+              <div class="flex gap-2">
+                <Button variant="glass" class="flex-1" @click="exportLocalData">
+                  <Download class="size-4" />
+                  导出数据
+                </Button>
+                <Button variant="glass" class="flex-1" @click="importLocalData">
+                  <Upload class="size-4" />
+                  导入数据
+                </Button>
+              </div>
+            </div>
+
+            <!-- WebDAV 配置 -->
+            <div class="space-y-2">
+              <label class="text-sm text-white/70">WebDAV 云备份</label>
+              <Input
+                v-model="webdavUrl"
+                type="url"
+                placeholder="WebDAV 服务器地址"
+                class="bg-white/10 border-white/10 text-white placeholder:text-white/40 focus-visible:ring-white/20"
+              />
+              <div class="flex gap-2">
+                <Input
+                  v-model="webdavUsername"
+                  type="text"
+                  placeholder="用户名"
+                  class="flex-1 bg-white/10 border-white/10 text-white placeholder:text-white/40 focus-visible:ring-white/20"
+                />
+                <Input
+                  v-model="webdavPassword"
+                  type="password"
+                  placeholder="密码"
+                  class="flex-1 bg-white/10 border-white/10 text-white placeholder:text-white/40 focus-visible:ring-white/20"
+                />
+              </div>
+              <Button
+                class="w-full bg-blue-500 hover:bg-blue-600 text-white"
+                :disabled="
+                  webdavTesting ||
+                  !webdavUrl ||
+                  !webdavUsername ||
+                  !webdavPassword
+                "
+                @click="testWebdavConnection"
+              >
+                <Loader2 v-if="webdavTesting" class="size-4 animate-spin" />
+                <Check v-else-if="webdavConnected" class="size-4" />
+                <Plug v-else class="size-4" />
+                {{
+                  webdavTesting
+                    ? '连接中...'
+                    : webdavConnected
+                    ? '已连接'
+                    : '测试连接'
+                }}
+              </Button>
+              <p
+                v-if="webdavMessage"
+                class="text-xs"
+                :class="webdavConnected ? 'text-green-400' : 'text-red-400'"
+              >
+                {{ webdavMessage }}
+              </p>
+            </div>
+
+            <!-- WebDAV 备份操作 -->
+            <template v-if="webdavConnected">
+              <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                  <label class="text-sm text-white/70">云端备份</label>
+                  <Button
+                    variant="glass"
+                    size="sm"
+                    :disabled="backupLoading"
+                    @click="createBackup"
+                  >
+                    <CloudUpload class="size-3.5" />
+                    立即备份
+                  </Button>
+                </div>
+
+                <!-- 备份列表 -->
+                <div class="max-h-36 overflow-y-auto rounded-lg bg-white/5">
+                  <div
+                    v-if="backupLoading"
+                    class="p-4 text-center text-white/50"
+                  >
+                    加载中...
+                  </div>
+                  <div
+                    v-else-if="backupList.length === 0"
+                    class="p-4 text-center text-white/50"
+                  >
+                    暂无备份
+                  </div>
+                  <div
+                    v-for="backup in backupList"
+                    :key="backup.path"
+                    class="px-3 py-2 flex items-center justify-between border-b border-white/5 last:border-0 hover:bg-white/5"
+                  >
+                    <div>
+                      <p class="text-sm text-white/80">{{ backup.name }}</p>
+                      <p class="text-xs text-white/50">
+                        {{ formatDate(backup.lastModified) }} ·
+                        {{ formatSize(backup.size) }}
+                      </p>
                     </div>
-                    <div
-                      v-else-if="backupList.length === 0"
-                      class="p-4 text-center text-white/50"
-                    >
-                      暂无备份
-                    </div>
-                    <div
-                      v-for="backup in backupList"
-                      :key="backup.path"
-                      class="px-3 py-2 flex items-center justify-between border-b border-white/5 last:border-0 hover:bg-white/5"
-                    >
-                      <div>
-                        <p class="text-sm text-white/80">{{ backup.name }}</p>
-                        <p class="text-xs text-white/50">
-                          {{ formatDate(backup.lastModified) }} ·
-                          {{ formatSize(backup.size) }}
-                        </p>
-                      </div>
-                      <div class="flex gap-2">
-                        <button
-                          class="p-2 rounded-lg hover:bg-white/10 transition-colors"
-                          title="恢复"
-                          @click="restoreBackup(backup.path)"
-                        >
-                          <div
-                            class="i-lucide-download w-4 h-4 text-white/70"
-                          />
-                        </button>
-                        <button
-                          class="p-2 rounded-lg hover:bg-white/10 transition-colors"
-                          title="删除"
-                          @click="deleteBackup(backup.path)"
-                        >
-                          <div class="i-lucide-trash-2 w-4 h-4 text-red-400" />
-                        </button>
-                      </div>
+                    <div class="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        class="hover:bg-white/10 text-white/70"
+                        title="恢复"
+                        @click="restoreBackup(backup.path)"
+                      >
+                        <Download class="size-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        class="hover:bg-white/10 text-red-400"
+                        title="删除"
+                        @click="deleteBackup(backup.path)"
+                      >
+                        <Trash2 class="size-4" />
+                      </Button>
                     </div>
                   </div>
                 </div>
-              </template>
-            </div>
-          </div>
+              </div>
+            </template>
+          </TabsContent>
         </div>
-      </div>
-    </Transition>
-  </Teleport>
+      </Tabs>
+    </DialogContent>
+  </Dialog>
 </template>
 
 <style scoped>
-select option {
-  background: #1a1a2e;
-  color: white;
+/* Select 下拉选项背景 */
+:deep([data-radix-popper-content-wrapper]) {
+  --tw-bg-opacity: 1;
 }
 </style>

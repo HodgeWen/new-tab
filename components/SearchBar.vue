@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, useTemplateRef } from 'vue'
+import { Search, X } from 'lucide-vue-next'
+import { Button } from '@/shadcn/ui/button'
+
 const searchInput = ref('')
-const inputRef = ref<HTMLInputElement>()
+const inputRef = useTemplateRef<HTMLInputElement>('inputRef')
 
 function handleSearch() {
   const query = searchInput.value.trim()
@@ -15,7 +18,9 @@ function handleSearch() {
       })
     } else {
       // 回退方案（如果是普通网页预览环境）
-      window.location.href = `https://www.google.com/search?q=${encodeURIComponent(query)}`
+      window.location.href = `https://www.google.com/search?q=${encodeURIComponent(
+        query
+      )}`
     }
   }
 }
@@ -57,8 +62,8 @@ onUnmounted(() => {
       class="glass rounded-2xl px-4 py-3 flex items-center gap-3 transition-all duration-300 focus-within:ring-2 focus-within:ring-white/30"
     >
       <!-- 搜索图标 -->
-      <div class="flex-shrink-0 p-2">
-        <div class="i-lucide-search w-5 h-5 text-white/70" />
+      <div class="shrink-0 p-2">
+        <Search class="size-5 text-white/70" />
       </div>
 
       <!-- 搜索输入框 -->
@@ -72,23 +77,16 @@ onUnmounted(() => {
       />
 
       <!-- 清除按钮 -->
-      <button
+      <Button
         v-if="searchInput"
-        class="flex-shrink-0 p-2 rounded-lg hover:bg-white/10 transition-colors"
+        variant="ghost"
+        size="icon-sm"
+        class="shrink-0 hover:bg-white/10 text-white/70"
         title="清除"
         @click="clearInput"
       >
-        <div class="i-lucide-x w-4 h-4 text-white/70" />
-      </button>
-
-      <!-- 搜索按钮 -->
-      <button
-        class="flex-shrink-0 p-2 rounded-lg hover:bg-white/10 transition-colors"
-        title="搜索"
-        @click="handleSearch"
-      >
-        <div class="i-lucide-search w-5 h-5 text-white/70" />
-      </button>
+        <X class="size-4" />
+      </Button>
     </div>
 
     <!-- 快捷键提示 -->

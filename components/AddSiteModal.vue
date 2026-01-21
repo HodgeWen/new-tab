@@ -5,12 +5,26 @@ import { useGridItemStore } from '@/stores/grid-items'
 import { faviconService } from '@/services/favicon'
 import { isSiteItem } from '@/types'
 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle
+} from '@/shadcn/ui/dialog'
+import { Button } from '@/shadcn/ui/button'
+import { Input } from '@/shadcn/ui/input'
+import { Globe } from 'lucide-vue-next'
+
 const uiStore = useUIStore()
 const gridItemStore = useGridItemStore()
 
-const isVisible = computed(
-  () => uiStore.modalType === 'addSite' || uiStore.modalType === 'editSite'
-)
+const isVisible = computed({
+  get: () => uiStore.modalType === 'addSite' || uiStore.modalType === 'editSite',
+  set: (value: boolean) => {
+    if (!value) closeModal()
+  }
+})
 const isEdit = computed(() => uiStore.modalType === 'editSite')
 
 const title = ref('')
@@ -117,100 +131,84 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <Teleport to="body">
-    <Transition
-      enter-active-class="transition-all duration-300 ease-out"
-      leave-active-class="transition-all duration-200 ease-in"
-      enter-from-class="opacity-0"
-      leave-to-class="opacity-0"
+  <Dialog v-model:open="isVisible">
+    <DialogContent
+      class="glass-dialog max-w-md p-0 text-white border-white/20 bg-black/40 backdrop-blur-xl"
     >
-      <div
-        v-if="isVisible"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-        @click.self="closeModal"
-      >
-        <div class="w-full max-w-md mx-4 rounded-2xl glass overflow-hidden">
-          <!-- 标题栏 -->
+      <DialogHeader class="px-6 py-4 border-b border-white/10">
+        <DialogTitle class="text-lg font-semibold text-white">
+          {{ isEdit ? '编辑网站' : '添加网站' }}
+        </DialogTitle>
+        <DialogDescription class="sr-only">
+          {{ isEdit ? '编辑网站的名称和网址' : '添加新网站到新标签页' }}
+        </DialogDescription>
+      </DialogHeader>
+
+      <!-- 表单 -->
+      <form class="p-6 space-y-4" @submit.prevent="handleSubmit">
+        <!-- 预览 -->
+        <div class="flex items-center gap-4 p-4 rounded-xl bg-white/5">
           <div
-            class="flex items-center justify-between px-6 py-4 border-b border-white/10"
+            class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center"
           >
-            <h2 class="text-lg font-semibold text-white">
-              {{ isEdit ? '编辑网站' : '添加网站' }}
-            </h2>
-            <button
-              class="p-2 rounded-lg hover:bg-white/10 transition-colors"
-              @click="closeModal"
-            >
-              <div class="i-lucide-x w-5 h-5 text-white/70" />
-            </button>
+            <img
+              v-if="favicon"
+              :src="favicon"
+              class="w-8 h-8 rounded"
+              @error="favicon = ''"
+            />
+            <Globe v-else class="size-6 text-white/50" />
           </div>
-
-          <!-- 表单 -->
-          <form class="p-6 space-y-4" @submit.prevent="handleSubmit">
-            <!-- 预览 -->
-            <div class="flex items-center gap-4 p-4 rounded-xl bg-white/5">
-              <div
-                class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center"
-              >
-                <img
-                  v-if="favicon"
-                  :src="favicon"
-                  class="w-8 h-8 rounded"
-                  @error="favicon = ''"
-                />
-                <div v-else class="i-lucide-globe w-6 h-6 text-white/50" />
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-white truncate">{{ title || '网站名称' }}</p>
-                <p class="text-xs text-white/50 truncate">
-                  {{ url || 'https://example.com' }}
-                </p>
-              </div>
-            </div>
-
-            <!-- URL 输入 -->
-            <div class="space-y-2">
-              <label class="text-sm text-white/70">网址</label>
-              <input
-                v-model="url"
-                type="text"
-                placeholder="https://example.com"
-                class="w-full px-4 py-3 rounded-xl bg-white/10 text-white placeholder-white/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
-                @blur="handleUrlChange"
-              />
-            </div>
-
-            <!-- 标题输入 -->
-            <div class="space-y-2">
-              <label class="text-sm text-white/70">名称</label>
-              <input
-                v-model="title"
-                type="text"
-                placeholder="网站名称"
-                class="w-full px-4 py-3 rounded-xl bg-white/10 text-white placeholder-white/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
-              />
-            </div>
-
-            <!-- 提交按钮 -->
-            <div class="flex gap-3 pt-2">
-              <button
-                type="button"
-                class="flex-1 px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors"
-                @click="closeModal"
-              >
-                取消
-              </button>
-              <button
-                type="submit"
-                class="flex-1 px-4 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white transition-colors disabled:opacity-50"
-                :disabled="loading || !title.trim() || !url.trim()"
-              >
-                {{ loading ? '保存中...' : isEdit ? '保存' : '添加' }}
-              </button>
-            </div>
-          </form>
+          <div class="flex-1 min-w-0">
+            <p class="text-white truncate">{{ title || '网站名称' }}</p>
+            <p class="text-xs text-white/50 truncate">
+              {{ url || 'https://example.com' }}
+            </p>
+          </div>
         </div>
-      </div>
-    </Transition>
-  </Teleport>
+
+        <!-- URL 输入 -->
+        <div class="space-y-2">
+          <label class="text-sm text-white/70">网址</label>
+          <Input
+            v-model="url"
+            type="text"
+            placeholder="https://example.com"
+            class="bg-white/10 border-white/10 text-white placeholder:text-white/40 focus-visible:ring-white/20"
+            @blur="handleUrlChange"
+          />
+        </div>
+
+        <!-- 标题输入 -->
+        <div class="space-y-2">
+          <label class="text-sm text-white/70">名称</label>
+          <Input
+            v-model="title"
+            type="text"
+            placeholder="网站名称"
+            class="bg-white/10 border-white/10 text-white placeholder:text-white/40 focus-visible:ring-white/20"
+          />
+        </div>
+
+        <!-- 提交按钮 -->
+        <div class="flex gap-3 pt-2">
+          <Button
+            type="button"
+            variant="glass"
+            class="flex-1"
+            @click="closeModal"
+          >
+            取消
+          </Button>
+          <Button
+            type="submit"
+            class="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
+            :disabled="loading || !title.trim() || !url.trim()"
+          >
+            {{ loading ? '保存中...' : isEdit ? '保存' : '添加' }}
+          </Button>
+        </div>
+      </form>
+    </DialogContent>
+  </Dialog>
 </template>

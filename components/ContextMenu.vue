@@ -8,6 +8,17 @@ import {
   type FolderItem,
   FOLDER_SIZE_PRESETS
 } from '@/types'
+import {
+  Plus,
+  FolderPlus,
+  Settings,
+  Pencil,
+  FolderInput,
+  FolderOutput,
+  Trash2,
+  Maximize2,
+  ChevronRight
+} from 'lucide-vue-next'
 
 const uiStore = useUIStore()
 const gridItemStore = useGridItemStore()
@@ -60,31 +71,27 @@ const menuStyle = computed(() => {
   }
 })
 
-// 菜单项
+// 菜单项配置
 const menuItems = computed(() => {
   if (target.value === 'blank') {
     return [
-      { icon: 'i-lucide-plus', label: '新增网站', action: 'addSite' },
-      {
-        icon: 'i-lucide-folder-plus',
-        label: '新增文件夹',
-        action: 'addFolder'
-      },
+      { icon: Plus, label: '新增网站', action: 'addSite' },
+      { icon: FolderPlus, label: '新增文件夹', action: 'addFolder' },
       { type: 'divider' },
-      { icon: 'i-lucide-settings', label: '设置', action: 'openSettings' }
+      { icon: Settings, label: '设置', action: 'openSettings' }
     ]
   }
 
   if (target.value === 'site') {
     const items: any[] = [
-      { icon: 'i-lucide-pencil', label: '编辑', action: 'editSite' }
+      { icon: Pencil, label: '编辑', action: 'editSite' }
     ]
 
     // 如果有可用的文件夹，添加"移动到分组"选项
     if (availableFolders.value.length > 0) {
       items.push({
         type: 'submenu',
-        icon: 'i-lucide-folder-input',
+        icon: FolderInput,
         label: '移动到分组',
         submenu: availableFolders.value.map(folder => ({
           label: folder.title,
@@ -97,7 +104,7 @@ const menuItems = computed(() => {
     // 如果当前项目在文件夹内，添加"移出分组"选项
     if (targetItem.value?.parentId) {
       items.push({
-        icon: 'i-lucide-folder-output',
+        icon: FolderOutput,
         label: '移出分组',
         action: 'moveOutOfFolder'
       })
@@ -106,7 +113,7 @@ const menuItems = computed(() => {
     items.push(
       { type: 'divider' },
       {
-        icon: 'i-lucide-trash-2',
+        icon: Trash2,
         label: '删除',
         action: 'deleteSite',
         danger: true
@@ -118,10 +125,10 @@ const menuItems = computed(() => {
 
   if (target.value === 'folder') {
     return [
-      { icon: 'i-lucide-pencil', label: '编辑', action: 'editFolder' },
+      { icon: Pencil, label: '编辑', action: 'editFolder' },
       {
         type: 'submenu',
-        icon: 'i-lucide-maximize-2',
+        icon: Maximize2,
         label: '调整尺寸',
         submenu: [
           {
@@ -143,7 +150,7 @@ const menuItems = computed(() => {
       },
       { type: 'divider' },
       {
-        icon: 'i-lucide-trash-2',
+        icon: Trash2,
         label: '删除',
         action: 'deleteFolder',
         danger: true
@@ -266,7 +273,7 @@ onUnmounted(() => {
       <div
         v-if="isVisible"
         ref="menuRef"
-        class="fixed z-50 min-w-[180px] py-2 rounded-xl glass shadow-xl"
+        class="fixed z-[60] min-w-[180px] py-2 rounded-xl glass shadow-xl"
         :style="menuStyle"
       >
         <template v-for="(item, index) in menuItems" :key="index">
@@ -281,9 +288,9 @@ onUnmounted(() => {
             v-else-if="item.type === 'submenu'"
             class="group relative px-3 py-2 flex items-center gap-3 hover:bg-white/10 cursor-pointer"
           >
-            <div :class="item.icon" class="w-4 h-4 text-white/70" />
+            <component :is="item.icon" class="size-4 text-white/70" />
             <span class="flex-1 text-sm text-white/90">{{ item.label }}</span>
-            <div class="i-lucide-chevron-right w-4 h-4 text-white/50" />
+            <ChevronRight class="size-4 text-white/50" />
 
             <!-- 子菜单内容 -->
             <div
@@ -308,12 +315,10 @@ onUnmounted(() => {
             :class="{ 'text-red-400 hover:text-red-300': item.danger }"
             @click="handleAction(item.action!)"
           >
-            <div
-              :class="[
-                item.icon,
-                'w-4 h-4',
-                item.danger ? '' : 'text-white/70'
-              ]"
+            <component
+              :is="item.icon"
+              class="size-4"
+              :class="item.danger ? '' : 'text-white/70'"
             />
             <span class="text-sm" :class="item.danger ? '' : 'text-white/90'">{{
               item.label

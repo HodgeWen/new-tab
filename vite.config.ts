@@ -1,11 +1,11 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import UnoCSS from 'unocss/vite'
+import tailwindcss from '@tailwindcss/vite'
 import { resolve } from 'node:path'
 
 // 用于独立调试的 Vite 配置
 export default defineConfig({
-  plugins: [vue(), UnoCSS()],
+  plugins: [vue(), tailwindcss()],
   root: 'entrypoints/newtab',
   resolve: {
     alias: {
@@ -15,6 +15,6 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    open: true
+    open: false
   }
 })

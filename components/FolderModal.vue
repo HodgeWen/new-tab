@@ -5,10 +5,25 @@ import { useGridItemStore } from '@/stores/grid-items'
 import { isSiteItem, isFolderItem, type GridItem, type SiteItem } from '@/types'
 import { faviconService } from '@/services/favicon'
 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle
+} from '@/shadcn/ui/dialog'
+import { FolderOpen } from 'lucide-vue-next'
+
 const uiStore = useUIStore()
 const gridItemStore = useGridItemStore()
 
-const isVisible = computed(() => uiStore.openFolderId !== null)
+const isVisible = computed({
+  get: () => uiStore.openFolderId !== null,
+  set: (value: boolean) => {
+    if (!value) closeFolder()
+  }
+})
+
 const folder = computed(() => {
   if (!uiStore.openFolderId) return null
   const item = gridItemStore.gridItems[uiStore.openFolderId]
@@ -97,88 +112,74 @@ function openSite(site: SiteItem) {
 </script>
 
 <template>
-  <Teleport to="body">
-    <Transition
-      enter-active-class="transition-all duration-300 ease-out"
-      leave-active-class="transition-all duration-200 ease-in"
-      enter-from-class="opacity-0"
-      leave-to-class="opacity-0"
+  <Dialog v-model:open="isVisible">
+    <DialogContent
+      v-if="folder"
+      class="glass-dialog max-w-md p-0 text-white border-white/20 bg-black/40 backdrop-blur-xl"
     >
-      <div
-        v-if="isVisible && folder"
-        class="fixed inset-0 z-40 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-        @click.self="closeFolder"
-      >
-        <div class="w-full max-w-md mx-4 rounded-2xl glass overflow-hidden">
-          <!-- 标题栏 -->
-          <div
-            class="flex items-center justify-between px-6 py-4 border-b border-white/10"
-          >
-            <h2 class="text-lg font-semibold text-white">{{ folder.title }}</h2>
-            <button
-              class="p-2 rounded-lg hover:bg-white/10 transition-colors"
-              @click="closeFolder"
-            >
-              <div class="i-lucide-x w-5 h-5 text-white/70" />
-            </button>
-          </div>
+      <DialogHeader class="px-6 py-4 border-b border-white/10">
+        <DialogTitle class="text-lg font-semibold text-white">
+          {{ folder.title }}
+        </DialogTitle>
+        <DialogDescription class="sr-only">
+          查看和管理文件夹内的网站
+        </DialogDescription>
+      </DialogHeader>
 
-          <!-- 内容区域 -->
-          <div class="p-6">
-            <div class="grid grid-cols-4 gap-4">
-              <template v-for="item in children" :key="item.id">
-                <div
-                  v-if="isSiteItem(item)"
-                  class="group flex flex-col items-center cursor-pointer select-none transition-all"
-                  :class="{
-                    'opacity-50': draggedId === item.id,
-                    'scale-105': dragOverId === item.id
-                  }"
-                  draggable="true"
-                  @dragstart="handleDragStart($event, item.id)"
-                  @dragover="handleDragOver($event, item.id)"
-                  @dragleave="handleDragLeave"
-                  @drop="handleDrop($event, item.id)"
-                  @dragend="handleDragEnd"
-                  @click="openSite(item)"
-                  @contextmenu="handleContextMenu($event, item)"
-                >
-                  <div
-                    class="w-14 h-14 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center mb-2 transition-all group-hover:scale-105"
-                  >
-                    <img
-                      :src="
-                        item.favicon || faviconService.getFaviconUrl(item.url)
-                      "
-                      :alt="item.title"
-                      class="w-8 h-8 rounded pointer-events-none"
-                      @error="
-                        ($event.target as HTMLImageElement).src =
-                          faviconService.generateDefaultIcon(item.title)
-                      "
-                    />
-                  </div>
-                  <span
-                    class="text-xs text-white/80 text-center line-clamp-2 max-w-[72px]"
-                  >
-                    {{ item.title }}
-                  </span>
-                </div>
-              </template>
-            </div>
-
-            <!-- 空状态 -->
+      <!-- 内容区域 -->
+      <div class="p-6">
+        <div class="grid grid-cols-4 gap-4">
+          <template v-for="item in children" :key="item.id">
             <div
-              v-if="children.length === 0"
-              class="text-center py-8 text-white/50"
+              v-if="isSiteItem(item)"
+              class="group flex flex-col items-center cursor-pointer select-none transition-all"
+              :class="{
+                'opacity-50': draggedId === item.id,
+                'scale-105': dragOverId === item.id
+              }"
+              draggable="true"
+              @dragstart="handleDragStart($event, item.id)"
+              @dragover="handleDragOver($event, item.id)"
+              @dragleave="handleDragLeave"
+              @drop="handleDrop($event, item.id)"
+              @dragend="handleDragEnd"
+              @click="openSite(item)"
+              @contextmenu="handleContextMenu($event, item)"
             >
-              <div class="i-lucide-folder-open w-12 h-12 mx-auto mb-3" />
-              <p>文件夹是空的</p>
-              <p class="text-xs mt-1">拖拽网站到这里添加</p>
+              <div
+                class="w-14 h-14 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center mb-2 transition-all group-hover:scale-105"
+              >
+                <img
+                  :src="
+                    item.favicon || faviconService.getFaviconUrl(item.url)
+                  "
+                  :alt="item.title"
+                  class="w-8 h-8 rounded pointer-events-none"
+                  @error="
+                    ($event.target as HTMLImageElement).src =
+                      faviconService.generateDefaultIcon(item.title)
+                  "
+                />
+              </div>
+              <span
+                class="text-xs text-white/80 text-center line-clamp-2 max-w-[72px]"
+              >
+                {{ item.title }}
+              </span>
             </div>
-          </div>
+          </template>
+        </div>
+
+        <!-- 空状态 -->
+        <div
+          v-if="children.length === 0"
+          class="text-center py-8 text-white/50"
+        >
+          <FolderOpen class="size-12 mx-auto mb-3" />
+          <p>文件夹是空的</p>
+          <p class="text-xs mt-1">拖拽网站到这里添加</p>
         </div>
       </div>
-    </Transition>
-  </Teleport>
+    </DialogContent>
+  </Dialog>
 </template>

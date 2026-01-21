@@ -1,5 +1,5 @@
 import { defineConfig } from 'wxt'
-import UnoCSS from 'unocss/vite'
+import tailwindcss from '@tailwindcss/vite'
 
 // 修复 MaxListenersExceededWarning 警告
 // WXT/Vite 开发服务器内部会添加多个事件监听器
@@ -27,7 +27,7 @@ export default defineConfig({
     }
   },
   vite: () => ({
-    plugins: [UnoCSS()],
+    plugins: [tailwindcss()],
     resolve: {
       alias: {
         '@': __dirname,

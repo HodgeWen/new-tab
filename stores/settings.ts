@@ -74,6 +74,11 @@ export const useSettingsStore = defineStore('settings', () => {
     await saveSettings()
   }
 
+  async function updateSettings(config: Partial<Settings>) {
+    Object.assign(settings.value, config)
+    await saveSettings()
+  }
+
   async function updateWallpaperSettings(
     config: Partial<Settings['wallpaper']>
   ) {
@@ -92,6 +97,7 @@ export const useSettingsStore = defineStore('settings', () => {
     loadSettings,
     saveSettings,
     toggleSearchBar,
+    updateSettings,
     updateWallpaperSettings,
     updateWebDAVSettings
   }

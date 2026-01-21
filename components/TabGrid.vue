@@ -15,6 +15,7 @@ import { useUIStore } from '@/stores/ui'
 import { isSiteItem, isFolderItem, type GridItem } from '@/types'
 import BookmarkCard from './BookmarkCard.vue'
 import FolderCard from './FolderCard.vue'
+import { BookmarkPlus } from 'lucide-vue-next'
 
 const gridItemStore = useGridItemStore()
 const uiStore = useUIStore()
@@ -253,7 +254,7 @@ onBeforeUnmount(() => {
       v-if="gridItemStore.rootGridItems.length === 0 && !gridItemStore.loading"
       class="flex flex-col items-center justify-center py-20 text-white/50"
     >
-      <div class="i-lucide-bookmark-plus w-16 h-16 mb-4" />
+      <BookmarkPlus class="size-16 mb-4" />
       <p class="text-lg">还没有收藏任何网站</p>
       <p class="text-sm mt-2">右键点击空白处添加网站或文件夹</p>
     </div>

@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import type { SiteItem } from '@/types'
 import { faviconService } from '@/services/favicon'
+import { Check } from 'lucide-vue-next'
 
 interface Props {
   item: SiteItem
@@ -58,22 +59,22 @@ function handleContextMenu(event: MouseEvent) {
     <Transition name="scale-fade">
       <div
         v-if="isEditMode"
-        class="absolute -top-1 -right-1 z-10 w-5 h-5 rounded-full flex items-center justify-center transition-all duration-200"
+        class="absolute -top-1 -right-1 z-10 size-5 rounded-full flex items-center justify-center transition-all duration-200"
         :class="isSelected
           ? 'bg-blue-500 shadow-lg shadow-blue-500/30'
           : 'bg-white/20 border border-white/30'
         "
       >
-        <div
+        <Check
           v-if="isSelected"
-          class="i-lucide-check w-3 h-3 text-white"
+          class="size-3 text-white"
         />
       </div>
     </Transition>
 
     <!-- 图标容器 -->
     <div
-      class="w-14 h-14 rounded-2xl glass flex items-center justify-center mb-2 transition-all duration-200"
+      class="size-14 rounded-2xl glass flex items-center justify-center mb-2 transition-all duration-200"
       :class="[
         isEditMode
           ? isSelected
@@ -85,7 +86,7 @@ function handleContextMenu(event: MouseEvent) {
       <img
         :src="faviconUrl"
         :alt="item.title"
-        class="w-8 h-8 rounded-lg"
+        class="size-8 rounded-lg"
         @error="
           ;($event.target as HTMLImageElement).src =
             faviconService.generateDefaultIcon(item.title)
@@ -129,4 +130,3 @@ function handleContextMenu(event: MouseEvent) {
   transform: scale(0.5);
 }
 </style>
-

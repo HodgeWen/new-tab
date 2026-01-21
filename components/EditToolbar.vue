@@ -1,14 +1,27 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { useUIStore } from '@/stores/ui'
 import { useGridItemStore } from '@/stores/grid-items'
 import { isSiteItem } from '@/types'
 
+import { Button } from '@/shadcn/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from '@/shadcn/ui/dropdown-menu'
+import {
+  CheckSquare,
+  FolderInput,
+  Trash2,
+  Folder,
+  FolderPlus
+} from 'lucide-vue-next'
+
 const uiStore = useUIStore()
 const gridItemStore = useGridItemStore()
-
-// 下拉菜单状态
-const showFolderMenu = ref(false)
 
 // 获取可选中的网格项（只有普通网站，不包含文件夹）
 const selectableSites = computed(() => {
@@ -52,18 +65,11 @@ async function moveToFolder(folderId: string) {
   const ids = Array.from(uiStore.selectedIds)
   await gridItemStore.batchMoveToFolder(ids, folderId)
   uiStore.clearSelection()
-  showFolderMenu.value = false
 }
 
 // 创建新分组并移入
 function createNewFolder() {
-  showFolderMenu.value = false
   uiStore.openModal('addFolder')
-}
-
-// 关闭下拉菜单
-function closeFolderMenu() {
-  showFolderMenu.value = false
 }
 </script>
 
@@ -91,53 +97,52 @@ function closeFolderMenu() {
           title="全选"
           @click="toggleSelectAll"
         >
-          <div class="i-lucide-check-square w-5 h-5" />
+          <CheckSquare class="size-5" />
           <span class="text-xs">全选</span>
         </button>
 
         <!-- 移入分组下拉 -->
-        <div class="relative">
-          <button
-            class="toolbar-btn"
-            :disabled="uiStore.selectedCount === 0"
-            title="移入分组"
-            @click="showFolderMenu = !showFolderMenu"
-          >
-            <div class="i-lucide-folder-input w-5 h-5" />
-            <span class="text-xs">移入分组</span>
-          </button>
-
-          <!-- 文件夹下拉菜单 -->
-          <Transition name="fade-scale">
-            <div
-              v-if="showFolderMenu"
-              class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 min-w-[180px] max-h-[240px] overflow-y-auto bg-black/80 backdrop-blur-xl rounded-xl border border-white/10 shadow-2xl py-2"
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <button
+              class="toolbar-btn"
+              :disabled="uiStore.selectedCount === 0"
+              title="移入分组"
             >
-              <!-- 现有文件夹列表 -->
-              <template v-if="gridItemStore.allFolders.length > 0">
-                <button
-                  v-for="folder in gridItemStore.allFolders"
-                  :key="folder.id"
-                  class="folder-menu-item"
-                  @click="moveToFolder(folder.id)"
-                >
-                  <div class="i-lucide-folder w-4 h-4 text-yellow-400" />
-                  <span class="truncate">{{ folder.title }}</span>
-                </button>
-                <div class="border-t border-white/10 my-2" />
-              </template>
-
-              <!-- 创建新分组 -->
-              <button
-                class="folder-menu-item text-blue-400"
-                @click="createNewFolder"
+              <FolderInput class="size-5" />
+              <span class="text-xs">移入分组</span>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            class="glass border-white/15 text-white min-w-[180px] max-h-[240px] overflow-y-auto"
+            align="center"
+            side="top"
+            :side-offset="8"
+          >
+            <!-- 现有文件夹列表 -->
+            <template v-if="gridItemStore.allFolders.length > 0">
+              <DropdownMenuItem
+                v-for="folder in gridItemStore.allFolders"
+                :key="folder.id"
+                class="focus:bg-white/10 focus:text-white cursor-pointer"
+                @click="moveToFolder(folder.id)"
               >
-                <div class="i-lucide-folder-plus w-4 h-4" />
-                <span>创建新分组</span>
-              </button>
-            </div>
-          </Transition>
-        </div>
+                <Folder class="size-4 text-yellow-400 mr-2" />
+                <span class="truncate">{{ folder.title }}</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator class="bg-white/10" />
+            </template>
+
+            <!-- 创建新分组 -->
+            <DropdownMenuItem
+              class="focus:bg-white/10 focus:text-white cursor-pointer text-blue-400"
+              @click="createNewFolder"
+            >
+              <FolderPlus class="size-4 mr-2" />
+              <span>创建新分组</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <!-- 删除按钮 -->
         <button
@@ -146,7 +151,7 @@ function closeFolderMenu() {
           title="删除"
           @click="deleteSelected"
         >
-          <div class="i-lucide-trash-2 w-5 h-5" />
+          <Trash2 class="size-5" />
           <span class="text-xs">删除</span>
         </button>
 
@@ -154,22 +159,16 @@ function closeFolderMenu() {
         <div class="w-px h-8 bg-white/20" />
 
         <!-- 完成按钮 -->
-        <button
-          class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-all"
+        <Button
+          variant="glass"
+          size="sm"
           @click="uiStore.exitEditMode"
         >
           完成
-        </button>
+        </Button>
       </div>
     </div>
   </Transition>
-
-  <!-- 点击外部关闭下拉菜单 -->
-  <div
-    v-if="showFolderMenu"
-    class="fixed inset-0 z-40"
-    @click="closeFolderMenu"
-  />
 </template>
 
 <style scoped>
@@ -199,22 +198,6 @@ function closeFolderMenu() {
   color: rgba(255, 255, 255, 1);
 }
 
-.folder-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  width: 100%;
-  padding: 0.625rem 1rem;
-  color: rgba(255, 255, 255, 0.8);
-  text-align: left;
-  transition: all 0.15s ease;
-}
-
-.folder-menu-item:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 1);
-}
-
 /* 动画 */
 .slide-up-enter-active,
 .slide-up-leave-active {
@@ -225,16 +208,5 @@ function closeFolderMenu() {
 .slide-up-leave-to {
   opacity: 0;
   transform: translate(-50%, 1rem);
-}
-
-.fade-scale-enter-active,
-.fade-scale-leave-active {
-  transition: all 0.2s ease;
-}
-
-.fade-scale-enter-from,
-.fade-scale-leave-to {
-  opacity: 0;
-  transform: translate(-50%, 0.5rem) scale(0.95);
 }
 </style>

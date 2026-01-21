@@ -54,7 +54,7 @@ class FaviconService {
   /**
    * 获取并缓存 favicon
    * @param url 网站 URL
-   * @returns favicon 的 Base64 数据
+   * @returns favicon 的 URL
    */
   async fetchAndCacheFavicon(url: string): Promise<string> {
     const domain = this.getDomain(url)
@@ -67,63 +67,13 @@ class FaviconService {
     }
 
     try {
-      // 尝试 Google Favicon Service
+      // 直接缓存 Google Favicon Service 的 URL，避免跨域转码
       const googleUrl = `${this.googleFaviconUrl}?domain=${domain}&sz=64`
-      const base64 = await this.urlToBase64(googleUrl)
-      if (base64) {
-        await db.saveFavicon(domain, base64)
-        return base64
-      }
-
-      // 尝试直接访问 favicon.ico
-      const origin = new URL(url).origin
-      const directUrl = `${origin}/favicon.ico`
-      const directBase64 = await this.urlToBase64(directUrl)
-      if (directBase64) {
-        await db.saveFavicon(domain, directBase64)
-        return directBase64
-      }
-
-      // 生成并缓存默认图标
-      const defaultIcon = this.generateDefaultIcon(domain)
-      await db.saveFavicon(domain, defaultIcon)
-      return defaultIcon
+      await db.saveFavicon(domain, googleUrl)
+      return googleUrl
     } catch {
-      return this.generateDefaultIcon(domain)
+      return this.getFaviconUrl(url)
     }
-  }
-
-  /**
-   * 将图片 URL 转换为 Base64 数据
-   */
-  private async urlToBase64(url: string): Promise<string | null> {
-    return new Promise(resolve => {
-      const img = new Image()
-      img.crossOrigin = 'anonymous'
-
-      img.onload = () => {
-        try {
-          const canvas = document.createElement('canvas')
-          canvas.width = img.width || 64
-          canvas.height = img.height || 64
-          const ctx = canvas.getContext('2d')
-          if (ctx) {
-            ctx.drawImage(img, 0, 0)
-            resolve(canvas.toDataURL('image/png'))
-          } else {
-            resolve(null)
-          }
-        } catch {
-          resolve(null)
-        }
-      }
-
-      img.onerror = () => resolve(null)
-      img.src = url
-
-      // 超时处理
-      setTimeout(() => resolve(null), 5000)
-    })
   }
 
   /**
@@ -143,7 +93,9 @@ class FaviconService {
     ]
     const color = colors[title.charCodeAt(0) % colors.length]
 
-    return `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="${color}" width="100" height="100" rx="20"/><text x="50" y="68" font-size="50" text-anchor="middle" fill="white" font-family="sans-serif" font-weight="600">${letter}</text></svg>`)}`
+    return `data:image/svg+xml,${encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="${color}" width="100" height="100" rx="20"/><text x="50" y="68" font-size="50" text-anchor="middle" fill="white" font-family="sans-serif" font-weight="600">${letter}</text></svg>`
+    )}`
   }
 }
 
