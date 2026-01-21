@@ -3,7 +3,7 @@
 ## 1. 目标与范围
 
 - 目标：以 shadcn-vue 作为基础组件结构与交互层，视觉统一通过玻璃化样式覆盖实现，保留现有交互/业务逻辑与 Glassmorphism 风格。
-- 范围：仅迁移 UI 层（`components/**` 与 `components/ui/**`），不改动 stores/services 的业务逻辑与数据结构。
+- 范围：仅迁移 UI 层（`components/**`），不改动 stores/services 的业务逻辑与数据结构。
 - 保持约束：
   - 搜索仍优先使用 `browser.search`（扩展合规）。
   - 壁纸失败回退与 Blob 释放逻辑保持。
