@@ -3,8 +3,7 @@ import { computed } from 'vue'
 import type { FolderItem, GridSize } from '@/types'
 import { useGridItemStore } from '@/stores/grid-items'
 import { faviconService } from '@/services/favicon'
-import { isSiteItem } from '@/types'
-import { Folder, FolderOpen } from 'lucide-vue-next'
+import { FolderOpen } from 'lucide-vue-next'
 
 interface Props {
   item: FolderItem
@@ -18,46 +17,21 @@ const emit = defineEmits<{
 
 const gridItemStore = useGridItemStore()
 
-/**
- * 根据文件夹尺寸计算布局配置
- */
-function getLayoutConfig(size: GridSize) {
-  const { w, h } = size
-
-  // 2x2 正方形
-  if (w === 2 && h === 2) {
-    return {
-      maxItems: 9, // 3x3 网格
-      cols: 3,
-      rows: 3,
-      iconSize: 'size-6',
-      gap: '0.5rem'
-    }
-  }
-
-  // 2x1 宽扁型
-  if (w === 2 && h === 1) {
-    return {
-      maxItems: 3, // 1x3 横向
-      cols: 3,
-      rows: 1,
-      iconSize: 'size-7',
-      gap: '0.75rem'
-    }
-  }
-
-  // 1x2 窄高型（默认）
-  return {
-    maxItems: 3, // 3x1 纵向
-    cols: 1,
-    rows: 3,
-    iconSize: 'size-7',
-    gap: '0.5rem'
-  }
-}
-
 // 根据文件夹尺寸计算显示数量和网格配置
-const layoutConfig = computed(() => getLayoutConfig(props.item.size))
+const layout = computed(() => {
+  const { w, h } = props.item.size
+
+  const cols = w === 2 ? 3 : 1
+  const rows = h === 2 ? 3 : 1
+  const items = cols * rows
+
+  return {
+    items,
+    cols,
+    rows,
+    gap: '1rem'
+  }
+})
 
 /**
  * 根据文件夹尺寸计算样式
@@ -79,22 +53,12 @@ const sizeStyles = computed(() => getSizeStyles(props.item.size))
 // 获取文件夹内的预览项目
 const previewItems = computed(() => {
   const children = gridItemStore.getFolderChildren(props.item.id)
-  const config = layoutConfig.value
 
-  return children.slice(0, config.maxItems).map(child => {
-    if (isSiteItem(child)) {
-      return {
-        id: child.id,
-        favicon: child.favicon || faviconService.getFaviconUrl(child.url),
-        title: child.title,
-        isFolder: false
-      }
-    }
+  return children.slice(0, layout.value.items).map(child => {
     return {
       id: child.id,
-      favicon: '',
-      title: child.title,
-      isFolder: true
+      favicon: child.favicon || faviconService.getFaviconUrl(child.url),
+      title: child.title
     }
   })
 })
@@ -123,45 +87,30 @@ function handleContextMenu(event: MouseEvent) {
     @contextmenu="handleContextMenu"
   >
     <!-- 文件夹容器 -->
-    <div class="flex-1 rounded-2xl glass p-3 overflow-hidden">
+    <div class="flex-1 rounded-2xl glass p-2 overflow-hidden">
       <!-- 预览网格 - 使用 flex 布局实现居中 -->
       <div class="w-full h-full flex items-center justify-center">
         <div
           v-if="previewItems.length > 0"
-          class="grid place-items-center"
+          class="grid place-items-center w-full h-full"
           :style="{
-            gridTemplateColumns: `repeat(${layoutConfig.cols}, 1fr)`,
-            gridTemplateRows: `repeat(${layoutConfig.rows}, 1fr)`,
-            gap: layoutConfig.gap,
-            width: '100%',
-            height: '100%'
+            gridTemplateColumns: `repeat(${layout.cols}, 1fr)`,
+            gridTemplateRows: `repeat(${layout.rows}, 1fr)`,
+            gap: layout.gap
           }"
         >
           <!-- 预览项目 - 只显示图标，无背景 -->
-          <div
+          <img
             v-for="preview in previewItems"
+            :src="preview.favicon"
+            :alt="preview.title"
             :key="preview.id"
-            class="flex items-center justify-center"
-          >
-            <template v-if="preview.isFolder">
-              <Folder
-                class="text-white/60"
-                :class="layoutConfig.iconSize"
-              />
-            </template>
-            <template v-else>
-              <img
-                :src="preview.favicon"
-                :alt="preview.title"
-                :class="layoutConfig.iconSize"
-                class="rounded object-contain"
-                @error="
-                  ($event.target as HTMLImageElement).src =
-                    faviconService.generateDefaultIcon(preview.title)
-                "
-              />
-            </template>
-          </div>
+            class="rounded-lg object-contain"
+            @error="
+              ;($event.target as HTMLImageElement).src =
+                faviconService.generateDefaultIcon(preview.title)
+            "
+          />
         </div>
 
         <!-- 空文件夹提示 -->
@@ -176,11 +125,8 @@ function handleContextMenu(event: MouseEvent) {
       <span class="text-xs text-white/80 line-clamp-1 text-shadow">
         {{ item.title }}
       </span>
-      <span
-        v-if="itemCount > layoutConfig.maxItems"
-        class="text-xs text-white/50"
-      >
-        +{{ itemCount - layoutConfig.maxItems }}
+      <span v-if="itemCount > layout.items" class="text-xs text-white/50">
+        +{{ itemCount - layout.items }}
       </span>
     </div>
   </div>

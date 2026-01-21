@@ -4,7 +4,7 @@ import type { Settings } from '@/types'
 import { db } from '@/services/database'
 
 const defaultSettings: Settings = {
-  showSearchBar: true,
+  showSearchBar: false,
   webdav: {
     enabled: false,
     url: '',

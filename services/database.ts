@@ -4,13 +4,7 @@ import type { GridItem, Settings, WallpaperInfo } from '@/types'
 /**
  * 网格项数据表记录
  */
-interface GridItemRecord {
-  /** 固定 ID，只有一条记录 */
-  id: 'data'
-  bookmarks: Record<string, GridItem>
-  rootOrder: string[]
-  updatedAt: number
-}
+interface GridItemRecord extends GridItem {}
 
 /**
  * 设置数据表记录
@@ -49,7 +43,9 @@ interface WebDAVRecord {
  */
 interface FaviconRecord {
   /** 网站域名作为主键 */
-  domain: string
+  id: string
+  /** 网站 ID */
+  siteId: string
   /** Base64 图标数据 */
   dataUrl: string
   /** 缓存时间戳 */
@@ -60,63 +56,38 @@ interface FaviconRecord {
  * 应用数据库 - 使用 Dexie.js
  *
  * 所有数据统一存储在 IndexedDB 中：
- * - bookmarks: 网格项数据
+ * - grid_items: 网格项数据
  * - settings: 应用设置
  * - wallpapers: 壁纸缓存（Blob）
  * - webdav: WebDAV 配置
  * - favicons: 网站图标缓存
  */
 class AppDatabase extends Dexie {
-  bookmarks!: EntityTable<GridItemRecord, 'id'>
+  gridItems!: EntityTable<GridItemRecord, 'id'>
   settings!: EntityTable<SettingsRecord, 'id'>
+  favicons!: EntityTable<FaviconRecord, 'id'>
   wallpapers!: EntityTable<WallpaperRecord, 'id'>
   webdav!: EntityTable<WebDAVRecord, 'id'>
-  favicons!: EntityTable<FaviconRecord, 'domain'>
 
   constructor() {
     super('new-tab-db')
 
     this.version(1).stores({
-      bookmarks: 'id',
-      settings: 'id',
-      wallpapers: 'id',
-      webdav: 'id'
-    })
-
-    // 版本 2：添加 favicon 缓存表
-    this.version(2).stores({
-      bookmarks: 'id',
+      gridItems: 'id',
       settings: 'id',
       wallpapers: 'id',
       webdav: 'id',
-      favicons: 'domain'
+      favicons: 'id'
     })
   }
 
   // ==================== 网格项操作 ====================
 
-  async getBookmarks(): Promise<{
-    bookmarks: Record<string, GridItem>
-    rootOrder: string[]
-  }> {
-    const record = await this.bookmarks.get('data')
-    return {
-      bookmarks: record?.bookmarks || {},
-      rootOrder: record?.rootOrder || []
-    }
+  async getGridItems(): Promise<GridItemRecord[]> {
+    return this.gridItems.toArray()
   }
 
-  async saveBookmarks(
-    bookmarks: Record<string, GridItem>,
-    rootOrder: string[]
-  ): Promise<void> {
-    await this.bookmarks.put({
-      id: 'data',
-      bookmarks,
-      rootOrder,
-      updatedAt: Date.now()
-    })
-  }
+  async saveGridItems(gridItems: GridItemRecord[]): Promise<void> {}
 
   // ==================== 设置操作 ====================
 

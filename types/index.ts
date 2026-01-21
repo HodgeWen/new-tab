@@ -30,11 +30,11 @@ export type FolderSizePreset = keyof typeof FOLDER_SIZE_PRESETS
  */
 export interface GridItem {
   id: string
-  type: 'site' | 'folder'
+  type: string
   title: string
   order: number
-  parentId: string | null // null 表示根级别
-  gridPosition?: GridPosition // 网格位置（可选，用于迁移兼容）
+  parentId: string | null
+  position?: GridPosition
   createdAt: number
   updatedAt: number
 }
@@ -54,7 +54,6 @@ export interface SiteItem extends GridItem {
 export interface FolderItem extends GridItem {
   type: 'folder'
   size: GridSize
-  children: string[] // 子项 ID 列表
 }
 
 /**
