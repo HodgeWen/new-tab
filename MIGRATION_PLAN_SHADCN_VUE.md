@@ -39,7 +39,7 @@
 
 ### 3.1 依赖引入（计划）
 
-- shadcn-vue 及其依赖(tailwindcss)
+- shadcn-vue 及其依赖
 
 ### 3.2 样式体系对齐
 
