@@ -91,7 +91,7 @@ Components
 - `components/FolderModal.vue`：文件夹弹层与内部拖拽排序。
 - `components/AddSiteModal.vue` / `components/AddFolderModal.vue`：添加/编辑表单。
 - `components/SettingsPanel.vue`：通用/壁纸/备份三栏设置。
-- `components/ui/ContextMenu.vue`：右键菜单 + 子菜单。
+- `components/ContextMenu.vue`：右键菜单 + 子菜单。
 - `components/EditToolbar.vue`：编辑模式工具栏。
 - `components/SearchBar.vue`：搜索与快捷键支持。
 

@@ -11,4 +11,3 @@ const pinia = createPinia()
 
 app.use(pinia)
 app.mount('#app')
-
