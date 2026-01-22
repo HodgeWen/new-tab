@@ -227,13 +227,6 @@ async function importLocalData() {
       if (data.gridItems) {
         await db.clearGridItems()
         await db.saveGridItems(data.gridItems)
-      } else if (data.bookmarks) {
-        // 兼容旧格式
-        const items = data.bookmarks.bookmarks || data.bookmarks
-        if (Array.isArray(items)) {
-          await db.clearGridItems()
-          await db.saveGridItems(items)
-        }
       }
 
       // 2. 恢复设置

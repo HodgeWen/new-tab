@@ -112,7 +112,7 @@ function openSite(site: SiteItem) {
 </script>
 
 <template>
-  <Dialog v-model:open="isVisible">
+  <Dialog v-model:open="isVisible" :modal="false">
     <DialogContent
       v-if="folder"
       class="glass-dialog max-w-md p-0 text-white border-white/20 bg-black/40 backdrop-blur-xl"

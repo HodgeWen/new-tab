@@ -44,15 +44,6 @@ export const useGridItemStore = defineStore('gridItems', () => {
 
       const loadedItems: Record<string, GridItem> = {}
       items.forEach(item => {
-        // 兼容旧的 gridPosition 和 parentId
-        if ((item as any).gridPosition && !item.position) {
-          item.position = (item as any).gridPosition
-          delete (item as any).gridPosition
-        }
-        if ((item as any).parentId && !item.pid) {
-          item.pid = (item as any).parentId
-          delete (item as any).parentId
-        }
         loadedItems[item.id] = item
       })
 
@@ -306,11 +297,6 @@ export const useGridItemStore = defineStore('gridItems', () => {
     saveOrders()
     syncGridItemsFromOrders()
 
-    // 如果移动到了根目录，确保它有位置
-    if (!targetParentId) {
-      migrateToGridLayout()
-    }
-
     // 拖拽操作通常频繁，这里可以选择不立即 persistToDb，或者防抖
     // 根据 proposal，可以在页面卸载或特定时机保存。这里为了安全还是保存一下，或者依靠 saveOrders
     await persistToDb()
@@ -400,80 +386,6 @@ export const useGridItemStore = defineStore('gridItems', () => {
       }
     }
     await persistToDb()
-  }
-
-  // 迁移旧数据到网格布局，或者为没有位置的新项目分配位置
-  function migrateToGridLayout(colCount: number = 8): boolean {
-    const rootItems = rootGridItems.value
-    let needsMigration = false
-    const occupied = new Set<string>() // "x,y"
-
-    // 1. 检查是否需要迁移，同时收集已占用的位置
-    for (const item of rootItems) {
-      if (!item.position) {
-        needsMigration = true
-      } else {
-        // 标记占用区域
-        const { x, y, w, h } = item.position
-        for (let i = 0; i < w; i++) {
-          for (let j = 0; j < h; j++) {
-            occupied.add(`${x + i},${y + j}`)
-          }
-        }
-      }
-    }
-
-    if (!needsMigration) return false
-
-    // 2. 为没有位置的项目分配位置
-    for (const item of rootItems) {
-      if (item.position) continue
-
-      let w = 1
-      let h = 1
-      if (isFolderItem(item)) {
-        w = item.size.w
-        h = item.size.h
-      }
-
-      // 寻找空位
-      let found = false
-      let y = 0
-      // 防止无限循环的安全限制
-      while (!found && y < 1000) {
-        for (let x = 0; x <= colCount - w; x++) {
-          // 检查该位置是否可用 (x, y, w, h)
-          let isFree = true
-          for (let i = 0; i < w; i++) {
-            for (let j = 0; j < h; j++) {
-              if (occupied.has(`${x + i},${y + j}`)) {
-                isFree = false
-                break
-              }
-            }
-            if (!isFree) break
-          }
-
-          if (isFree) {
-            // 找到空位，分配位置
-            item.position = { x, y, w, h }
-            // 标记占用
-            for (let i = 0; i < w; i++) {
-              for (let j = 0; j < h; j++) {
-                occupied.add(`${x + i},${y + j}`)
-              }
-            }
-            found = true
-            break
-          }
-        }
-        if (!found) y++ // 换行
-      }
-    }
-
-    // 迁移后保存
-    persistToDb()
-    return true
   }
 
   // 批量删除网格项
@@ -578,7 +490,6 @@ export const useGridItemStore = defineStore('gridItems', () => {
     reorder,
     updateGridPosition,
     batchUpdateGridPositions,
-    migrateToGridLayout,
     batchDeleteGridItems,
     batchMoveToFolder
   }

@@ -161,13 +161,6 @@ class AppDatabase extends Dexie {
       if (data.gridItems) {
         await this.clearGridItems()
         await this.saveGridItems(data.gridItems)
-      } else if (data.bookmarks) {
-        // 兼容旧格式
-        const items = data.bookmarks.bookmarks || data.bookmarks
-        if (Array.isArray(items)) {
-          await this.clearGridItems()
-          await this.saveGridItems(items)
-        }
       }
 
       return true

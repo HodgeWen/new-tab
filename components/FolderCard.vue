@@ -104,42 +104,32 @@ function handleContextMenu(event: MouseEvent) {
   >
     <!-- 文件夹容器 -->
     <div class="flex-1 rounded-2xl glass p-2 overflow-hidden cursor-default">
-      <!-- 预览网格 - 使用 flex 布局实现居中 -->
-      <div class="w-full h-full flex items-center justify-center">
-        <div
-          v-if="previewItems.length > 0"
-          class="grid place-items-center w-full h-full"
-          :style="{
-            gridTemplateColumns: `repeat(${layout.cols}, 1fr)`,
-            gridTemplateRows: `repeat(${layout.rows}, 1fr)`,
-            gap: layout.gap
-          }"
-        >
-          <!-- 预览项目 -->
-          <img
-            v-for="preview in previewItems"
-            :src="preview.favicon"
-            :key="preview.id"
-            :alt="preview.title"
-            :title="preview.title"
-            class="rounded-lg object-contain hover:bg-white/10 transition-colors cursor-pointer"
-            @click.stop="handlePreviewClick(preview.url)"
-            @error="
-              ;($event.target as HTMLImageElement).src =
-                faviconService.generateDefaultIcon(preview.title)
-            "
-          />
-        </div>
-
-        <!-- 空文件夹提示 -->
-        <div
-          v-else
-          class="flex items-center justify-center w-full h-full cursor-pointer hover:opacity-80 transition-opacity"
-          @click="handleFolderClick"
-        >
-          <FolderOpen class="size-8 text-white/30" />
-        </div>
+      <div
+        v-if="previewItems.length > 0"
+        class="grid place-items-center w-full h-full"
+        :style="{
+          gridTemplateColumns: `repeat(${layout.cols}, 1fr)`,
+          gridTemplateRows: `repeat(${layout.rows}, 1fr)`,
+          gap: layout.gap
+        }"
+      >
+        <!-- 预览项目 -->
+        <img
+          v-for="preview in previewItems"
+          :src="preview.favicon"
+          :key="preview.id"
+          :alt="preview.title"
+          :title="preview.title"
+          class="rounded-lg object-contain hover:bg-white/10 transition-colors cursor-pointer"
+          @click.stop="handlePreviewClick(preview.url)"
+          @error="
+            ;($event.target as HTMLImageElement).src =
+              faviconService.generateDefaultIcon(preview.title)
+          "
+        />
       </div>
+
+      <FolderOpen v-else class="size-8 text-white/30" />
     </div>
 
     <!-- 标题和数量 -->
