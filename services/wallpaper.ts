@@ -4,7 +4,7 @@ import {
   type WallpaperCategory,
   BingWallpaperProvider,
   PicsumWallpaperProvider
-} from './wallpaper-provider'
+} from '../utils/wallpaper-provider'
 
 /**
  * 壁纸服务 - 统一管理多个壁纸提供者
@@ -17,16 +17,24 @@ class WallpaperService {
   private providers: Map<string, WallpaperProvider> = new Map()
   private fallbackProvider: WallpaperProvider
 
+  private registerProviders(provider: WallpaperProvider): void
+  private registerProviders(providers: Array<WallpaperProvider>): void
+  private registerProviders(
+    providers: Array<WallpaperProvider> | WallpaperProvider
+  ) {
+    if (Array.isArray(providers)) {
+      providers.forEach(provider => this.registerProviders(provider))
+    } else {
+      if (this.providers.has(providers.id)) return
+      this.providers.set(providers.id, providers)
+    }
+  }
+
   constructor() {
-    // 注册壁纸提供者
-    const bingProvider = new BingWallpaperProvider()
-    const picsumProvider = new PicsumWallpaperProvider()
+    const providers = [PicsumWallpaperProvider, BingWallpaperProvider]
+    this.registerProviders(providers)
 
-    this.providers.set(bingProvider.id, bingProvider)
-    this.providers.set(picsumProvider.id, picsumProvider)
-
-    // Picsum 作为 fallback
-    this.fallbackProvider = picsumProvider
+    this.fallbackProvider = PicsumWallpaperProvider
   }
 
   /**
@@ -53,32 +61,27 @@ class WallpaperService {
   /**
    * 获取指定提供者支持的分类
    */
-  getCategories(providerId: string): WallpaperCategory[] {
-    const provider = this.providers.get(providerId)
-    if (!provider || !provider.supportsCategory) {
-      return []
-    }
-    return provider.getCategories()
+  getCategories(providerId: string): WallpaperCategory[] | undefined {
+    return this.getProvider(providerId)?.categories
   }
 
   /**
    * 检查提供者是否支持分类
    */
   supportsCategory(providerId: string): boolean {
-    const provider = this.providers.get(providerId)
-    return provider?.supportsCategory ?? false
+    return !!this.getCategories(providerId) || false
   }
 
   /**
    * 获取随机壁纸
-   * @param providerId 提供者ID（默认使用 bing）
+   * @param providerId 提供者ID（默认使用 Picsum）
    * @param category 分类（可选）
    */
   async getRandomPhoto(
-    providerId: string = 'bing',
+    providerId: string = PicsumWallpaperProvider.id,
     category?: string
   ): Promise<WallpaperInfo | null> {
-    const provider = this.providers.get(providerId)
+    const provider = this.getProvider(providerId)
 
     if (!provider) {
       console.warn(

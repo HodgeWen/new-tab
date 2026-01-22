@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, onUnmounted } from 'vue'
 import type { WallpaperInfo } from '@/types'
-import { wallpaperService } from '@/services/wallpaper-service'
+import { wallpaperService } from '@/services/wallpaper'
 import { db, revokeObjectUrl, fetchImageAsBlob } from '@/services/database'
 import { useSettingsStore } from './settings'
 

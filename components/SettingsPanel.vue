@@ -5,7 +5,7 @@ import { useSettingsStore } from '@/stores/settings'
 import { useWallpaperStore } from '@/stores/wallpaper'
 import { useGridItemStore } from '@/stores/grid-items'
 import { webdavService } from '@/services/webdav'
-import { wallpaperService } from '@/services/wallpaper-service'
+import { wallpaperService } from '@/services/wallpaper'
 import { db } from '@/services/database'
 
 import {

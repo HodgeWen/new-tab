@@ -10,8 +10,8 @@ export interface GridSize {
  * 网格位置信息
  */
 export interface GridPosition extends GridSize {
-  x: number // 列位置 (0-based)
-  y: number // 行位置 (0-based)
+  x?: number
+  y?: number
 }
 
 /**
@@ -34,7 +34,7 @@ export interface GridItem {
   title: string
   order: number
   pid: string | null
-  position?: GridPosition
+  position: GridPosition
   createdAt: number
   updatedAt: number
 }
@@ -53,7 +53,6 @@ export interface SiteItem extends GridItem {
  */
 export interface FolderItem extends GridItem {
   type: 'folder'
-  size: GridSize
   children: string[] // 子项 ID 列表
 }
 

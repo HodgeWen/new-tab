@@ -1,5 +1,6 @@
 import { createClient, type WebDAVClient, type FileStat } from 'webdav'
 import { encrypt, decrypt } from '@/utils/crypto'
+import type { Settings } from '@/types'
 import { db } from './database'
 
 interface BackupFile {
@@ -12,11 +13,25 @@ interface BackupFile {
 class WebDAVService {
   private client: WebDAVClient | null = null
   private readonly backupPath = '/new-tab-backups'
+  private readonly settingsStorageKey = 'new-tab-settings'
+
+  private readSettingsFromStorage(): Partial<Settings> {
+    try {
+      const raw = localStorage.getItem(this.settingsStorageKey)
+      return raw ? (JSON.parse(raw) as Partial<Settings>) : {}
+    } catch {
+      return {}
+    }
+  }
 
   /**
    * 初始化 WebDAV 客户端
    */
-  async connect(url: string, username: string, password: string): Promise<boolean> {
+  async connect(
+    url: string,
+    username: string,
+    password: string
+  ): Promise<boolean> {
     try {
       this.client = createClient(url, {
         username,
@@ -67,7 +82,11 @@ class WebDAVService {
   /**
    * 创建备份
    */
-  async backup(): Promise<{ success: boolean; filename?: string; message?: string }> {
+  async backup(): Promise<{
+    success: boolean
+    filename?: string
+    message?: string
+  }> {
     if (!this.client) {
       return { success: false, message: '未连接到 WebDAV 服务器' }
     }
@@ -76,7 +95,10 @@ class WebDAVService {
       await this.ensureBackupDir()
 
       const data = await db.exportData()
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
+      const timestamp = new Date()
+        .toISOString()
+        .replace(/[:.]/g, '-')
+        .slice(0, 19)
       const filename = `new-tab-backup-${timestamp}.json`
       const filepath = `${this.backupPath}/${filename}`
 
@@ -123,7 +145,9 @@ class WebDAVService {
   /**
    * 恢复备份
    */
-  async restore(filepath: string): Promise<{ success: boolean; message?: string }> {
+  async restore(
+    filepath: string
+  ): Promise<{ success: boolean; message?: string }> {
     if (!this.client) {
       return { success: false, message: '未连接到 WebDAV 服务器' }
     }
@@ -170,7 +194,24 @@ class WebDAVService {
     password: string
   }): Promise<void> {
     const encryptedPassword = await encrypt(config.password)
-    await db.saveWebDAVConfig(config.url, config.username, encryptedPassword)
+    const storedSettings = this.readSettingsFromStorage()
+    const storedWebdav =
+      storedSettings.webdav && typeof storedSettings.webdav === 'object'
+        ? storedSettings.webdav
+        : undefined
+
+    const nextSettings: Partial<Settings> = {
+      ...storedSettings,
+      webdav: {
+        ...storedWebdav,
+        enabled: storedWebdav?.enabled ?? true,
+        url: config.url,
+        username: config.username,
+        password: encryptedPassword
+      }
+    }
+
+    localStorage.setItem(this.settingsStorageKey, JSON.stringify(nextSettings))
   }
 
   /**
@@ -178,14 +219,27 @@ class WebDAVService {
    */
   async autoConnect(): Promise<boolean> {
     try {
-      const config = await db.getWebDAVConfig()
+      const storedSettings = this.readSettingsFromStorage()
+      const webdavConfig = storedSettings.webdav
 
-      if (!config?.url || !config?.username || !config?.encryptedPassword) {
+      if (
+        !webdavConfig ||
+        typeof webdavConfig !== 'object' ||
+        !webdavConfig.url ||
+        !webdavConfig.username ||
+        !webdavConfig.password
+      ) {
         return false
       }
 
-      const password = await decrypt(config.encryptedPassword)
-      return await this.connect(config.url, config.username, password)
+      const password = await decrypt(webdavConfig.password)
+      if (!password) return false
+
+      return await this.connect(
+        webdavConfig.url,
+        webdavConfig.username,
+        password
+      )
     } catch {
       return false
     }

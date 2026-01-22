@@ -14,17 +14,14 @@ export interface WallpaperCategory {
  */
 export interface WallpaperProvider {
   /** 提供者唯一标识 */
-  readonly id: string
+  id: string
   /** 提供者显示名称 */
-  readonly name: string
-  /** 是否支持分类选择 */
-  readonly supportsCategory: boolean
-
+  name: string
   /**
-   * 获取支持的分类列表
-   * 如果 supportsCategory 为 false，返回空数组
+   * 分类列表
+   * 如果未提供，则认为不支持分类
    */
-  getCategories(): WallpaperCategory[]
+  categories?: WallpaperCategory[]
 
   /**
    * 获取随机壁纸
@@ -33,24 +30,18 @@ export interface WallpaperProvider {
   getRandomPhoto(category?: string): Promise<WallpaperInfo | null>
 }
 
-/**
- * Bing 每日壁纸提供者
- * 使用 Peapix Feed API，提供高质量历史壁纸
- */
-export class BingWallpaperProvider implements WallpaperProvider {
-  readonly id = 'bing'
-  readonly name = 'Bing 每日壁纸'
-  readonly supportsCategory = false
+function defineWallpaperProvider(
+  provider: WallpaperProvider
+): WallpaperProvider {
+  return provider
+}
 
-  private readonly apiUrl = 'https://peapix.com/bing/feed'
-
-  getCategories(): WallpaperCategory[] {
-    return []
-  }
-
-  async getRandomPhoto(): Promise<WallpaperInfo | null> {
+export const BingWallpaperProvider = defineWallpaperProvider({
+  id: 'bing',
+  name: 'Bing 每日壁纸',
+  async getRandomPhoto() {
     try {
-      const response = await fetch(this.apiUrl)
+      const response = await fetch('https://peapix.com/bing/feed')
       if (!response.ok) {
         throw new Error(`Bing API responded with status ${response.status}`)
       }
@@ -77,21 +68,15 @@ export class BingWallpaperProvider implements WallpaperProvider {
       return null
     }
   }
-}
+})
 
 /**
  * Picsum 随机图片提供者
- * 作为备用壁纸源，可靠性高
  */
-export class PicsumWallpaperProvider implements WallpaperProvider {
-  readonly id = 'picsum'
-  readonly name = 'Picsum 随机图片'
-  readonly supportsCategory = false
 
-  getCategories(): WallpaperCategory[] {
-    return []
-  }
-
+export const PicsumWallpaperProvider = defineWallpaperProvider({
+  id: 'picsum',
+  name: 'Picsum 随机图片',
   async getRandomPhoto(): Promise<WallpaperInfo | null> {
     const timestamp = Date.now()
     // 使用固定范围的随机 ID 以确保获取有效图片
@@ -106,4 +91,4 @@ export class PicsumWallpaperProvider implements WallpaperProvider {
       downloadUrl: `https://picsum.photos/id/${randomId}/1920/1080`
     }
   }
-}
+})

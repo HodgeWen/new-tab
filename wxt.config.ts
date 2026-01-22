@@ -1,5 +1,6 @@
 import { defineConfig } from 'wxt'
 import tailwindcss from '@tailwindcss/vite'
+import vueJsx from '@vitejs/plugin-vue-jsx'
 
 // 修复 MaxListenersExceededWarning 警告
 // WXT/Vite 开发服务器内部会添加多个事件监听器
@@ -27,7 +28,7 @@ export default defineConfig({
     }
   },
   vite: () => ({
-    plugins: [tailwindcss()],
+    plugins: [tailwindcss(), vueJsx()],
     resolve: {
       alias: {
         '@': __dirname,

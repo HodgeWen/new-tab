@@ -31,22 +31,11 @@ const shadowDom: Record<string, HTMLElement> = {}
 
 // 将网格项数据转换为 GridStack widget 数据
 function itemToWidget(item: GridItem): GridStackWidget {
-  let w = 1
-  let h = 1
-
-  if (isFolderItem(item)) {
-    w = item.size.w
-    h = item.size.h
-  }
-
-  const position = item.position
+  const { position } = item
 
   return {
     id: item.id,
-    x: position?.x,
-    y: position?.y,
-    w: position?.w ?? w,
-    h: position?.h ?? h,
+    ...position,
     noResize: true
   }
 }
