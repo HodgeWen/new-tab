@@ -3,7 +3,13 @@ import { onMounted, computed, ref, provide } from 'vue'
 import { useGridItemStore } from '@/stores/grid-items'
 import { useSettingsStore } from '@/stores/settings'
 import { useWallpaperStore } from '@/stores/wallpaper'
-import { UI_KEY, type UIContext, type ContextMenuState, type ModalType, type ContextMenuTarget } from '@/types/ui'
+import {
+  UI_KEY,
+  type UIContext,
+  type ContextMenuState,
+  type ModalType,
+  type ContextMenuTarget
+} from '@/types/ui'
 import type { GridItem, SiteItem, FolderItem } from '@/types'
 import { RefreshCw, Pencil, Settings as SettingsIcon } from 'lucide-vue-next'
 import { Button } from '@/shadcn/ui/button'
@@ -41,7 +47,12 @@ const selectedIds = ref<Set<string>>(new Set())
 const selectedCount = computed(() => selectedIds.value.size)
 
 // Actions
-function openContextMenu(x: number, y: number, target: ContextMenuTarget, item: GridItem | null = null) {
+function openContextMenu(
+  x: number,
+  y: number,
+  target: ContextMenuTarget,
+  item: GridItem | null = null
+) {
   contextMenu.value = {
     visible: true,
     x,
@@ -330,7 +341,7 @@ body {
 
 /* 壁纸淡入动画 */
 .wallpaper-fade-enter-active {
-  transition: opacity 0.6s ease-out;
+  transition: opacity 0.3s ease-out;
 }
 
 .wallpaper-fade-leave-active {

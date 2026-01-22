@@ -17,43 +17,6 @@ type Orders = OrderEntry[]
 
 const ORDERS_KEY = 'new-tab-orders'
 
-/**
- * 迁移旧的 FolderSize 字符串格式到 GridSize 对象格式
- */
-function migrateOldFolderSize(size: unknown): GridSize {
-  // 兼容旧的字符串格式
-  if (typeof size === 'string') {
-    switch (size) {
-      case '2x2':
-        return { w: 2, h: 2 }
-      case '2x1':
-        return { w: 2, h: 1 }
-      case '1x2':
-      default:
-        return { w: 1, h: 2 }
-    }
-  }
-  // 已经是新格式
-  if (typeof size === 'object' && size !== null && 'w' in size && 'h' in size) {
-    return size as GridSize
-  }
-  return { w: 1, h: 2 }
-}
-
-/**
- * 迁移单个书签项的数据格式
- */
-function migrateGridItem(item: Record<string, unknown>): GridItem {
-  const migrated = { ...item } as unknown as GridItem
-
-  // 如果是文件夹，迁移 size 字段
-  if (item.type === 'folder' && 'size' in item) {
-    ;(migrated as FolderItem).size = migrateOldFolderSize(item.size)
-  }
-
-  return migrated
-}
-
 export const useGridItemStore = defineStore('gridItems', () => {
   const gridItems = ref<Record<string, GridItem>>({})
   const rootOrder = ref<string[]>([])
@@ -79,12 +42,18 @@ export const useGridItemStore = defineStore('gridItems', () => {
     try {
       const items = await db.getGridItems()
 
-      // 迁移旧数据格式
       const loadedItems: Record<string, GridItem> = {}
       items.forEach(item => {
-        loadedItems[item.id] = migrateGridItem(
-          item as unknown as Record<string, unknown>
-        )
+        // 兼容旧的 gridPosition 和 parentId
+        if ((item as any).gridPosition && !item.position) {
+          item.position = (item as any).gridPosition
+          delete (item as any).gridPosition
+        }
+        if ((item as any).parentId && !item.pid) {
+          item.pid = (item as any).parentId
+          delete (item as any).parentId
+        }
+        loadedItems[item.id] = item
       })
 
       gridItems.value = loadedItems
@@ -111,7 +80,7 @@ export const useGridItemStore = defineStore('gridItems', () => {
   function buildOrdersFromGridItems() {
     const allItems = Object.values(gridItems.value)
     const rootItems = allItems
-      .filter(item => !item.parentId)
+      .filter(item => !item.pid)
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
 
     const newOrders: Orders = []
@@ -120,7 +89,7 @@ export const useGridItemStore = defineStore('gridItems', () => {
       const childrenIds: string[] = []
       if (isFolderItem(item)) {
         const children = allItems
-          .filter(child => child.parentId === item.id)
+          .filter(child => child.pid === item.id)
           .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
         childrenIds.push(...children.map(c => c.id))
       }
@@ -141,7 +110,7 @@ export const useGridItemStore = defineStore('gridItems', () => {
       const item = gridItems.value[id]
       if (item) {
         item.order = index
-        item.parentId = null
+        item.pid = null
         if (isFolderItem(item)) {
           // 确保 children 数组是新的引用
           item.children = [...childrenIds]
@@ -149,7 +118,7 @@ export const useGridItemStore = defineStore('gridItems', () => {
           childrenIds.forEach((childId, childIndex) => {
             const child = gridItems.value[childId]
             if (child) {
-              child.parentId = id
+              child.pid = id
               child.order = childIndex
             }
           })
@@ -167,7 +136,9 @@ export const useGridItemStore = defineStore('gridItems', () => {
 
   // 保存 gridItems 到 IndexedDB
   async function persistToDb() {
-    const items = Object.values(gridItems.value).map(item => toRaw(item))
+    const items = Object.values(gridItems.value).map(item =>
+      JSON.parse(JSON.stringify(toRaw(item)))
+    )
     await db.saveGridItems(items)
   }
 
@@ -185,14 +156,14 @@ export const useGridItemStore = defineStore('gridItems', () => {
       createdAt: now,
       updatedAt: now,
       ...site,
-      parentId: site.parentId || null
+      pid: site.pid || null
     }
 
     gridItems.value[id] = newSite
 
     // 更新 orders
-    if (site.parentId) {
-      const parentEntry = orders.value.find(e => e[0] === site.parentId)
+    if (site.pid) {
+      const parentEntry = orders.value.find(e => e[0] === site.pid)
       if (parentEntry) {
         parentEntry[1].push(id)
       } else {
@@ -227,14 +198,14 @@ export const useGridItemStore = defineStore('gridItems', () => {
       createdAt: now,
       updatedAt: now,
       ...folder,
-      parentId: folder.parentId || null
+      pid: folder.pid || null
     }
 
     gridItems.value[id] = newFolder
 
-    if (folder.parentId) {
+    if (folder.pid) {
       // 理论上不支持文件夹嵌套，但逻辑上处理
-      const parentEntry = orders.value.find(e => e[0] === folder.parentId)
+      const parentEntry = orders.value.find(e => e[0] === folder.pid)
       if (parentEntry) {
         parentEntry[1].push(id)
       } else {
@@ -334,6 +305,12 @@ export const useGridItemStore = defineStore('gridItems', () => {
     item.updatedAt = Date.now()
     saveOrders()
     syncGridItemsFromOrders()
+
+    // 如果移动到了根目录，确保它有位置
+    if (!targetParentId) {
+      migrateToGridLayout()
+    }
+
     // 拖拽操作通常频繁，这里可以选择不立即 persistToDb，或者防抖
     // 根据 proposal，可以在页面卸载或特定时机保存。这里为了安全还是保存一下，或者依靠 saveOrders
     await persistToDb()
@@ -344,10 +321,10 @@ export const useGridItemStore = defineStore('gridItems', () => {
     const folder = gridItems.value[id]
     if (!folder || !isFolderItem(folder)) return
 
-    // 同时更新 gridPosition 的 w 和 h
-    const updatedGridPosition = folder.gridPosition
+    // 同时更新 position 的 w 和 h
+    const updatedGridPosition = folder.position
       ? {
-          ...folder.gridPosition,
+          ...folder.position,
           w: size.w,
           h: size.h
         }
@@ -362,7 +339,7 @@ export const useGridItemStore = defineStore('gridItems', () => {
     const updatedFolder = {
       ...folder,
       size,
-      gridPosition: updatedGridPosition,
+      position: updatedGridPosition,
       updatedAt: Date.now()
     }
 
@@ -375,9 +352,9 @@ export const useGridItemStore = defineStore('gridItems', () => {
   }
 
   // 重排序
-  async function reorder(newOrder: string[], parentId: string | null = null) {
-    if (parentId) {
-      const parentEntry = orders.value.find(e => e[0] === parentId)
+  async function reorder(newOrder: string[], pid: string | null = null) {
+    if (pid) {
+      const parentEntry = orders.value.find(e => e[0] === pid)
       if (parentEntry) {
         parentEntry[1] = [...newOrder]
       }
@@ -406,7 +383,7 @@ export const useGridItemStore = defineStore('gridItems', () => {
     const item = gridItems.value[id]
     if (!item) return
 
-    item.gridPosition = position
+    item.position = position
     item.updatedAt = Date.now()
     await persistToDb()
   }
@@ -418,32 +395,39 @@ export const useGridItemStore = defineStore('gridItems', () => {
     for (const { id, position } of updates) {
       const item = gridItems.value[id]
       if (item) {
-        item.gridPosition = position
+        item.position = position
         item.updatedAt = Date.now()
       }
     }
     await persistToDb()
   }
 
-  // 迁移旧数据到网格布局
+  // 迁移旧数据到网格布局，或者为没有位置的新项目分配位置
   function migrateToGridLayout(colCount: number = 8): boolean {
     const rootItems = rootGridItems.value
     let needsMigration = false
+    const occupied = new Set<string>() // "x,y"
 
+    // 1. 检查是否需要迁移，同时收集已占用的位置
     for (const item of rootItems) {
-      if (!item.gridPosition) {
+      if (!item.position) {
         needsMigration = true
-        break
+      } else {
+        // 标记占用区域
+        const { x, y, w, h } = item.position
+        for (let i = 0; i < w; i++) {
+          for (let j = 0; j < h; j++) {
+            occupied.add(`${x + i},${y + j}`)
+          }
+        }
       }
     }
 
     if (!needsMigration) return false
 
-    let currentX = 0
-    let currentY = 0
-
+    // 2. 为没有位置的项目分配位置
     for (const item of rootItems) {
-      if (item.gridPosition) continue
+      if (item.position) continue
 
       let w = 1
       let h = 1
@@ -452,13 +436,39 @@ export const useGridItemStore = defineStore('gridItems', () => {
         h = item.size.h
       }
 
-      if (currentX + w > colCount) {
-        currentX = 0
-        currentY++
-      }
+      // 寻找空位
+      let found = false
+      let y = 0
+      // 防止无限循环的安全限制
+      while (!found && y < 1000) {
+        for (let x = 0; x <= colCount - w; x++) {
+          // 检查该位置是否可用 (x, y, w, h)
+          let isFree = true
+          for (let i = 0; i < w; i++) {
+            for (let j = 0; j < h; j++) {
+              if (occupied.has(`${x + i},${y + j}`)) {
+                isFree = false
+                break
+              }
+            }
+            if (!isFree) break
+          }
 
-      item.gridPosition = { x: currentX, y: currentY, w, h }
-      currentX += w
+          if (isFree) {
+            // 找到空位，分配位置
+            item.position = { x, y, w, h }
+            // 标记占用
+            for (let i = 0; i < w; i++) {
+              for (let j = 0; j < h; j++) {
+                occupied.add(`${x + i},${y + j}`)
+              }
+            }
+            found = true
+            break
+          }
+        }
+        if (!found) y++ // 换行
+      }
     }
 
     // 迁移后保存

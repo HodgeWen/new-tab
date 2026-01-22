@@ -187,8 +187,21 @@ async function deleteBackup(filepath: string) {
 
 // 导出本地数据
 async function exportLocalData() {
-  const data = await db.exportData()
-  const blob = new Blob([data], { type: 'application/json' })
+  const gridItems = await db.getGridItems()
+  const settings = localStorage.getItem('new-tab-settings')
+  const orders = localStorage.getItem('new-tab-orders')
+
+  const exportData = {
+    version: '2.0.0',
+    exportedAt: new Date().toISOString(),
+    gridItems,
+    settings: settings ? JSON.parse(settings) : null,
+    orders: orders ? JSON.parse(orders) : null
+  }
+
+  const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+    type: 'application/json'
+  })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
@@ -206,13 +219,39 @@ async function importLocalData() {
     const file = (e.target as HTMLInputElement).files?.[0]
     if (!file) return
 
-    const text = await file.text()
-    const success = await db.importData(text)
-    if (success) {
+    try {
+      const text = await file.text()
+      const data = JSON.parse(text)
+
+      // 1. 恢复 GridItems
+      if (data.gridItems) {
+        await db.clearGridItems()
+        await db.saveGridItems(data.gridItems)
+      } else if (data.bookmarks) {
+        // 兼容旧格式
+        const items = data.bookmarks.bookmarks || data.bookmarks
+        if (Array.isArray(items)) {
+          await db.clearGridItems()
+          await db.saveGridItems(items)
+        }
+      }
+
+      // 2. 恢复设置
+      if (data.settings) {
+        localStorage.setItem('new-tab-settings', JSON.stringify(data.settings))
+      }
+
+      // 3. 恢复排序
+      if (data.orders) {
+        localStorage.setItem('new-tab-orders', JSON.stringify(data.orders))
+      }
+
+      // 重新加载应用状态
       await gridItemStore.loadGridItems()
       await settingsStore.loadSettings()
       alert('导入成功！')
-    } else {
+    } catch (error) {
+      console.error('Import failed:', error)
       alert('导入失败：数据格式无效')
     }
   }

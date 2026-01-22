@@ -102,7 +102,7 @@ const menuItems = computed(() => {
     }
 
     // 如果当前项目在文件夹内，添加"移出分组"选项
-    if (targetItem.value?.parentId) {
+    if (targetItem.value?.pid) {
       items.push({
         icon: FolderOutput,
         label: '移出分组',
@@ -273,7 +273,7 @@ onUnmounted(() => {
       <div
         v-if="isVisible"
         ref="menuRef"
-        class="fixed z-[60] min-w-[180px] py-2 rounded-xl glass shadow-xl"
+        class="fixed z-[100] min-w-[180px] py-2 rounded-xl glass shadow-xl"
         :style="menuStyle"
       >
         <template v-for="(item, index) in menuItems" :key="index">

@@ -33,8 +33,8 @@ export interface GridItem {
   type: string
   title: string
   order: number
-  parentId: string | null
-  gridPosition?: GridPosition
+  pid: string | null
+  position?: GridPosition
   createdAt: number
   updatedAt: number
 }

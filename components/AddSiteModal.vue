@@ -119,7 +119,7 @@ async function handleSubmit() {
         title: title.value.trim(),
         url: fullUrl,
         favicon: favicon.value,
-        parentId: null
+        pid: null
       })
     }
 

@@ -39,7 +39,7 @@ function itemToWidget(item: GridItem): GridStackWidget {
     h = item.size.h
   }
 
-  const position = item.gridPosition
+  const position = item.position
 
   return {
     id: item.id,
@@ -198,22 +198,61 @@ function initGridStack() {
   loadGridItems()
 }
 
-// 监听网格项列表变化（仅当网格项增删时重新加载）
+// 监听网格项列表变化（增删或尺寸/位置变化）
 watch(
-  () => gridItemStore.rootGridItems.map(b => b.id).join(','),
-  () => {
-    if (!isUpdating && grid) {
+  () => [
+    gridItemStore.rootGridItems.map(b => b.id).join(','),
+    // 添加对尺寸和位置变化的监听
+    ...gridItemStore.rootGridItems.map(b => `${b.id}:${b.position?.w}x${b.position?.h}:${b.position?.x},${b.position?.y}`)
+  ],
+  (newVal, oldVal) => {
+    // 只有在非更新期间且有实质变化时才刷新
+    // JSON.stringify 用于比较数组内容
+    if (!isUpdating && grid && JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
       nextTick(() => {
-        // 清理现有渲染
-        Object.keys(shadowDom).forEach(id => {
-          render(null, shadowDom[id])
-          delete shadowDom[id]
-        })
-        grid!.removeAll(false)
-        loadGridItems()
+        // 使用 GridStack 的 update 方法而不是重新加载，避免闪烁
+        // 但是对于增删操作，removeAll + load 更安全
+        
+        // 简单策略：如果是 ID 列表变化，重新加载
+        const newIds = newVal[0] as string
+        const oldIds = oldVal ? oldVal[0] as string : ''
+        
+        if (newIds !== oldIds) {
+          // 清理现有渲染
+          Object.keys(shadowDom).forEach(id => {
+            render(null, shadowDom[id])
+            delete shadowDom[id]
+          })
+          grid!.removeAll(false)
+          loadGridItems()
+        } else {
+          // 如果只是属性变化（如尺寸），尝试更新
+          // 遍历检查哪些 widget 需要更新
+          gridItemStore.rootGridItems.forEach(item => {
+            const el = grid!.getGridItems().find(w => w.gridstackNode?.id === item.id)
+            if (el && item.position) {
+              const node = el.gridstackNode
+              if (node && (node.w !== item.position.w || node.h !== item.position.h || node.x !== item.position.x || node.y !== item.position.y)) {
+                grid!.update(el, {
+                  w: item.position.w,
+                  h: item.position.h,
+                  x: item.position.x,
+                  y: item.position.y
+                })
+                // 同时重新渲染内容，因为 FolderCard 依赖 size 计算布局
+                // 注意：el 是 grid-stack-item，我们需要渲染到 grid-stack-item-content
+                const contentEl = el.querySelector('.grid-stack-item-content') as HTMLElement
+                if (contentEl) {
+                  renderWidgetContent(contentEl, item)
+                }
+              }
+            }
+          })
+        }
       })
     }
-  }
+  },
+  { deep: true }
 )
 
 // 监听编辑模式和选中状态变化

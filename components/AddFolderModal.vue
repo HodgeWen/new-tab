@@ -107,7 +107,7 @@ async function handleSubmit() {
       await gridItemStore.addFolder({
         title: title.value.trim(),
         size: currentSize.value,
-        parentId: null
+        pid: null
       })
     }
 

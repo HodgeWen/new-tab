@@ -115,14 +115,14 @@ function handleContextMenu(event: MouseEvent) {
             gap: layout.gap
           }"
         >
-          <!-- 预览项目 - 只显示图标，无背景 -->
+          <!-- 预览项目 -->
           <img
             v-for="preview in previewItems"
             :src="preview.favicon"
+            :key="preview.id"
             :alt="preview.title"
             :title="preview.title"
-            :key="preview.id"
-            class="rounded-lg object-contain cursor-pointer hover:opacity-80 transition-opacity"
+            class="rounded-lg object-contain hover:bg-white/10 transition-colors cursor-pointer"
             @click.stop="handlePreviewClick(preview.url)"
             @error="
               ;($event.target as HTMLImageElement).src =
