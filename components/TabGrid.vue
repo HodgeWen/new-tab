@@ -11,14 +11,14 @@ import {
 import { GridStack, type GridStackNode, type GridStackWidget } from 'gridstack'
 import 'gridstack/dist/gridstack.min.css'
 import { useGridItemStore } from '@/stores/grid-items'
-import { useUIStore } from '@/stores/ui'
+import { useUI } from '@/composables/useUI'
 import { isSiteItem, isFolderItem, type GridItem } from '@/types'
 import BookmarkCard from './BookmarkCard.vue'
 import FolderCard from './FolderCard.vue'
 import { BookmarkPlus } from 'lucide-vue-next'
 
 const gridItemStore = useGridItemStore()
-const uiStore = useUIStore()
+const ui = useUI()
 
 // 容器引用
 const gridContainer = ref<HTMLElement>()
@@ -58,8 +58,8 @@ function renderWidgetContent(el: HTMLElement, item: GridItem) {
   if (isSiteItem(item)) {
     vnode = h(BookmarkCard, {
       item,
-      isEditMode: uiStore.isEditMode,
-      isSelected: uiStore.isSelected(item.id),
+      isEditMode: ui.isEditMode.value,
+      isSelected: ui.isSelected(item.id),
       onContextmenu: (event: MouseEvent) => handleContextMenu(event, item),
       onToggleSelect: () => handleToggleSelect(item.id)
     })
@@ -79,7 +79,7 @@ function renderWidgetContent(el: HTMLElement, item: GridItem) {
 
 // 处理选中切换
 function handleToggleSelect(id: string) {
-  uiStore.toggleSelectItem(id)
+  ui.toggleSelectItem(id)
 }
 
 // 处理网格变化
@@ -120,12 +120,12 @@ function handleContextMenu(event: MouseEvent, item: GridItem) {
   event.preventDefault()
   event.stopPropagation()
   const target = isSiteItem(item) ? 'site' : 'folder'
-  uiStore.openContextMenu(event.clientX, event.clientY, target, item)
+  ui.openContextMenu(event.clientX, event.clientY, target, item)
 }
 
 // 点击文件夹
 function handleFolderClick(folderId: string) {
-  uiStore.openFolder(folderId)
+  ui.openFolder(folderId)
 }
 
 // 加载网格项到 GridStack
@@ -218,7 +218,7 @@ watch(
 
 // 监听编辑模式和选中状态变化
 watch(
-  () => [uiStore.isEditMode, uiStore.selectedIds],
+  () => [ui.isEditMode.value, ui.selectedIds.value],
   () => {
     rerenderExistingWidgets()
   },

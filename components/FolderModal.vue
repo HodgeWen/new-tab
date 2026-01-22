@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useUIStore } from '@/stores/ui'
+import { useUI } from '@/composables/useUI'
 import { useGridItemStore } from '@/stores/grid-items'
 import { isSiteItem, isFolderItem, type GridItem, type SiteItem } from '@/types'
 import { faviconService } from '@/services/favicon'
@@ -14,19 +14,19 @@ import {
 } from '@/shadcn/ui/dialog'
 import { FolderOpen } from 'lucide-vue-next'
 
-const uiStore = useUIStore()
+const ui = useUI()
 const gridItemStore = useGridItemStore()
 
 const isVisible = computed({
-  get: () => uiStore.openFolderId !== null,
+  get: () => ui.openFolderId.value !== null,
   set: (value: boolean) => {
     if (!value) closeFolder()
   }
 })
 
 const folder = computed(() => {
-  if (!uiStore.openFolderId) return null
-  const item = gridItemStore.gridItems[uiStore.openFolderId]
+  if (!ui.openFolderId.value) return null
+  const item = gridItemStore.gridItems[ui.openFolderId.value]
   return item && isFolderItem(item) ? item : null
 })
 
@@ -93,7 +93,7 @@ function handleDragEnd() {
 
 // 关闭文件夹
 function closeFolder() {
-  uiStore.closeFolder()
+  ui.closeFolder()
 }
 
 // 右键菜单
@@ -102,7 +102,7 @@ function handleContextMenu(event: MouseEvent, item: GridItem) {
   event.stopPropagation()
 
   const target = isSiteItem(item) ? 'site' : 'folder'
-  uiStore.openContextMenu(event.clientX, event.clientY, target, item)
+  ui.openContextMenu(event.clientX, event.clientY, target, item)
 }
 
 // 打开网站

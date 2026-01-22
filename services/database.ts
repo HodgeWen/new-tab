@@ -1,20 +1,10 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { GridItem, Settings, WallpaperInfo } from '@/types'
+import type { GridItem, WallpaperInfo } from '@/types'
 
 /**
  * 网格项数据表记录
  */
 interface GridItemRecord extends GridItem {}
-
-/**
- * 设置数据表记录
- */
-interface SettingsRecord {
-  /** 固定 ID，只有一条记录 */
-  id: 'data'
-  settings: Settings
-  updatedAt: number
-}
 
 /**
  * 壁纸缓存表记录
@@ -28,24 +18,13 @@ interface WallpaperRecord {
 }
 
 /**
- * WebDAV 配置表记录（加密存储密码）
- */
-interface WebDAVRecord {
-  id: 'config'
-  url: string
-  username: string
-  encryptedPassword: string
-  updatedAt: number
-}
-
-/**
  * Favicon 缓存表记录
  */
 interface FaviconRecord {
   /** 网站域名作为主键 */
   id: string
-  /** 网站 ID */
-  siteId: string
+  /** 网站 ID (可选) */
+  siteId?: string
   /** Base64 图标数据 */
   dataUrl: string
   /** 缓存时间戳 */
@@ -57,26 +36,20 @@ interface FaviconRecord {
  *
  * 所有数据统一存储在 IndexedDB 中：
  * - grid_items: 网格项数据
- * - settings: 应用设置
  * - wallpapers: 壁纸缓存（Blob）
- * - webdav: WebDAV 配置
  * - favicons: 网站图标缓存
  */
 class AppDatabase extends Dexie {
   gridItems!: EntityTable<GridItemRecord, 'id'>
-  settings!: EntityTable<SettingsRecord, 'id'>
   favicons!: EntityTable<FaviconRecord, 'id'>
   wallpapers!: EntityTable<WallpaperRecord, 'id'>
-  webdav!: EntityTable<WebDAVRecord, 'id'>
 
   constructor() {
     super('new-tab-db')
 
     this.version(1).stores({
       gridItems: 'id',
-      settings: 'id',
       wallpapers: 'id',
-      webdav: 'id',
       favicons: 'id'
     })
   }
@@ -87,31 +60,12 @@ class AppDatabase extends Dexie {
     return this.gridItems.toArray()
   }
 
-  async saveGridItems(gridItems: GridItemRecord[]): Promise<void> {}
-
-  // ==================== 设置操作 ====================
-
-  async getSettings(): Promise<Settings | null> {
-    try {
-      const record = await this.settings.get('data')
-      return record?.settings ?? null
-    } catch (error) {
-      console.error('[Database] getSettings error:', error)
-      return null
-    }
+  async saveGridItems(gridItems: GridItemRecord[]): Promise<void> {
+    await this.gridItems.bulkPut(gridItems)
   }
 
-  async saveSettings(settings: Settings): Promise<void> {
-    try {
-      await this.settings.put({
-        id: 'data',
-        settings,
-        updatedAt: Date.now()
-      })
-    } catch (error) {
-      console.error('[Database] saveSettings error:', error)
-      throw error
-    }
+  async clearGridItems(): Promise<void> {
+    await this.gridItems.clear()
   }
 
   // ==================== 壁纸缓存操作 ====================
@@ -144,41 +98,6 @@ class AppDatabase extends Dexie {
     })
   }
 
-  // ==================== WebDAV 配置操作 ====================
-
-  async getWebDAVConfig(): Promise<{
-    url: string
-    username: string
-    encryptedPassword: string
-  } | null> {
-    const record = await this.webdav.get('config')
-    if (!record) return null
-
-    return {
-      url: record.url,
-      username: record.username,
-      encryptedPassword: record.encryptedPassword
-    }
-  }
-
-  async saveWebDAVConfig(
-    url: string,
-    username: string,
-    encryptedPassword: string
-  ): Promise<void> {
-    await this.webdav.put({
-      id: 'config',
-      url,
-      username,
-      encryptedPassword,
-      updatedAt: Date.now()
-    })
-  }
-
-  async clearWebDAVConfig(): Promise<void> {
-    await this.webdav.delete('config')
-  }
-
   // ==================== Favicon 缓存操作 ====================
 
   /**
@@ -204,7 +123,7 @@ class AppDatabase extends Dexie {
   async saveFavicon(domain: string, dataUrl: string): Promise<void> {
     try {
       await this.favicons.put({
-        domain,
+        id: domain,
         dataUrl,
         timestamp: Date.now()
       })
@@ -219,15 +138,11 @@ class AppDatabase extends Dexie {
    * 导出所有数据（不含壁纸 Blob）
    */
   async exportData(): Promise<string> {
-    const [bookmarksData, settingsData] = await Promise.all([
-      this.getBookmarks(),
-      this.getSettings()
-    ])
+    const gridItemsData = await this.getGridItems()
 
     return JSON.stringify(
       {
-        bookmarks: bookmarksData,
-        settings: settingsData,
+        gridItems: gridItemsData,
         exportedAt: new Date().toISOString(),
         version: '2.0.0'
       },
@@ -243,15 +158,16 @@ class AppDatabase extends Dexie {
     try {
       const data = JSON.parse(jsonString)
 
-      if (data.bookmarks) {
-        await this.saveBookmarks(
-          data.bookmarks.bookmarks || data.bookmarks,
-          data.bookmarks.rootOrder || []
-        )
-      }
-
-      if (data.settings) {
-        await this.saveSettings(data.settings)
+      if (data.gridItems) {
+        await this.clearGridItems()
+        await this.saveGridItems(data.gridItems)
+      } else if (data.bookmarks) {
+        // 兼容旧格式
+        const items = data.bookmarks.bookmarks || data.bookmarks
+        if (Array.isArray(items)) {
+          await this.clearGridItems()
+          await this.saveGridItems(items)
+        }
       }
 
       return true

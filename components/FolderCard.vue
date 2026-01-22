@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { FolderItem, GridSize } from '@/types'
+import { isSiteItem } from '@/types'
 import { useGridItemStore } from '@/stores/grid-items'
 import { faviconService } from '@/services/favicon'
 import { FolderOpen } from 'lucide-vue-next'
@@ -55,20 +56,36 @@ const previewItems = computed(() => {
   const children = gridItemStore.getFolderChildren(props.item.id)
 
   return children.slice(0, layout.value.items).map(child => {
-    return {
+    const defaultIcon = {
       id: child.id,
-      favicon: child.favicon || faviconService.getFaviconUrl(child.url),
-      title: child.title
+      favicon: '',
+      title: child.title,
+      url: ''
     }
+
+    if (isSiteItem(child)) {
+      return {
+        id: child.id,
+        favicon: child.favicon || faviconService.getFaviconUrl(child.url),
+        title: child.title,
+        url: child.url
+      }
+    }
+    return defaultIcon
   })
 })
 
 // 文件夹内项目总数
 const itemCount = computed(() => props.item.children.length)
 
-// 处理点击
-function handleClick() {
+// 处理点击文件夹（标题区域）
+function handleFolderClick() {
   emit('click')
+}
+
+// 处理点击预览图标
+function handlePreviewClick(url: string) {
+  window.open(url, '_self')
 }
 
 // 处理右键菜单
@@ -82,12 +99,11 @@ function handleContextMenu(event: MouseEvent) {
 <template>
   <div
     :style="sizeStyles"
-    class="folder-card group flex flex-col cursor-pointer select-none"
-    @click="handleClick"
+    class="folder-card group flex flex-col select-none"
     @contextmenu="handleContextMenu"
   >
     <!-- 文件夹容器 -->
-    <div class="flex-1 rounded-2xl glass p-2 overflow-hidden">
+    <div class="flex-1 rounded-2xl glass p-2 overflow-hidden cursor-default">
       <!-- 预览网格 - 使用 flex 布局实现居中 -->
       <div class="w-full h-full flex items-center justify-center">
         <div
@@ -104,8 +120,10 @@ function handleContextMenu(event: MouseEvent) {
             v-for="preview in previewItems"
             :src="preview.favicon"
             :alt="preview.title"
+            :title="preview.title"
             :key="preview.id"
-            class="rounded-lg object-contain"
+            class="rounded-lg object-contain cursor-pointer hover:opacity-80 transition-opacity"
+            @click.stop="handlePreviewClick(preview.url)"
             @error="
               ;($event.target as HTMLImageElement).src =
                 faviconService.generateDefaultIcon(preview.title)
@@ -114,15 +132,24 @@ function handleContextMenu(event: MouseEvent) {
         </div>
 
         <!-- 空文件夹提示 -->
-        <div v-else class="flex items-center justify-center w-full h-full">
+        <div
+          v-else
+          class="flex items-center justify-center w-full h-full cursor-pointer hover:opacity-80 transition-opacity"
+          @click="handleFolderClick"
+        >
           <FolderOpen class="size-8 text-white/30" />
         </div>
       </div>
     </div>
 
     <!-- 标题和数量 -->
-    <div class="mt-1 text-center leading-tight">
-      <span class="text-xs text-white/80 line-clamp-1 text-shadow">
+    <div
+      class="mt-1 text-center leading-tight cursor-pointer hover:text-white transition-colors"
+      @click="handleFolderClick"
+    >
+      <span
+        class="text-xs text-white/80 line-clamp-1 text-shadow group-hover:text-white"
+      >
         {{ item.title }}
       </span>
       <span v-if="itemCount > layout.items" class="text-xs text-white/50">

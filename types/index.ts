@@ -34,7 +34,7 @@ export interface GridItem {
   title: string
   order: number
   parentId: string | null
-  position?: GridPosition
+  gridPosition?: GridPosition
   createdAt: number
   updatedAt: number
 }
@@ -54,6 +54,7 @@ export interface SiteItem extends GridItem {
 export interface FolderItem extends GridItem {
   type: 'folder'
   size: GridSize
+  children: string[] // 子项 ID 列表
 }
 
 /**

@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { onMounted, computed } from 'vue'
+import { onMounted, computed, ref, provide } from 'vue'
 import { useGridItemStore } from '@/stores/grid-items'
 import { useSettingsStore } from '@/stores/settings'
 import { useWallpaperStore } from '@/stores/wallpaper'
-import { useUIStore } from '@/stores/ui'
-import { RefreshCw, Pencil, Settings } from 'lucide-vue-next'
+import { UI_KEY, type UIContext, type ContextMenuState, type ModalType, type ContextMenuTarget } from '@/types/ui'
+import type { GridItem, SiteItem, FolderItem } from '@/types'
+import { RefreshCw, Pencil, Settings as SettingsIcon } from 'lucide-vue-next'
 import { Button } from '@/shadcn/ui/button'
 
 import SearchBar from '@/components/SearchBar.vue'
@@ -19,7 +20,143 @@ import EditToolbar from '@/components/EditToolbar.vue'
 const gridItemStore = useGridItemStore()
 const settingsStore = useSettingsStore()
 const wallpaperStore = useWallpaperStore()
-const uiStore = useUIStore()
+
+// UI State Implementation
+const contextMenu = ref<ContextMenuState>({
+  visible: false,
+  x: 0,
+  y: 0,
+  target: 'blank',
+  targetItem: null
+})
+
+const modalType = ref<ModalType>(null)
+const modalData = ref<GridItem | null>(null)
+const openFolderId = ref<string | null>(null)
+const settingsPanelOpen = ref(false)
+const editingItem = ref<SiteItem | FolderItem | null>(null)
+const isEditMode = ref(false)
+const selectedIds = ref<Set<string>>(new Set())
+
+const selectedCount = computed(() => selectedIds.value.size)
+
+// Actions
+function openContextMenu(x: number, y: number, target: ContextMenuTarget, item: GridItem | null = null) {
+  contextMenu.value = {
+    visible: true,
+    x,
+    y,
+    target,
+    targetItem: item
+  }
+}
+
+function closeContextMenu() {
+  contextMenu.value.visible = false
+  contextMenu.value.targetItem = null
+}
+
+function openModal(type: ModalType, data: GridItem | null = null) {
+  modalType.value = type
+  modalData.value = data
+}
+
+function closeModal() {
+  modalType.value = null
+  modalData.value = null
+  editingItem.value = null
+}
+
+function openFolder(folderId: string) {
+  openFolderId.value = folderId
+}
+
+function closeFolder() {
+  openFolderId.value = null
+}
+
+function openSettingsPanel() {
+  settingsPanelOpen.value = true
+}
+
+function closeSettingsPanel() {
+  settingsPanelOpen.value = false
+}
+
+function setEditingItem(item: SiteItem | FolderItem | null) {
+  editingItem.value = item
+}
+
+function enterEditMode() {
+  isEditMode.value = true
+  selectedIds.value = new Set()
+}
+
+function exitEditMode() {
+  isEditMode.value = false
+  selectedIds.value = new Set()
+}
+
+function toggleEditMode() {
+  if (isEditMode.value) {
+    exitEditMode()
+  } else {
+    enterEditMode()
+  }
+}
+
+function toggleSelectItem(id: string) {
+  const newSet = new Set(selectedIds.value)
+  if (newSet.has(id)) {
+    newSet.delete(id)
+  } else {
+    newSet.add(id)
+  }
+  selectedIds.value = newSet
+}
+
+function selectAll(ids: string[]) {
+  selectedIds.value = new Set(ids)
+}
+
+function clearSelection() {
+  selectedIds.value = new Set()
+}
+
+function isSelected(id: string): boolean {
+  return selectedIds.value.has(id)
+}
+
+// Provide UI Context
+const uiContext: UIContext = {
+  contextMenu,
+  modalType,
+  modalData,
+  openFolderId,
+  settingsPanelOpen,
+  editingItem,
+  isEditMode,
+  selectedIds,
+  selectedCount,
+  openContextMenu,
+  closeContextMenu,
+  openModal,
+  closeModal,
+  openFolder,
+  closeFolder,
+  openSettingsPanel,
+  closeSettingsPanel,
+  setEditingItem,
+  enterEditMode,
+  exitEditMode,
+  toggleEditMode,
+  toggleSelectItem,
+  selectAll,
+  clearSelection,
+  isSelected
+}
+
+provide(UI_KEY, uiContext)
 
 // 默认深色渐变背景（始终显示在最底层）
 const defaultGradient =
@@ -68,7 +205,7 @@ function handleContextMenu(event: MouseEvent) {
   const folderCard = target.closest('.folder-card')
 
   if (!bookmarkCard && !folderCard) {
-    uiStore.openContextMenu(event.clientX, event.clientY, 'blank')
+    openContextMenu(event.clientX, event.clientY, 'blank')
   }
 }
 </script>
@@ -115,9 +252,9 @@ function handleContextMenu(event: MouseEvent) {
       <Button
         variant="glass"
         size="icon"
-        :class="{ 'bg-white/25': uiStore.isEditMode }"
+        :class="{ 'bg-white/25': isEditMode }"
         title="编辑书签"
-        @click="uiStore.toggleEditMode()"
+        @click="toggleEditMode()"
       >
         <Pencil class="size-5" />
       </Button>
@@ -127,9 +264,9 @@ function handleContextMenu(event: MouseEvent) {
         variant="glass"
         size="icon"
         title="设置"
-        @click="uiStore.openSettingsPanel()"
+        @click="openSettingsPanel()"
       >
-        <Settings class="size-5" />
+        <SettingsIcon class="size-5" />
       </Button>
     </div>
 

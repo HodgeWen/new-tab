@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { useUIStore } from '@/stores/ui'
+import { useUI } from '@/composables/useUI'
 import { useGridItemStore } from '@/stores/grid-items'
 import {
   isFolderItem,
@@ -20,16 +20,17 @@ import { Button } from '@/shadcn/ui/button'
 import { Input } from '@/shadcn/ui/input'
 import { Folder } from 'lucide-vue-next'
 
-const uiStore = useUIStore()
+const ui = useUI()
 const gridItemStore = useGridItemStore()
 
 const isVisible = computed({
-  get: () => uiStore.modalType === 'addFolder' || uiStore.modalType === 'editFolder',
+  get: () =>
+    ui.modalType.value === 'addFolder' || ui.modalType.value === 'editFolder',
   set: (value: boolean) => {
     if (!value) closeModal()
   }
 })
-const isEdit = computed(() => uiStore.modalType === 'editFolder')
+const isEdit = computed(() => ui.modalType.value === 'editFolder')
 
 const title = ref('')
 const selectedPreset = ref<FolderSizePreset>('square')
@@ -70,11 +71,11 @@ watch(isVisible, visible => {
   if (
     visible &&
     isEdit.value &&
-    uiStore.modalData &&
-    isFolderItem(uiStore.modalData)
+    ui.modalData.value &&
+    isFolderItem(ui.modalData.value)
   ) {
-    title.value = uiStore.modalData.title
-    selectedPreset.value = findPresetBySize(uiStore.modalData.size)
+    title.value = ui.modalData.value.title
+    selectedPreset.value = findPresetBySize(ui.modalData.value.size)
   } else if (!visible) {
     resetForm()
   }
@@ -82,7 +83,7 @@ watch(isVisible, visible => {
 
 // 关闭模态框
 function closeModal() {
-  uiStore.closeModal()
+  ui.closeModal()
   resetForm()
 }
 
@@ -92,13 +93,13 @@ async function handleSubmit() {
 
   loading.value = true
   try {
-    if (isEdit.value && uiStore.modalData) {
-      await gridItemStore.updateGridItem(uiStore.modalData.id, {
+    if (isEdit.value && ui.modalData.value) {
+      await gridItemStore.updateGridItem(ui.modalData.value.id, {
         title: title.value.trim()
       })
-      if (isFolderItem(uiStore.modalData)) {
+      if (isFolderItem(ui.modalData.value)) {
         await gridItemStore.updateFolderSize(
-          uiStore.modalData.id,
+          ui.modalData.value.id,
           currentSize.value
         )
       }

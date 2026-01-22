@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { useUIStore } from '@/stores/ui'
+import { useUI } from '@/composables/useUI'
 import { useGridItemStore } from '@/stores/grid-items'
 import { faviconService } from '@/services/favicon'
 import { isSiteItem } from '@/types'
@@ -16,16 +16,16 @@ import { Button } from '@/shadcn/ui/button'
 import { Input } from '@/shadcn/ui/input'
 import { Globe } from 'lucide-vue-next'
 
-const uiStore = useUIStore()
+const ui = useUI()
 const gridItemStore = useGridItemStore()
 
 const isVisible = computed({
-  get: () => uiStore.modalType === 'addSite' || uiStore.modalType === 'editSite',
+  get: () => ui.modalType.value === 'addSite' || ui.modalType.value === 'editSite',
   set: (value: boolean) => {
     if (!value) closeModal()
   }
 })
-const isEdit = computed(() => uiStore.modalType === 'editSite')
+const isEdit = computed(() => ui.modalType.value === 'editSite')
 
 const title = ref('')
 const url = ref('')
@@ -44,12 +44,12 @@ watch(isVisible, visible => {
   if (
     visible &&
     isEdit.value &&
-    uiStore.modalData &&
-    isSiteItem(uiStore.modalData)
+    ui.modalData.value &&
+    isSiteItem(ui.modalData.value)
   ) {
-    title.value = uiStore.modalData.title
-    url.value = uiStore.modalData.url
-    favicon.value = uiStore.modalData.favicon
+    title.value = ui.modalData.value.title
+    url.value = ui.modalData.value.url
+    favicon.value = ui.modalData.value.favicon
   } else if (!visible) {
     resetForm()
   }
@@ -57,7 +57,7 @@ watch(isVisible, visible => {
 
 // 关闭模态框
 function closeModal() {
-  uiStore.closeModal()
+  ui.closeModal()
   resetForm()
 }
 
@@ -108,8 +108,8 @@ async function handleSubmit() {
       favicon.value = await faviconService.fetchAndCacheFavicon(fullUrl)
     }
 
-    if (isEdit.value && uiStore.modalData) {
-      await gridItemStore.updateGridItem(uiStore.modalData.id, {
+    if (isEdit.value && ui.modalData.value) {
+      await gridItemStore.updateGridItem(ui.modalData.value.id, {
         title: title.value.trim(),
         url: fullUrl,
         favicon: favicon.value

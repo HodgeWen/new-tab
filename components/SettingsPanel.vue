@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { useUIStore } from '@/stores/ui'
+import { useUI } from '@/composables/useUI'
 import { useSettingsStore } from '@/stores/settings'
 import { useWallpaperStore } from '@/stores/wallpaper'
 import { useGridItemStore } from '@/stores/grid-items'
@@ -40,7 +40,7 @@ import {
   Trash2
 } from 'lucide-vue-next'
 
-const uiStore = useUIStore()
+const ui = useUI()
 const settingsStore = useSettingsStore()
 const wallpaperStore = useWallpaperStore()
 const gridItemStore = useGridItemStore()
@@ -64,9 +64,9 @@ const backupLoading = ref(false)
 
 // 是否显示面板
 const isVisible = computed({
-  get: () => uiStore.settingsPanelOpen,
+  get: () => ui.settingsPanelOpen.value,
   set: (value: boolean) => {
-    if (!value) uiStore.closeSettingsPanel()
+    if (!value) ui.closeSettingsPanel()
   }
 })
 

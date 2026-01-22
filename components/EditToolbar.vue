@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useUIStore } from '@/stores/ui'
+import { useUI } from '@/composables/useUI'
 import { useGridItemStore } from '@/stores/grid-items'
 import { isSiteItem } from '@/types'
 
@@ -20,7 +20,7 @@ import {
   FolderPlus
 } from 'lucide-vue-next'
 
-const uiStore = useUIStore()
+const ui = useUI()
 const gridItemStore = useGridItemStore()
 
 // 获取可选中的网格项（只有普通网站，不包含文件夹）
@@ -31,52 +31,52 @@ const selectableSites = computed(() => {
 // 是否全选
 const isAllSelected = computed(() => {
   if (selectableSites.value.length === 0) return false
-  return selectableSites.value.every(site => uiStore.isSelected(site.id))
+  return selectableSites.value.every(site => ui.isSelected(site.id))
 })
 
 // 全选/取消全选
 function toggleSelectAll() {
   if (isAllSelected.value) {
-    uiStore.clearSelection()
+    ui.clearSelection()
   } else {
     const ids = selectableSites.value.map(site => site.id)
-    uiStore.selectAll(ids)
+    ui.selectAll(ids)
   }
 }
 
 // 删除选中项
 async function deleteSelected() {
-  if (uiStore.selectedCount === 0) return
+  if (ui.selectedCount.value === 0) return
 
   const confirmed = confirm(
-    `确定要删除选中的 ${uiStore.selectedCount} 个书签吗？`
+    `确定要删除选中的 ${ui.selectedCount.value} 个书签吗？`
   )
   if (!confirmed) return
 
-  const ids = Array.from(uiStore.selectedIds)
+  const ids = Array.from(ui.selectedIds.value)
   await gridItemStore.batchDeleteGridItems(ids)
-  uiStore.clearSelection()
+  ui.clearSelection()
 }
 
 // 移动到文件夹
 async function moveToFolder(folderId: string) {
-  if (uiStore.selectedCount === 0) return
+  if (ui.selectedCount.value === 0) return
 
-  const ids = Array.from(uiStore.selectedIds)
+  const ids = Array.from(ui.selectedIds.value)
   await gridItemStore.batchMoveToFolder(ids, folderId)
-  uiStore.clearSelection()
+  ui.clearSelection()
 }
 
 // 创建新分组并移入
 function createNewFolder() {
-  uiStore.openModal('addFolder')
+  ui.openModal('addFolder')
 }
 </script>
 
 <template>
   <Transition name="slide-up">
     <div
-      v-if="uiStore.isEditMode"
+      v-if="ui.isEditMode.value"
       class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
     >
       <div
@@ -86,7 +86,7 @@ function createNewFolder() {
         <div
           class="flex items-center gap-2 text-white/80 text-sm pr-3 border-r border-white/20"
         >
-          <span class="font-medium">{{ uiStore.selectedCount }}</span>
+          <span class="font-medium">{{ ui.selectedCount.value }}</span>
           <span>已选</span>
         </div>
 
@@ -106,7 +106,7 @@ function createNewFolder() {
           <DropdownMenuTrigger as-child>
             <button
               class="toolbar-btn"
-              :disabled="uiStore.selectedCount === 0"
+              :disabled="ui.selectedCount.value === 0"
               title="移入分组"
             >
               <FolderInput class="size-5" />
@@ -147,7 +147,7 @@ function createNewFolder() {
         <!-- 删除按钮 -->
         <button
           class="toolbar-btn text-red-400 hover:text-red-300"
-          :disabled="uiStore.selectedCount === 0"
+          :disabled="ui.selectedCount.value === 0"
           title="删除"
           @click="deleteSelected"
         >
@@ -162,7 +162,7 @@ function createNewFolder() {
         <Button
           variant="glass"
           size="sm"
-          @click="uiStore.exitEditMode"
+          @click="ui.exitEditMode"
         >
           完成
         </Button>

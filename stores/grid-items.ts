@@ -11,6 +11,12 @@ import { isFolderItem } from '@/types'
 import { db } from '@/services/database'
 import { generateId } from '@/utils/id'
 
+// [itemId, childIds[]]
+type OrderEntry = [string, string[]]
+type Orders = OrderEntry[]
+
+const ORDERS_KEY = 'new-tab-orders'
+
 /**
  * 迁移旧的 FolderSize 字符串格式到 GridSize 对象格式
  */
@@ -51,6 +57,7 @@ function migrateGridItem(item: Record<string, unknown>): GridItem {
 export const useGridItemStore = defineStore('gridItems', () => {
   const gridItems = ref<Record<string, GridItem>>({})
   const rootOrder = ref<string[]>([])
+  const orders = ref<Orders>([])
   const loading = ref(false)
 
   // 获取根级别的网格项
@@ -70,60 +77,98 @@ export const useGridItemStore = defineStore('gridItems', () => {
   async function loadGridItems() {
     loading.value = true
     try {
-      const data = await db.getBookmarks()
+      const items = await db.getGridItems()
 
       // 迁移旧数据格式
       const loadedItems: Record<string, GridItem> = {}
-      for (const [id, item] of Object.entries(data.bookmarks || {})) {
-        loadedItems[id] = migrateGridItem(
+      items.forEach(item => {
+        loadedItems[item.id] = migrateGridItem(
           item as unknown as Record<string, unknown>
         )
-      }
-
-      let loadedRootOrder = Array.isArray(data.rootOrder)
-        ? [...data.rootOrder]
-        : []
-
-      // 修复数据不一致：如果有网格项但 rootOrder 为空，重建 rootOrder
-      const itemIds = Object.keys(loadedItems)
-      const rootLevelIds = itemIds.filter(id => {
-        const item = loadedItems[id]
-        return item && item.parentId === null
       })
 
-      if (rootLevelIds.length > 0 && loadedRootOrder.length === 0) {
-        loadedRootOrder = rootLevelIds
-      }
+      gridItems.value = loadedItems
 
-      // 确保 rootOrder 中的 ID 都存在于 gridItems 中
-      loadedRootOrder = loadedRootOrder.filter(id => id in loadedItems)
-
-      // 添加缺失的根级别项到 rootOrder
-      for (const id of rootLevelIds) {
-        if (!loadedRootOrder.includes(id)) {
-          loadedRootOrder.push(id)
+      // 加载 orders
+      const rawOrders = localStorage.getItem(ORDERS_KEY)
+      if (rawOrders) {
+        try {
+          orders.value = JSON.parse(rawOrders)
+          syncGridItemsFromOrders()
+        } catch (e) {
+          console.error('[GridItems] Failed to parse orders:', e)
+          buildOrdersFromGridItems()
         }
-      }
-
-      // 使用扩展运算符确保响应式更新
-      gridItems.value = { ...loadedItems }
-      rootOrder.value = [...loadedRootOrder]
-
-      // 如果修复了数据，保存修复后的数据
-      if (data.rootOrder?.length !== loadedRootOrder.length) {
-        await saveGridItems()
+      } else {
+        buildOrdersFromGridItems()
       }
     } finally {
       loading.value = false
     }
   }
 
-  // 保存网格项数据
-  async function saveGridItems() {
-    // 使用 toRaw 获取原始对象，确保正确序列化
-    const rawItems = JSON.parse(JSON.stringify(toRaw(gridItems.value)))
-    const rawRootOrder = JSON.parse(JSON.stringify(toRaw(rootOrder.value)))
-    await db.saveBookmarks(rawItems, rawRootOrder)
+  // 从 gridItems 构建 orders (当 localStorage 中没有 orders 时)
+  function buildOrdersFromGridItems() {
+    const allItems = Object.values(gridItems.value)
+    const rootItems = allItems
+      .filter(item => !item.parentId)
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+
+    const newOrders: Orders = []
+
+    rootItems.forEach(item => {
+      const childrenIds: string[] = []
+      if (isFolderItem(item)) {
+        const children = allItems
+          .filter(child => child.parentId === item.id)
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+        childrenIds.push(...children.map(c => c.id))
+      }
+      newOrders.push([item.id, childrenIds])
+    })
+
+    orders.value = newOrders
+    saveOrders()
+    syncGridItemsFromOrders()
+  }
+
+  // 根据 orders 同步更新 gridItems 的 hierarchy 和 order
+  function syncGridItemsFromOrders() {
+    const newRootOrder: string[] = []
+
+    orders.value.forEach(([id, childrenIds], index) => {
+      newRootOrder.push(id)
+      const item = gridItems.value[id]
+      if (item) {
+        item.order = index
+        item.parentId = null
+        if (isFolderItem(item)) {
+          // 确保 children 数组是新的引用
+          item.children = [...childrenIds]
+          // 更新子项
+          childrenIds.forEach((childId, childIndex) => {
+            const child = gridItems.value[childId]
+            if (child) {
+              child.parentId = id
+              child.order = childIndex
+            }
+          })
+        }
+      }
+    })
+
+    rootOrder.value = newRootOrder
+  }
+
+  // 保存 orders 到 localStorage
+  function saveOrders() {
+    localStorage.setItem(ORDERS_KEY, JSON.stringify(orders.value))
+  }
+
+  // 保存 gridItems 到 IndexedDB
+  async function persistToDb() {
+    const items = Object.values(gridItems.value).map(item => toRaw(item))
+    await db.saveGridItems(items)
   }
 
   // 添加网站
@@ -133,35 +178,34 @@ export const useGridItemStore = defineStore('gridItems', () => {
     const id = generateId()
     const now = Date.now()
 
-    // 确保 rootOrder 是数组
-    const currentRootOrder = Array.isArray(rootOrder.value)
-      ? [...rootOrder.value]
-      : []
-
     const newSite: SiteItem = {
       id,
       type: 'site',
-      order: currentRootOrder.length,
+      order: 0, // 会被 sync 更新
       createdAt: now,
       updatedAt: now,
-      ...site
+      ...site,
+      parentId: site.parentId || null
     }
 
-    // 更新 gridItems
-    gridItems.value = { ...gridItems.value, [id]: newSite }
+    gridItems.value[id] = newSite
 
+    // 更新 orders
     if (site.parentId) {
-      const parent = gridItems.value[site.parentId]
-      if (parent && isFolderItem(parent)) {
-        parent.children = [...parent.children, id]
+      const parentEntry = orders.value.find(e => e[0] === site.parentId)
+      if (parentEntry) {
+        parentEntry[1].push(id)
+      } else {
+        // 容错：如果父级不在 orders 中（不应发生），添加到根
+        orders.value.push([id, []])
       }
     } else {
-      // 添加到 rootOrder
-      currentRootOrder.push(id)
-      rootOrder.value = currentRootOrder
+      orders.value.push([id, []])
     }
 
-    await saveGridItems()
+    saveOrders()
+    syncGridItemsFromOrders()
+    await persistToDb()
     return id
   }
 
@@ -175,36 +219,34 @@ export const useGridItemStore = defineStore('gridItems', () => {
     const id = generateId()
     const now = Date.now()
 
-    // 确保 rootOrder 是数组
-    const currentRootOrder = Array.isArray(rootOrder.value)
-      ? [...rootOrder.value]
-      : []
-
     const newFolder: FolderItem = {
       id,
       type: 'folder',
-      order: currentRootOrder.length,
+      order: 0,
       children: [],
       createdAt: now,
       updatedAt: now,
-      ...folder
+      ...folder,
+      parentId: folder.parentId || null
     }
 
-    // 更新 gridItems
-    gridItems.value = { ...gridItems.value, [id]: newFolder }
+    gridItems.value[id] = newFolder
 
     if (folder.parentId) {
-      const parent = gridItems.value[folder.parentId]
-      if (parent && isFolderItem(parent)) {
-        parent.children = [...parent.children, id]
+      // 理论上不支持文件夹嵌套，但逻辑上处理
+      const parentEntry = orders.value.find(e => e[0] === folder.parentId)
+      if (parentEntry) {
+        parentEntry[1].push(id)
+      } else {
+        orders.value.push([id, []])
       }
     } else {
-      // 添加到 rootOrder
-      currentRootOrder.push(id)
-      rootOrder.value = currentRootOrder
+      orders.value.push([id, []])
     }
 
-    await saveGridItems()
+    saveOrders()
+    syncGridItemsFromOrders()
+    await persistToDb()
     return id
   }
 
@@ -217,42 +259,38 @@ export const useGridItemStore = defineStore('gridItems', () => {
     if (!item) return
 
     Object.assign(item, updates, { updatedAt: Date.now() })
-    await saveGridItems()
+    await persistToDb()
   }
 
   // 删除网格项
   async function deleteGridItem(id: string) {
-    const item = gridItems.value[id]
-    if (!item) return
+    // 从 orders 中移除
+    const rootIndex = orders.value.findIndex(e => e[0] === id)
+    if (rootIndex > -1) {
+      // 是根级项
+      const entry = orders.value[rootIndex]
+      const childrenIds = entry[1]
+      orders.value.splice(rootIndex, 1)
 
-    // 如果是文件夹，将子项移到根级别
-    if (isFolderItem(item)) {
-      for (const childId of item.children) {
-        const child = gridItems.value[childId]
-        if (child) {
-          child.parentId = null
-          if (!Array.isArray(rootOrder.value)) {
-            rootOrder.value = []
-          }
-          rootOrder.value = [...rootOrder.value, childId]
+      // 如果是文件夹，将子项移到根级别
+      childrenIds.forEach(childId => {
+        orders.value.push([childId, []])
+      })
+    } else {
+      // 是子项
+      for (const entry of orders.value) {
+        const childIndex = entry[1].indexOf(id)
+        if (childIndex > -1) {
+          entry[1].splice(childIndex, 1)
+          break
         }
       }
     }
 
-    // 从父级移除引用
-    if (item.parentId) {
-      const parent = gridItems.value[item.parentId]
-      if (parent && isFolderItem(parent)) {
-        const index = parent.children.indexOf(id)
-        if (index > -1) parent.children.splice(index, 1)
-      }
-    } else {
-      const index = rootOrder.value.indexOf(id)
-      if (index > -1) rootOrder.value.splice(index, 1)
-    }
-
     delete gridItems.value[id]
-    await saveGridItems()
+    saveOrders()
+    syncGridItemsFromOrders()
+    await persistToDb()
   }
 
   // 移动网格项到指定位置
@@ -264,31 +302,41 @@ export const useGridItemStore = defineStore('gridItems', () => {
     const item = gridItems.value[id]
     if (!item) return
 
-    // 从原位置移除
-    if (item.parentId) {
-      const oldParent = gridItems.value[item.parentId]
-      if (oldParent && isFolderItem(oldParent)) {
-        const index = oldParent.children.indexOf(id)
-        if (index > -1) oldParent.children.splice(index, 1)
-      }
+    // 1. 从原位置移除
+    let savedChildren: string[] = []
+
+    const rootIndex = orders.value.findIndex(e => e[0] === id)
+    if (rootIndex > -1) {
+      savedChildren = orders.value[rootIndex][1]
+      orders.value.splice(rootIndex, 1)
     } else {
-      const index = rootOrder.value.indexOf(id)
-      if (index > -1) rootOrder.value.splice(index, 1)
+      for (const entry of orders.value) {
+        const childIndex = entry[1].indexOf(id)
+        if (childIndex > -1) {
+          entry[1].splice(childIndex, 1)
+          break
+        }
+      }
     }
 
-    // 添加到新位置
-    item.parentId = targetParentId
+    // 2. 插入新位置
     if (targetParentId) {
-      const newParent = gridItems.value[targetParentId]
-      if (newParent && isFolderItem(newParent)) {
-        newParent.children.splice(targetIndex, 0, id)
+      const parentEntry = orders.value.find(e => e[0] === targetParentId)
+      if (parentEntry) {
+        parentEntry[1].splice(targetIndex, 0, id)
       }
     } else {
-      rootOrder.value.splice(targetIndex, 0, id)
+      // 只有当它是文件夹或者它原本在根级且有子项时，我们需要保留子项
+      // 如果它原本是子项（site），savedChildren 是空的，这也正确
+      orders.value.splice(targetIndex, 0, [id, savedChildren])
     }
 
     item.updatedAt = Date.now()
-    await saveGridItems()
+    saveOrders()
+    syncGridItemsFromOrders()
+    // 拖拽操作通常频繁，这里可以选择不立即 persistToDb，或者防抖
+    // 根据 proposal，可以在页面卸载或特定时机保存。这里为了安全还是保存一下，或者依靠 saveOrders
+    await persistToDb()
   }
 
   // 更新文件夹尺寸
@@ -318,26 +366,39 @@ export const useGridItemStore = defineStore('gridItems', () => {
       updatedAt: Date.now()
     }
 
-    // 触发响应式更新
     gridItems.value = {
       ...gridItems.value,
       [id]: updatedFolder
     }
 
-    await saveGridItems()
+    await persistToDb()
   }
 
   // 重排序
   async function reorder(newOrder: string[], parentId: string | null = null) {
     if (parentId) {
-      const parent = gridItems.value[parentId]
-      if (parent && isFolderItem(parent)) {
-        parent.children = newOrder
+      const parentEntry = orders.value.find(e => e[0] === parentId)
+      if (parentEntry) {
+        parentEntry[1] = [...newOrder]
       }
     } else {
-      rootOrder.value = [...newOrder]
+      // 重构根 orders
+      const newOrders: Orders = []
+      newOrder.forEach(id => {
+        const existingEntry = orders.value.find(e => e[0] === id)
+        if (existingEntry) {
+          newOrders.push(existingEntry)
+        } else {
+          // 容错
+          newOrders.push([id, []])
+        }
+      })
+      orders.value = newOrders
     }
-    await saveGridItems()
+
+    saveOrders()
+    syncGridItemsFromOrders()
+    // reorder 也是频繁操作，可以暂不 persistToDb
   }
 
   // 更新单个网格项的网格位置
@@ -347,10 +408,10 @@ export const useGridItemStore = defineStore('gridItems', () => {
 
     item.gridPosition = position
     item.updatedAt = Date.now()
-    await saveGridItems()
+    await persistToDb()
   }
 
-  // 批量更新网格位置（用于拖拽结束时同步多个项目的位置）
+  // 批量更新网格位置
   async function batchUpdateGridPositions(
     updates: Array<{ id: string; position: GridPosition }>
   ) {
@@ -361,15 +422,14 @@ export const useGridItemStore = defineStore('gridItems', () => {
         item.updatedAt = Date.now()
       }
     }
-    await saveGridItems()
+    await persistToDb()
   }
 
-  // 迁移旧数据到网格布局（将 rootOrder 顺序转换为网格位置）
+  // 迁移旧数据到网格布局
   function migrateToGridLayout(colCount: number = 8): boolean {
     const rootItems = rootGridItems.value
     let needsMigration = false
 
-    // 检查是否需要迁移（存在没有 gridPosition 的根级网格项）
     for (const item of rootItems) {
       if (!item.gridPosition) {
         needsMigration = true
@@ -379,14 +439,12 @@ export const useGridItemStore = defineStore('gridItems', () => {
 
     if (!needsMigration) return false
 
-    // 按 rootOrder 顺序计算网格位置
     let currentX = 0
     let currentY = 0
 
     for (const item of rootItems) {
       if (item.gridPosition) continue
 
-      // 获取元素尺寸
       let w = 1
       let h = 1
       if (isFolderItem(item)) {
@@ -394,58 +452,45 @@ export const useGridItemStore = defineStore('gridItems', () => {
         h = item.size.h
       }
 
-      // 检查是否需要换行
       if (currentX + w > colCount) {
         currentX = 0
         currentY++
       }
 
-      // 设置位置
       item.gridPosition = { x: currentX, y: currentY, w, h }
-
-      // 移动到下一个位置
       currentX += w
     }
 
+    // 迁移后保存
+    persistToDb()
     return true
   }
 
   // 批量删除网格项
   async function batchDeleteGridItems(ids: string[]) {
     for (const id of ids) {
-      const item = gridItems.value[id]
-      if (!item) continue
-
-      // 如果是文件夹，将子项移到根级别
-      if (isFolderItem(item)) {
-        for (const childId of item.children) {
-          const child = gridItems.value[childId]
-          if (child) {
-            child.parentId = null
-            if (!Array.isArray(rootOrder.value)) {
-              rootOrder.value = []
-            }
-            rootOrder.value = [...rootOrder.value, childId]
+      // 从 orders 移除
+      const rootIndex = orders.value.findIndex(e => e[0] === id)
+      if (rootIndex > -1) {
+        const entry = orders.value[rootIndex]
+        const childrenIds = entry[1]
+        orders.value.splice(rootIndex, 1)
+        childrenIds.forEach(childId => orders.value.push([childId, []]))
+      } else {
+        for (const entry of orders.value) {
+          const childIndex = entry[1].indexOf(id)
+          if (childIndex > -1) {
+            entry[1].splice(childIndex, 1)
+            break
           }
         }
       }
-
-      // 从父级移除引用
-      if (item.parentId) {
-        const parent = gridItems.value[item.parentId]
-        if (parent && isFolderItem(parent)) {
-          const index = parent.children.indexOf(id)
-          if (index > -1) parent.children.splice(index, 1)
-        }
-      } else {
-        const index = rootOrder.value.indexOf(id)
-        if (index > -1) rootOrder.value.splice(index, 1)
-      }
-
       delete gridItems.value[id]
     }
 
-    await saveGridItems()
+    saveOrders()
+    syncGridItemsFromOrders()
+    await persistToDb()
   }
 
   // 批量移动网格项到文件夹
@@ -454,8 +499,6 @@ export const useGridItemStore = defineStore('gridItems', () => {
     targetFolderId: string | null
   ) {
     const targetFolder = targetFolderId ? gridItems.value[targetFolderId] : null
-
-    // 如果目标是文件夹，确保它存在且是文件夹类型
     if (targetFolderId && (!targetFolder || !isFolderItem(targetFolder))) {
       return
     }
@@ -463,39 +506,39 @@ export const useGridItemStore = defineStore('gridItems', () => {
     for (const id of ids) {
       const item = gridItems.value[id]
       if (!item) continue
-
-      // 不能将文件夹移动到其他文件夹
-      if (isFolderItem(item)) continue
-
-      // 不能将项目移动到自己
+      if (isFolderItem(item)) continue // 不支持移动文件夹到文件夹
       if (id === targetFolderId) continue
 
-      // 从原位置移除
-      if (item.parentId) {
-        const oldParent = gridItems.value[item.parentId]
-        if (oldParent && isFolderItem(oldParent)) {
-          const index = oldParent.children.indexOf(id)
-          if (index > -1) oldParent.children.splice(index, 1)
-        }
+      // 1. 移除
+      const rootIndex = orders.value.findIndex(e => e[0] === id)
+      if (rootIndex > -1) {
+        orders.value.splice(rootIndex, 1)
       } else {
-        const index = rootOrder.value.indexOf(id)
-        if (index > -1) rootOrder.value.splice(index, 1)
+        for (const entry of orders.value) {
+          const childIndex = entry[1].indexOf(id)
+          if (childIndex > -1) {
+            entry[1].splice(childIndex, 1)
+            break
+          }
+        }
       }
 
-      // 添加到新位置
-      item.parentId = targetFolderId
-
-      if (targetFolderId && targetFolder && isFolderItem(targetFolder)) {
-        targetFolder.children = [...targetFolder.children, id]
+      // 2. 添加到新位置
+      if (targetFolderId) {
+        const parentEntry = orders.value.find(e => e[0] === targetFolderId)
+        if (parentEntry) {
+          parentEntry[1].push(id)
+        }
       } else {
-        // 移动到根级别
-        rootOrder.value = [...rootOrder.value, id]
+        orders.value.push([id, []])
       }
 
       item.updatedAt = Date.now()
     }
 
-    await saveGridItems()
+    saveOrders()
+    syncGridItemsFromOrders()
+    await persistToDb()
   }
 
   // 获取所有文件夹

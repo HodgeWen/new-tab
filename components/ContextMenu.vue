@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, watch, onUnmounted, ref } from 'vue'
-import { useUIStore } from '@/stores/ui'
+import { useUI } from '@/composables/useUI'
 import { useGridItemStore } from '@/stores/grid-items'
 import {
   isFolderItem,
@@ -20,13 +20,13 @@ import {
   ChevronRight
 } from 'lucide-vue-next'
 
-const uiStore = useUIStore()
+const ui = useUI()
 const gridItemStore = useGridItemStore()
 const menuRef = ref<HTMLDivElement>()
 
-const isVisible = computed(() => uiStore.contextMenu.visible)
-const target = computed(() => uiStore.contextMenu.target)
-const targetItem = computed(() => uiStore.contextMenu.targetItem)
+const isVisible = computed(() => ui.contextMenu.value.visible)
+const target = computed(() => ui.contextMenu.value.target)
+const targetItem = computed(() => ui.contextMenu.value.targetItem)
 
 // 获取所有文件夹（用于"移动到分组"功能）
 const availableFolders = computed(() => {
@@ -50,8 +50,8 @@ const availableFolders = computed(() => {
 
 // 计算菜单位置（确保不超出视口）
 const menuStyle = computed(() => {
-  let x = uiStore.contextMenu.x
-  let y = uiStore.contextMenu.y
+  let x = ui.contextMenu.value.x
+  let y = ui.contextMenu.value.y
 
   // 简单的边界检测
   if (typeof window !== 'undefined') {
@@ -165,21 +165,21 @@ const menuItems = computed(() => {
 async function handleAction(action: string, value?: unknown) {
   // 先保存 targetItem，因为 closeContextMenu 会将其设为 null
   const item = targetItem.value
-  uiStore.closeContextMenu()
+  ui.closeContextMenu()
 
   switch (action) {
     case 'addSite':
-      uiStore.openModal('addSite')
+      ui.openModal('addSite')
       break
     case 'addFolder':
-      uiStore.openModal('addFolder')
+      ui.openModal('addFolder')
       break
     case 'openSettings':
-      uiStore.openSettingsPanel()
+      ui.openSettingsPanel()
       break
     case 'editSite':
       if (item) {
-        uiStore.openModal('editSite', item)
+        ui.openModal('editSite', item)
       }
       break
     case 'deleteSite':
@@ -189,7 +189,7 @@ async function handleAction(action: string, value?: unknown) {
       break
     case 'editFolder':
       if (item) {
-        uiStore.openModal('editFolder', item)
+        ui.openModal('editFolder', item)
       }
       break
     case 'deleteFolder':
@@ -235,14 +235,14 @@ async function handleAction(action: string, value?: unknown) {
 // 点击外部关闭
 function handleClickOutside(event: MouseEvent) {
   if (menuRef.value && !menuRef.value.contains(event.target as Node)) {
-    uiStore.closeContextMenu()
+    ui.closeContextMenu()
   }
 }
 
 // ESC 关闭
 function handleKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape') {
-    uiStore.closeContextMenu()
+    ui.closeContextMenu()
   }
 }
 
