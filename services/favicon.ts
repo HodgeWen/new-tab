@@ -1,24 +1,12 @@
 /**
- * Favicon 获取与缓存服务
- * 策略：缓存 -> Google Favicon Service -> 直接访问 -> 默认图标
+ * Favicon 获取服务
+ * 策略：Google Favicon Service -> 默认图标
  */
-import { db } from './database'
 
 class FaviconService {
   private readonly googleFaviconUrl = 'https://www.google.com/s2/favicons'
   private readonly defaultIcon =
     'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23667eea" width="100" height="100" rx="20"/><text x="50" y="65" font-size="50" text-anchor="middle" fill="white">?</text></svg>'
-
-  /**
-   * 从 URL 中提取域名
-   */
-  private getDomain(url: string): string | null {
-    try {
-      return new URL(url).hostname
-    } catch {
-      return null
-    }
-  }
 
   /**
    * 获取 favicon URL（同步方法，仅用于快速获取 Google 服务 URL）
@@ -29,50 +17,6 @@ class FaviconService {
       return `${this.googleFaviconUrl}?domain=${domain}&sz=${size}`
     } catch {
       return this.defaultIcon
-    }
-  }
-
-  /**
-   * 获取 favicon，优先从缓存读取
-   * @param url 网站 URL
-   * @returns favicon 的 Base64 数据或 URL
-   */
-  async getFaviconWithCache(url: string): Promise<string> {
-    const domain = this.getDomain(url)
-    if (!domain) return this.defaultIcon
-
-    // 尝试从缓存读取
-    const cached = await db.getFavicon(domain)
-    if (cached) {
-      return cached
-    }
-
-    // 缓存未命中，返回 Google 服务 URL
-    return this.getFaviconUrl(url)
-  }
-
-  /**
-   * 获取并缓存 favicon
-   * @param url 网站 URL
-   * @returns favicon 的 URL
-   */
-  async fetchAndCacheFavicon(url: string): Promise<string> {
-    const domain = this.getDomain(url)
-    if (!domain) return this.defaultIcon
-
-    // 先检查缓存
-    const cached = await db.getFavicon(domain)
-    if (cached) {
-      return cached
-    }
-
-    try {
-      // 直接缓存 Google Favicon Service 的 URL，避免跨域转码
-      const googleUrl = `${this.googleFaviconUrl}?domain=${domain}&sz=64`
-      await db.saveFavicon(domain, googleUrl)
-      return googleUrl
-    } catch {
-      return this.getFaviconUrl(url)
     }
   }
 

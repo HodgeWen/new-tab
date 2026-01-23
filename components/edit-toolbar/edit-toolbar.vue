@@ -1,7 +1,7 @@
 <template>
   <Transition name="slide-up">
     <div
-      v-if="ui.isEditMode.value"
+      v-if="uiStore.isEditMode"
       class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
     >
       <div
@@ -11,7 +11,7 @@
         <div
           class="flex items-center gap-2 text-white/80 text-sm pr-3 border-r border-white/20"
         >
-          <span class="font-medium">{{ ui.selectedCount.value }}</span>
+          <span class="font-medium">{{ uiStore.selectedCount }}</span>
           <span>已选</span>
         </div>
 
@@ -31,7 +31,7 @@
           <DropdownMenuTrigger as-child>
             <button
               class="toolbar-btn"
-              :disabled="ui.selectedCount.value === 0"
+              :disabled="uiStore.selectedCount === 0"
               title="移入分组"
             >
               <FolderInput class="size-5" />
@@ -72,7 +72,7 @@
         <!-- 删除按钮 -->
         <button
           class="toolbar-btn text-red-400 hover:text-red-300"
-          :disabled="ui.selectedCount.value === 0"
+          :disabled="uiStore.selectedCount === 0"
           title="删除"
           @click="deleteSelected"
         >
@@ -84,7 +84,7 @@
         <div class="w-px h-8 bg-white/20" />
 
         <!-- 完成按钮 -->
-        <Button variant="glass" size="sm" @click="ui.exitEditMode">
+        <Button variant="glass" size="sm" @click="uiStore.exitEditMode">
           完成
         </Button>
       </div>
@@ -93,10 +93,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useUI } from '@/composables/useUI'
+import { computed, inject } from 'vue'
 import { useGridItemStore } from '@/stores/grid-items'
+import { useUIStore } from '@/stores/ui'
 import { isSiteItem } from '@/types'
+import { COMPONENTS_DI_KEY } from '@/utils/di'
 
 import { Button } from '@/shadcn/ui/button'
 import {
@@ -114,8 +115,9 @@ import {
   FolderPlus
 } from 'lucide-vue-next'
 
-const ui = useUI()
+const uiStore = useUIStore()
 const gridItemStore = useGridItemStore()
+const components = inject(COMPONENTS_DI_KEY, null)
 
 // 获取可选中的网格项（只有普通网站，不包含文件夹）
 const selectableSites = computed(() => {
@@ -125,45 +127,45 @@ const selectableSites = computed(() => {
 // 是否全选
 const isAllSelected = computed(() => {
   if (selectableSites.value.length === 0) return false
-  return selectableSites.value.every(site => ui.isSelected(site.id))
+  return selectableSites.value.every(site => uiStore.isSelected(site.id))
 })
 
 // 全选/取消全选
 function toggleSelectAll() {
   if (isAllSelected.value) {
-    ui.clearSelection()
+    uiStore.clearSelection()
   } else {
     const ids = selectableSites.value.map(site => site.id)
-    ui.selectAll(ids)
+    uiStore.selectAll(ids)
   }
 }
 
 // 删除选中项
 async function deleteSelected() {
-  if (ui.selectedCount.value === 0) return
+  if (uiStore.selectedCount === 0) return
 
   const confirmed = confirm(
-    `确定要删除选中的 ${ui.selectedCount.value} 个书签吗？`
+    `确定要删除选中的 ${uiStore.selectedCount} 个书签吗？`
   )
   if (!confirmed) return
 
-  const ids = Array.from(ui.selectedIds.value)
+  const ids = Array.from(uiStore.checkedSites)
   await gridItemStore.batchDeleteGridItems(ids)
-  ui.clearSelection()
+  uiStore.clearSelection()
 }
 
 // 移动到文件夹
 async function moveToFolder(folderId: string) {
-  if (ui.selectedCount.value === 0) return
+  if (uiStore.selectedCount === 0) return
 
-  const ids = Array.from(ui.selectedIds.value)
+  const ids = Array.from(uiStore.checkedSites)
   await gridItemStore.batchMoveToFolder(ids, folderId)
-  ui.clearSelection()
+  uiStore.clearSelection()
 }
 
 // 创建新分组并移入
 function createNewFolder() {
-  ui.openModal('addFolder')
+  components?.folderEdit.value?.open()
 }
 </script>
 

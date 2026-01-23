@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useGridItemStore } from './grid-items'
 import { isSiteItem } from '@/types'
 
@@ -10,6 +10,8 @@ export const useUIStore = defineStore('ui', () => {
 
   /** 选中的网站ID集合 */
   const checkedSites = ref<Set<string>>(new Set())
+
+  const selectedCount = computed(() => checkedSites.value.size)
 
   const rootSites = computed(() => {
     return gridItemStore.rootGridItems.filter(isSiteItem)
@@ -35,11 +37,48 @@ export const useUIStore = defineStore('ui', () => {
     }
   }
 
+  function selectAll(ids: string[]) {
+    checkedSites.value = new Set(ids)
+  }
+
+  function clearSelection() {
+    checkedSites.value = new Set()
+  }
+
+  function isSelected(id: string) {
+    return checkedSites.value.has(id)
+  }
+
+  function enterEditMode() {
+    isEditMode.value = true
+    clearSelection()
+  }
+
+  function exitEditMode() {
+    isEditMode.value = false
+    clearSelection()
+  }
+
+  function toggleEditMode() {
+    if (isEditMode.value) {
+      exitEditMode()
+    } else {
+      enterEditMode()
+    }
+  }
+
   return {
     isEditMode,
     checkedSites,
     isAllSitesChecked,
+    selectedCount,
     toggleCheckSite,
-    toggleCheckAllSites
+    toggleCheckAllSites,
+    selectAll,
+    clearSelection,
+    isSelected,
+    enterEditMode,
+    exitEditMode,
+    toggleEditMode
   }
 })

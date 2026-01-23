@@ -40,9 +40,9 @@
       <Button
         variant="glass"
         size="icon"
-        :class="{ 'bg-white/25': isEditMode }"
+        :class="{ 'bg-white/25': uiStore.isEditMode }"
         title="编辑书签"
-        @click="toggleEditMode()"
+        @click="uiStore.toggleEditMode()"
       >
         <Pencil class="size-5" />
       </Button>
@@ -66,7 +66,7 @@
       <SearchBar v-if="settingsStore.settings.showSearchBar" class="mb-12" />
 
       <!-- 网格布局 -->
-      <TabGrid class="w-full max-w-6xl" />
+      <GridContainer class="w-full max-w-6xl" @open-folder="openFolder" />
 
       <!-- 壁纸信息 -->
       <div
@@ -89,200 +89,55 @@
     </div>
 
     <!-- 设置面板 -->
-    <SettingsPanel />
+    <SettingsPanel ref="settingsPanelRef" />
 
     <!-- 右键菜单 -->
-    <ContextMenu />
+    <ContextMenuRenderer />
 
     <!-- 文件夹展开模态框 -->
-    <FolderModal />
-
-    <!-- 添加/编辑网站模态框 -->
-    <AddSiteModal />
-
-    <!-- 添加/编辑文件夹模态框 -->
-    <AddFolderModal />
+    <FolderModal ref="folderModalRef" />
 
     <!-- 编辑工具栏 -->
     <EditToolbar />
   </div>
 
-  <SiteEdit ref="site-edit" />
-  <FolderEdit ref="folder-edit" />
+  <SiteEdit ref="siteEditRef" />
+  <FolderEdit ref="folderEditRef" />
 </template>
 <script setup lang="ts">
 import { onMounted, computed, ref, provide } from 'vue'
 import { useGridItemStore } from '@/stores/grid-items'
 import { useSettingsStore } from '@/stores/settings'
 import { useWallpaperStore } from '@/stores/wallpaper'
-import {
-  UI_KEY,
-  type UIContext,
-  type ContextMenuState,
-  type ModalType,
-  type ContextMenuTarget
-} from '@/types/ui'
-import type { GridItem, SiteItem, FolderItem } from '@/types'
-import { RefreshCw, Pencil, Settings as SettingsIcon } from 'lucide-vue-next'
+import { useUIStore } from '@/stores/ui'
+import { useContextMenu } from '@/shadcn/ui/context-menu'
+import { RefreshCw, Pencil, Settings as SettingsIcon, Plus, FolderPlus } from 'lucide-vue-next'
 import { Button } from '@/shadcn/ui/button'
 
-import SearchBar from '@/components/SearchBar.vue'
-import TabGrid from '@/components/TabGrid.vue'
-import SettingsPanel from '@/components/SettingsPanel.vue'
-import ContextMenu from '@/components/ContextMenu.vue'
-import FolderModal from '@/components/FolderModal.vue'
-import AddSiteModal from '@/components/AddSiteModal.vue'
-import AddFolderModal from '@/components/AddFolderModal.vue'
-import EditToolbar from '@/components/EditToolbar.vue'
+import { SearchBar } from '@/components/search'
+import GridContainer from '@/components/grid/grid-container.vue'
+import { SettingsPanel } from '@/components/setting'
+import { EditToolbar } from '@/components/edit-toolbar'
 import { SiteEdit } from '@/components/site'
-import { FolderEdit } from '@/components/folder'
+import { FolderEdit, FolderModal } from '@/components/folder'
+import ContextMenuRenderer from '@/shadcn/ui/context-menu/context-menu-renderer.vue'
 import { COMPONENTS_DI_KEY } from '@/utils/di'
 
 const gridItemStore = useGridItemStore()
 const settingsStore = useSettingsStore()
 const wallpaperStore = useWallpaperStore()
+const uiStore = useUIStore()
+const { show } = useContextMenu()
 
-// UI State Implementation
-const contextMenu = ref<ContextMenuState>({
-  visible: false,
-  x: 0,
-  y: 0,
-  target: 'blank',
-  targetItem: null
+const siteEditRef = ref<InstanceType<typeof SiteEdit> | null>(null)
+const folderEditRef = ref<InstanceType<typeof FolderEdit> | null>(null)
+const settingsPanelRef = ref<InstanceType<typeof SettingsPanel> | null>(null)
+const folderModalRef = ref<InstanceType<typeof FolderModal> | null>(null)
+
+provide(COMPONENTS_DI_KEY, {
+  siteEdit: siteEditRef,
+  folderEdit: folderEditRef
 })
-
-const modalType = ref<ModalType>(null)
-const modalData = ref<GridItem | null>(null)
-const openFolderId = ref<string | null>(null)
-const settingsPanelOpen = ref(false)
-const editingItem = ref<SiteItem | FolderItem | null>(null)
-const isEditMode = ref(false)
-const selectedIds = ref<Set<string>>(new Set())
-
-const selectedCount = computed(() => selectedIds.value.size)
-
-// Actions
-function openContextMenu(
-  x: number,
-  y: number,
-  target: ContextMenuTarget,
-  item: GridItem | null = null
-) {
-  contextMenu.value = {
-    visible: true,
-    x,
-    y,
-    target,
-    targetItem: item
-  }
-}
-
-function closeContextMenu() {
-  contextMenu.value.visible = false
-  contextMenu.value.targetItem = null
-}
-
-function openModal(type: ModalType, data: GridItem | null = null) {
-  modalType.value = type
-  modalData.value = data
-}
-
-function closeModal() {
-  modalType.value = null
-  modalData.value = null
-  editingItem.value = null
-}
-
-function openFolder(folderId: string) {
-  openFolderId.value = folderId
-}
-
-function closeFolder() {
-  openFolderId.value = null
-}
-
-function openSettingsPanel() {
-  settingsPanelOpen.value = true
-}
-
-function closeSettingsPanel() {
-  settingsPanelOpen.value = false
-}
-
-function setEditingItem(item: SiteItem | FolderItem | null) {
-  editingItem.value = item
-}
-
-function enterEditMode() {
-  isEditMode.value = true
-  selectedIds.value = new Set()
-}
-
-function exitEditMode() {
-  isEditMode.value = false
-  selectedIds.value = new Set()
-}
-
-function toggleEditMode() {
-  if (isEditMode.value) {
-    exitEditMode()
-  } else {
-    enterEditMode()
-  }
-}
-
-function toggleSelectItem(id: string) {
-  const newSet = new Set(selectedIds.value)
-  if (newSet.has(id)) {
-    newSet.delete(id)
-  } else {
-    newSet.add(id)
-  }
-  selectedIds.value = newSet
-}
-
-function selectAll(ids: string[]) {
-  selectedIds.value = new Set(ids)
-}
-
-function clearSelection() {
-  selectedIds.value = new Set()
-}
-
-function isSelected(id: string): boolean {
-  return selectedIds.value.has(id)
-}
-
-// Provide UI Context
-const uiContext: UIContext = {
-  contextMenu,
-  modalType,
-  modalData,
-  openFolderId,
-  settingsPanelOpen,
-  editingItem,
-  isEditMode,
-  selectedIds,
-  selectedCount,
-  openContextMenu,
-  closeContextMenu,
-  openModal,
-  closeModal,
-  openFolder,
-  closeFolder,
-  openSettingsPanel,
-  closeSettingsPanel,
-  setEditingItem,
-  enterEditMode,
-  exitEditMode,
-  toggleEditMode,
-  toggleSelectItem,
-  selectAll,
-  clearSelection,
-  isSelected
-}
-
-provide(UI_KEY, uiContext)
 
 // 默认深色渐变背景（始终显示在最底层）
 const defaultGradient =
@@ -313,10 +168,7 @@ const showWallpaper = computed(() => {
 })
 
 onMounted(async () => {
-  await Promise.all([
-    gridItemStore.loadGridItems(),
-    settingsStore.loadSettings()
-  ])
+  await gridItemStore.loadGridItems()
 
   if (settingsStore.settings.wallpaper.enabled) {
     await wallpaperStore.loadWallpaper()
@@ -324,21 +176,44 @@ onMounted(async () => {
 })
 
 function handleContextMenu(event: MouseEvent) {
-  event.preventDefault()
-
   const target = event.target as HTMLElement
-  const bookmarkCard = target.closest('.bookmark-card')
-  const folderCard = target.closest('.folder-card')
+  const bookmarkCard = target.closest('.site-item')
+  const folderCard = target.closest('.folder-item')
 
   if (!bookmarkCard && !folderCard) {
-    openContextMenu(event.clientX, event.clientY, 'blank')
+    event.preventDefault()
+    show({
+      x: event.clientX,
+      y: event.clientY,
+      items: [
+        {
+          icon: Plus,
+          label: '新增网站',
+          action: () => siteEditRef.value?.open()
+        },
+        {
+          icon: FolderPlus,
+          label: '新增文件夹',
+          action: () => folderEditRef.value?.open()
+        },
+        { type: 'divider' },
+        {
+          icon: SettingsIcon,
+          label: '设置',
+          action: () => settingsPanelRef.value?.open()
+        }
+      ]
+    })
   }
 }
 
-const siteEditRef = useTemplateRef('site-edit')
-provide(COMPONENTS_DI_KEY, {
-  siteEdit: siteEditRef
-})
+function openSettingsPanel() {
+  settingsPanelRef.value?.open()
+}
+
+function openFolder(folderId: string) {
+  folderModalRef.value?.open(folderId)
+}
 </script>
 
 <style>

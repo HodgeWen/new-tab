@@ -19,7 +19,6 @@ declare module '#imports' {
   export { onActivated, onBeforeMount, onBeforeUnmount, onBeforeUpdate, onErrorCaptured, onDeactivated, onMounted, onServerPrefetch, onUnmounted, onUpdated, useAttrs, useSlots, computed, customRef, isReadonly, isRef, isShallow, isProxy, isReactive, markRaw, reactive, readonly, ref, shallowReactive, shallowReadonly, shallowRef, triggerRef, toRaw, toRef, toRefs, toValue, unref, watch, watchEffect, watchPostEffect, watchSyncEffect, defineComponent, defineAsyncComponent, getCurrentInstance, h, inject, nextTick, provide, useCssModule, createApp, effectScope, EffectScope, getCurrentScope, onScopeDispose, Component, Slot, Slots, ComponentPublicInstance, ComputedRef, DirectiveBinding, ExtractDefaultPropTypes, ExtractPropTypes, ExtractPublicPropTypes, InjectionKey, PropType, Ref, ShallowRef, MaybeRef, MaybeRefOrGetter, VNode, WritableComputedRef, onRenderTracked, onRenderTriggered, resolveComponent, useCssVars, useModel, getCurrentWatcher, onWatcherCleanup, useId, useTemplateRef } from 'vue';
   export { fakeBrowser } from 'wxt/testing';
   export { useModal } from '../composables/use-modal';
-  export { useUI } from '../composables/useUI';
   export { encrypt, decrypt } from '../utils/crypto';
   export { generateId } from '../utils/id';
   export { BingWallpaperProvider, PicsumWallpaperProvider, WallpaperCategory, WallpaperProvider } from '../utils/wallpaper-provider';
