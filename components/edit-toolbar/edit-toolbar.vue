@@ -18,9 +18,9 @@
         <!-- 全选按钮 -->
         <button
           class="toolbar-btn"
-          :class="{ active: isAllSelected }"
+          :class="{ active: uiStore.isAllSitesChecked }"
           title="全选"
-          @click="toggleSelectAll"
+          @click="uiStore.toggleCheckAllSites()"
         >
           <CheckSquare class="size-5" />
           <span class="text-xs">全选</span>
@@ -84,7 +84,7 @@
         <div class="w-px h-8 bg-white/20" />
 
         <!-- 完成按钮 -->
-        <Button variant="glass" size="sm" @click="uiStore.exitEditMode">
+        <Button variant="glass" size="sm" @click="uiStore.toggleEditMode()">
           完成
         </Button>
       </div>
@@ -93,10 +93,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject } from 'vue'
+import { inject } from 'vue'
 import { useGridItemStore } from '@/stores/grid-items'
 import { useUIStore } from '@/stores/ui'
-import { isSiteItem } from '@/types'
 import { COMPONENTS_DI_KEY } from '@/utils/di'
 
 import { Button } from '@/shadcn/ui/button'
@@ -119,27 +118,6 @@ const uiStore = useUIStore()
 const gridItemStore = useGridItemStore()
 const components = inject(COMPONENTS_DI_KEY, null)
 
-// 获取可选中的网格项（只有普通网站，不包含文件夹）
-const selectableSites = computed(() => {
-  return gridItemStore.rootGridItems.filter(isSiteItem)
-})
-
-// 是否全选
-const isAllSelected = computed(() => {
-  if (selectableSites.value.length === 0) return false
-  return selectableSites.value.every(site => uiStore.isSelected(site.id))
-})
-
-// 全选/取消全选
-function toggleSelectAll() {
-  if (isAllSelected.value) {
-    uiStore.clearSelection()
-  } else {
-    const ids = selectableSites.value.map(site => site.id)
-    uiStore.selectAll(ids)
-  }
-}
-
 // 删除选中项
 async function deleteSelected() {
   if (uiStore.selectedCount === 0) return
@@ -151,7 +129,7 @@ async function deleteSelected() {
 
   const ids = Array.from(uiStore.checkedSites)
   await gridItemStore.batchDeleteGridItems(ids)
-  uiStore.clearSelection()
+  uiStore.clear()
 }
 
 // 移动到文件夹
@@ -160,7 +138,7 @@ async function moveToFolder(folderId: string) {
 
   const ids = Array.from(uiStore.checkedSites)
   await gridItemStore.batchMoveToFolder(ids, folderId)
-  uiStore.clearSelection()
+  uiStore.clear()
 }
 
 // 创建新分组并移入

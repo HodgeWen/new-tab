@@ -6,34 +6,23 @@ export interface GridSize {
   h: number
 }
 
-/**
- * 网格位置信息
- */
-export interface GridPosition extends GridSize {
-  x?: number
-  y?: number
+/** 网格位置 */
+export interface GridPosition {
+  x: number
+  y: number
 }
 
-/**
- * 预设文件夹尺寸配置
- */
-export const FOLDER_SIZE_PRESETS = {
-  narrow: { w: 1, h: 2, label: '1×2', desc: '窄高型' },
-  square: { w: 2, h: 2, label: '2×2', desc: '正方形' },
-  wide: { w: 2, h: 1, label: '2×1', desc: '宽扁型' }
-} as const
+export type FolderSizeName = 'wide' | 'square' | 'narrow'
 
-export type FolderSizePreset = keyof typeof FOLDER_SIZE_PRESETS
+export type GridItemType = 'site' | 'folder'
 
 /**
  * 网格项的基础接口
  */
-export interface GridItem {
+export interface BaseGridItem {
   id: string
-  type: string
+  type: GridItemType
   title: string
-  order: number
-  pid: string | null
   position: GridPosition
   createdAt: number
   updatedAt: number
@@ -42,28 +31,33 @@ export interface GridItem {
 /**
  * 网站收藏项
  */
-export interface SiteItem extends GridItem {
+export interface SiteItem extends BaseGridItem {
+  pid: string | null
   type: 'site'
   url: string
   favicon: string // favicon URL 或 base64
 }
+
+/**
+ * 文件夹项
+ */
+export interface FolderItem extends BaseGridItem {
+  type: 'folder'
+  size: GridSize
+}
+
+export type GridItem = SiteItem | FolderItem
 
 export type SiteForm = Pick<SiteItem, 'title' | 'url' | 'favicon'> & {
   id: string | null
   pid: string | null
 }
 
-/**
- * 文件夹项
- */
-export interface FolderItem extends GridItem {
-  type: 'folder'
-  size: GridSize
+export type FolderForm = Pick<FolderItem, 'title' | 'size'> & {
+  id: string | null
 }
 
-export type FolderForm = Pick<FolderItem, 'title' | 'size'> & {
-  id?: string
-}
+export type FolderUIItem = FolderItem & { children: SiteItem[] }
 
 /**
  * WebDAV 配置
@@ -110,18 +104,4 @@ export interface BackupData {
   gridItems: GridItem[]
   settings: Settings
   orders: [string, string[]][]
-}
-
-/**
- * 判断是否为网站项
- */
-export function isSiteItem(item: GridItem): item is SiteItem {
-  return item.type === 'site'
-}
-
-/**
- * 判断是否为文件夹项
- */
-export function isFolderItem(item: GridItem): item is FolderItem {
-  return item.type === 'folder'
 }

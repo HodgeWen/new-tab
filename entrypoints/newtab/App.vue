@@ -66,7 +66,7 @@
       <SearchBar v-if="settingsStore.settings.showSearchBar" class="mb-12" />
 
       <!-- 网格布局 -->
-      <GridContainer class="w-full max-w-6xl" @open-folder="openFolder" />
+      <GridContainer class="w-full max-w-6xl" />
 
       <!-- 壁纸信息 -->
       <div
@@ -87,22 +87,20 @@
         on Picsum
       </div>
     </div>
-
-    <!-- 设置面板 -->
-    <SettingsPanel ref="settingsPanelRef" />
-
-    <!-- 右键菜单 -->
-    <ContextMenuRenderer />
-
-    <!-- 文件夹展开模态框 -->
-    <FolderModal ref="folderModalRef" />
-
-    <!-- 编辑工具栏 -->
-    <EditToolbar />
   </div>
+  <!-- 设置面板 -->
+  <SettingsPanel ref="settings-panel" />
 
-  <SiteEdit ref="siteEditRef" />
-  <FolderEdit ref="folderEditRef" />
+  <!-- 右键菜单 -->
+  <ContextMenuRenderer />
+  <!-- 文件夹展开模态框 -->
+  <FolderModal ref="folder-modal" />
+  <!-- 编辑工具栏 -->
+  <EditToolbar />
+  <!-- 网站编辑模态框 -->
+  <SiteEdit ref="site-edit" />
+  <!-- 文件夹编辑模态框 -->
+  <FolderEdit ref="folder-edit" />
 </template>
 <script setup lang="ts">
 import { onMounted, computed, ref, provide, useTemplateRef } from 'vue'
@@ -135,12 +133,12 @@ const wallpaperStore = useWallpaperStore()
 const uiStore = useUIStore()
 const { show } = useContextMenu()
 
-const siteEditRef = ref<InstanceType<typeof SiteEdit> | null>(null)
-const folderEditRef = ref<InstanceType<typeof FolderEdit> | null>(null)
-const settingsPanelRef = ref<InstanceType<typeof SettingsPanel> | null>(null)
-const folderModalRef = ref<InstanceType<typeof FolderModal> | null>(null)
+const siteEdit = useTemplateRef('site-edit')
+const folderEdit = useTemplateRef('folder-edit')
+const settingsPanel = useTemplateRef('settings-panel')
+const folderModal = useTemplateRef('folder-modal')
 
-provide(COMPONENTS_DI_KEY, { siteEdit: siteEditRef, folderEdit: folderEditRef })
+provide(COMPONENTS_DI_KEY, { siteEdit, folderEdit, folderModal })
 
 // 默认深色渐变背景（始终显示在最底层）
 const defaultGradient =
@@ -189,21 +187,17 @@ function handleContextMenu(event: MouseEvent) {
       x: event.clientX,
       y: event.clientY,
       items: [
-        {
-          icon: Plus,
-          label: '新增网站',
-          action: () => siteEditRef.value?.open()
-        },
+        { icon: Plus, label: '新增网站', action: () => siteEdit.value?.open() },
         {
           icon: FolderPlus,
           label: '新增文件夹',
-          action: () => folderEditRef.value?.open()
+          action: () => folderEdit.value?.open()
         },
         { type: 'divider' },
         {
           icon: SettingsIcon,
           label: '设置',
-          action: () => settingsPanelRef.value?.open()
+          action: () => settingsPanel.value?.open()
         }
       ]
     })
@@ -211,11 +205,7 @@ function handleContextMenu(event: MouseEvent) {
 }
 
 function openSettingsPanel() {
-  settingsPanelRef.value?.open()
-}
-
-function openFolder(folderId: string) {
-  folderModalRef.value?.open(folderId)
+  settingsPanel.value?.open()
 }
 </script>
 

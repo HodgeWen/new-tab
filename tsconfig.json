@@ -23,14 +23,17 @@
 
     /* Paths */
     "baseUrl": ".",
-    "paths": {
-      "@/*": ["./*"],
-      "~/*": ["./*"]
-    },
+    "paths": { "@/*": ["./*"], "~/*": ["./*"] },
 
     /* Types */
-    "types": ["wxt/browser"]
+    "types": ["wxt/browser", "vite/client"]
   },
-  "include": [".wxt/wxt.d.ts", "**/*.ts", "**/*.tsx", "**/*.vue"],
+  "include": [
+    ".wxt/wxt.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.vue",
+    "vite.config.ts"
+  ],
   "exclude": ["node_modules", ".output"]
 }

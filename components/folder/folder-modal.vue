@@ -1,7 +1,75 @@
+<template>
+  <Dialog v-model:open="visible" :modal="false">
+    <DialogContent
+      v-if="folder"
+      class="glass-dialog max-w-md p-0 text-white border-white/20 bg-black/40 backdrop-blur-xl"
+    >
+      <DialogHeader class="px-6 py-4 border-b border-white/10">
+        <DialogTitle class="text-lg font-semibold text-white">
+          {{ folder.title }}
+        </DialogTitle>
+        <DialogDescription class="sr-only">
+          查看和管理文件夹内的网站
+        </DialogDescription>
+      </DialogHeader>
+
+      <div class="p-6">
+        <div class="grid grid-cols-4 gap-4">
+          >
+          <div
+            v-for="site in folder.children"
+            :key="site.id"
+            class="group flex flex-col items-center cursor-pointer select-none transition-all"
+            :class="{
+              'opacity-50': draggedId === site.id,
+              'scale-105': dragOverId === site.id
+            }"
+            draggable="true"
+            @dragstart="handleDragStart($event, site.id)"
+            @dragover="handleDragOver($event, site.id)"
+            @dragleave="handleDragLeave"
+            @drop="handleDrop($event, site.id)"
+            @dragend="handleDragEnd"
+            @click="openSite(site)"
+            @contextmenu="handleContextMenu($event, site)"
+          >
+            <div
+              class="w-14 h-14 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center mb-2 transition-all group-hover:scale-105"
+            >
+              <img
+                :src="site.favicon || faviconService.getFaviconUrl(site.url)"
+                :alt="site.title"
+                class="w-8 h-8 rounded pointer-events-none"
+                @error="
+                  ($event.target as HTMLImageElement).src =
+                    faviconService.generateDefaultIcon(site.title)
+                "
+              />
+            </div>
+            <span
+              class="text-xs text-white/80 text-center line-clamp-2 max-w-[72px]"
+            >
+              {{ site.title }}
+            </span>
+          </div>
+        </div>
+
+        <div
+          v-if="folder.children.length === 0"
+          class="text-center py-8 text-white/50"
+        >
+          <FolderOpen class="size-12 mx-auto mb-3" />
+          <p>文件夹是空的</p>
+          <p class="text-xs mt-1">拖拽网站到这里添加</p>
+        </div>
+      </div>
+    </DialogContent>
+  </Dialog>
+</template>
 <script setup lang="ts">
-import { computed, ref, watch, inject } from 'vue'
+import { computed, ref, shallowRef, watch, inject } from 'vue'
 import { useGridItemStore } from '@/stores/grid-items'
-import { isSiteItem, isFolderItem, type GridItem, type SiteItem } from '@/types'
+import type { SiteItem, FolderItem } from '@/types'
 import { faviconService } from '@/services/favicon'
 import { useContextMenu } from '@/shadcn/ui/context-menu'
 import type { ContextMenuItemConfig } from '@/shadcn/ui/context-menu/use-context-menu'
@@ -21,9 +89,7 @@ import {
   Trash2
 } from 'lucide-vue-next'
 
-defineOptions({
-  name: 'FolderModal'
-})
+defineOptions({ name: 'FolderModal' })
 
 const gridItemStore = useGridItemStore()
 const { show } = useContextMenu()
@@ -31,17 +97,7 @@ const components = inject(COMPONENTS_DI_KEY, null)
 
 const visible = ref(false)
 const folderId = ref<string | null>(null)
-
-const folder = computed(() => {
-  if (!folderId.value) return null
-  const item = gridItemStore.gridItems[folderId.value]
-  return item && isFolderItem(item) ? item : null
-})
-
-const children = computed(() => {
-  if (!folder.value) return []
-  return gridItemStore.getFolderChildren(folder.value.id)
-})
+const folder = shallowRef<FolderItem & { children: SiteItem[] }>()
 
 const availableFolders = computed(() => {
   if (!folder.value) return []
@@ -79,7 +135,7 @@ async function handleDrop(event: DragEvent, targetId: string) {
     return
   }
 
-  const currentOrder = children.value.map(item => item.id)
+  const currentOrder = folder.value.children.map(item => item.id)
   const oldIndex = currentOrder.indexOf(draggedId.value)
   const newIndex = currentOrder.indexOf(targetId)
 
@@ -97,11 +153,9 @@ function handleDragEnd() {
   dragOverId.value = null
 }
 
-function handleContextMenu(event: MouseEvent, item: GridItem) {
+function handleContextMenu(event: MouseEvent, item: SiteItem) {
   event.preventDefault()
   event.stopPropagation()
-
-  if (!isSiteItem(item)) return
 
   const items: ContextMenuItemConfig[] = [
     {
@@ -152,15 +206,11 @@ function handleContextMenu(event: MouseEvent, item: GridItem) {
     }
   )
 
-  show({
-    x: event.clientX,
-    y: event.clientY,
-    items
-  })
+  show({ x: event.clientX, y: event.clientY, items })
 }
 
-function openFolder(folderIdValue: string) {
-  folderId.value = folderIdValue
+function openFolder(data: FolderItem & { children: SiteItem[] }) {
+  folder.value = data
   visible.value = true
 }
 
@@ -176,72 +226,3 @@ watch(visible, value => {
 
 defineExpose({ open: openFolder })
 </script>
-
-<template>
-  <Dialog v-model:open="visible" :modal="false">
-    <DialogContent
-      v-if="folder"
-      class="glass-dialog max-w-md p-0 text-white border-white/20 bg-black/40 backdrop-blur-xl"
-    >
-      <DialogHeader class="px-6 py-4 border-b border-white/10">
-        <DialogTitle class="text-lg font-semibold text-white">
-          {{ folder.title }}
-        </DialogTitle>
-        <DialogDescription class="sr-only">
-          查看和管理文件夹内的网站
-        </DialogDescription>
-      </DialogHeader>
-
-      <div class="p-6">
-        <div class="grid grid-cols-4 gap-4">
-          <template v-for="item in children" :key="item.id">
-            <div
-              v-if="isSiteItem(item)"
-              class="group flex flex-col items-center cursor-pointer select-none transition-all"
-              :class="{
-                'opacity-50': draggedId === item.id,
-                'scale-105': dragOverId === item.id
-              }"
-              draggable="true"
-              @dragstart="handleDragStart($event, item.id)"
-              @dragover="handleDragOver($event, item.id)"
-              @dragleave="handleDragLeave"
-              @drop="handleDrop($event, item.id)"
-              @dragend="handleDragEnd"
-              @click="openSite(item)"
-              @contextmenu="handleContextMenu($event, item)"
-            >
-              <div
-                class="w-14 h-14 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center mb-2 transition-all group-hover:scale-105"
-              >
-                <img
-                  :src="item.favicon || faviconService.getFaviconUrl(item.url)"
-                  :alt="item.title"
-                  class="w-8 h-8 rounded pointer-events-none"
-                  @error="
-                    ($event.target as HTMLImageElement).src =
-                      faviconService.generateDefaultIcon(item.title)
-                  "
-                />
-              </div>
-              <span
-                class="text-xs text-white/80 text-center line-clamp-2 max-w-[72px]"
-              >
-                {{ item.title }}
-              </span>
-            </div>
-          </template>
-        </div>
-
-        <div
-          v-if="children.length === 0"
-          class="text-center py-8 text-white/50"
-        >
-          <FolderOpen class="size-12 mx-auto mb-3" />
-          <p>文件夹是空的</p>
-          <p class="text-xs mt-1">拖拽网站到这里添加</p>
-        </div>
-      </div>
-    </DialogContent>
-  </Dialog>
-</template>

@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { useGridItemStore } from './grid-items'
-import { isSiteItem } from '@/types'
 
 export const useUIStore = defineStore('ui', () => {
   const gridItemStore = useGridItemStore()
@@ -14,7 +13,7 @@ export const useUIStore = defineStore('ui', () => {
   const selectedCount = computed(() => checkedSites.value.size)
 
   const rootSites = computed(() => {
-    return gridItemStore.rootGridItems.filter(isSiteItem)
+    return gridItemStore.rootGridItems.filter(item => item.type === 'site')
   })
 
   const isAllSitesChecked = computed(() => {
@@ -37,34 +36,16 @@ export const useUIStore = defineStore('ui', () => {
     }
   }
 
-  function selectAll(ids: string[]) {
-    checkedSites.value = new Set(ids)
-  }
-
-  function clearSelection() {
-    checkedSites.value = new Set()
-  }
-
-  function isSelected(id: string) {
-    return checkedSites.value.has(id)
-  }
-
-  function enterEditMode() {
-    isEditMode.value = true
-    clearSelection()
-  }
-
-  function exitEditMode() {
-    isEditMode.value = false
-    clearSelection()
-  }
-
-  function toggleEditMode() {
-    if (isEditMode.value) {
-      exitEditMode()
+  function toggleEditMode(edit?: boolean) {
+    if (edit !== undefined) {
+      isEditMode.value = edit
     } else {
-      enterEditMode()
+      isEditMode.value = !isEditMode.value
     }
+  }
+
+  function clear() {
+    checkedSites.value = new Set()
   }
 
   return {
@@ -74,11 +55,7 @@ export const useUIStore = defineStore('ui', () => {
     selectedCount,
     toggleCheckSite,
     toggleCheckAllSites,
-    selectAll,
-    clearSelection,
-    isSelected,
-    enterEditMode,
-    exitEditMode,
-    toggleEditMode
+    toggleEditMode,
+    clear
   }
 })

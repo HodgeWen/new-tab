@@ -84,11 +84,7 @@
 import { computed, ref, watch } from 'vue'
 import { useModal } from '@/composables/use-modal'
 import { useGridItemStore } from '@/stores/grid-items'
-import {
-  FOLDER_SIZE_PRESETS,
-  type GridSize,
-  type FolderSizePreset
-} from '@/types'
+import { type GridSize, type FolderSizeName } from '@/types'
 import {
   Dialog,
   DialogContent,
@@ -99,31 +95,27 @@ import {
 import { Button } from '@/shadcn/ui/button'
 import { Input } from '@/shadcn/ui/input'
 import { Folder } from 'lucide-vue-next'
+import { FOLDER_SIZE_PRESETS } from './helper'
+import { o } from '@cat-kit/core'
 
-defineOptions({
-  name: 'FolderEdit'
-})
+defineOptions({ name: 'FolderEdit' })
 
-type FolderForm = {
-  id: string | null
-  title: string
-  size: GridSize
-}
-
-const { visible, form, open } = useModal<FolderForm>({
-  id: null,
-  title: '',
-  size: { w: FOLDER_SIZE_PRESETS.square.w, h: FOLDER_SIZE_PRESETS.square.h }
-})
+type FolderForm = { id: string | null; title: string; size: GridSize }
 
 const gridItemStore = useGridItemStore()
 const loading = ref(false)
 
+const selectedPreset = ref<FolderSizeName>('square')
+
+const { visible, form, open } = useModal<FolderForm>({
+  id: null,
+  title: '',
+  size: o(FOLDER_SIZE_PRESETS[selectedPreset.value]).pick(['w', 'h'])
+})
 const isEdit = computed(() => Boolean(form.id))
-const selectedPreset = ref<FolderSizePreset>('square')
 
 const sizeOptions = Object.entries(FOLDER_SIZE_PRESETS).map(([key, value]) => ({
-  key: key as FolderSizePreset,
+  key: key as FolderSizeName,
   ...value
 }))
 
@@ -132,23 +124,16 @@ const currentSize = computed<GridSize>(() => {
   return { w: preset.w, h: preset.h }
 })
 
-function findPresetBySize(size: GridSize): FolderSizePreset {
-  for (const [key, preset] of Object.entries(FOLDER_SIZE_PRESETS)) {
-    if (preset.w === size.w && preset.h === size.h) {
-      return key as FolderSizePreset
-    }
-  }
-  return 'square'
-}
+watch(selectedPreset, value => {
+  o(form.size).extend(o(FOLDER_SIZE_PRESETS[value]).pick(['w', 'h']))
+})
 
 function closeModal() {
   visible.value = false
 }
 
 watch(visible, value => {
-  if (value) {
-    selectedPreset.value = findPresetBySize(form.size)
-  } else {
+  if (!value) {
     selectedPreset.value = 'square'
   }
 })
@@ -159,9 +144,7 @@ async function handleSubmit() {
   loading.value = true
   try {
     if (form.id) {
-      await gridItemStore.updateGridItem(form.id, {
-        title: form.title.trim()
-      })
+      await gridItemStore.updateGridItem(form.id, { title: form.title.trim() })
       await gridItemStore.updateFolderSize(form.id, currentSize.value)
     } else {
       await gridItemStore.addFolder({

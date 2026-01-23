@@ -1,10 +1,10 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { BackupData, GridItem, WallpaperInfo } from '@/types'
+import type { BackupData, FolderItem, SiteItem, WallpaperInfo } from '@/types'
 
 /**
  * 网格项数据表记录
  */
-interface GridItemRecord extends GridItem {}
+type GridItemRecord = SiteItem | FolderItem
 
 /**
  * 壁纸缓存表记录
@@ -31,14 +31,13 @@ class AppDatabase extends Dexie {
   constructor() {
     super('new-tab-db')
 
-    this.version(1).stores({
-      gridItems: 'id',
-      wallpapers: 'id'
-    })
+    this.version(1).stores({ gridItems: 'id', wallpapers: 'id' })
   }
   // ==================== 壁纸缓存操作 ====================
 
-  async getWallpaper(id: 'current' | 'next'): Promise<{
+  async getWallpaper(
+    id: 'current' | 'next'
+  ): Promise<{
     wallpaper: WallpaperInfo
     blobUrl: string
     timestamp: number
@@ -58,12 +57,7 @@ class AppDatabase extends Dexie {
     wallpaper: WallpaperInfo,
     blob: Blob
   ): Promise<void> {
-    await this.wallpapers.put({
-      id,
-      wallpaper,
-      blob,
-      timestamp: Date.now()
-    })
+    await this.wallpapers.put({ id, wallpaper, blob, timestamp: Date.now() })
   }
 
   // ==================== 工具方法 ====================
@@ -72,9 +66,7 @@ class AppDatabase extends Dexie {
    * 导出所有数据（不含壁纸 Blob）
    */
   async exportData(): Promise<Pick<BackupData, 'gridItems'>> {
-    return {
-      gridItems: await this.gridItems.toArray()
-    }
+    return { gridItems: await this.gridItems.toArray() }
   }
 
   /**

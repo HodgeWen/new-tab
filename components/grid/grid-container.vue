@@ -14,27 +14,23 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="tsx">
 import { BookmarkPlus } from 'lucide-vue-next'
-import {
-  ref,
-  onMounted,
-  onBeforeUnmount,
-  watch,
-  nextTick,
-  h,
-  render
-} from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch, nextTick, render } from 'vue'
 import { GridStack, type GridStackNode, type GridStackWidget } from 'gridstack'
 import 'gridstack/dist/gridstack.min.css'
 import { useGridItemStore } from '@/stores/grid-items'
-import { isSiteItem, isFolderItem, type GridItem } from '@/types'
+import {
+  type GridItem,
+  type SiteItem as ISiteItem,
+  type FolderItem as IFolderItem,
+  GridItemType
+} from '@/types'
 import { SiteItem } from '@/components/site'
 import { FolderItem } from '@/components/folder'
+import { nanoid } from 'nanoid'
 
-const emit = defineEmits<{
-  'open-folder': [id: string]
-}>()
+const emit = defineEmits<{ 'open-folder': [id: string] }>()
 
 const gridItemStore = useGridItemStore()
 
@@ -46,24 +42,20 @@ const shadowDom: Record<string, HTMLElement> = {}
 function itemToWidget(item: GridItem): GridStackWidget {
   const { position } = item
 
-  return {
-    id: item.id,
-    ...position,
-    noResize: true
+  return { id: item.id, ...position, noResize: true }
+}
+
+const renderMap: Record<GridItemType, (item: GridItem) => any> = {
+  site: item => {
+    return <SiteItem item={item as ISiteItem} />
+  },
+  folder: item => {
+    return <FolderItem item={item as IFolderItem} />
   }
 }
 
 function renderWidgetContent(el: HTMLElement, item: GridItem) {
-  let vnode
-
-  if (isSiteItem(item)) {
-    vnode = h(SiteItem, { item })
-  } else if (isFolderItem(item)) {
-    vnode = h(FolderItem, {
-      item,
-      onOpen: () => emit('open-folder', item.id)
-    })
-  }
+  const vnode = renderMap[item.type](item)
 
   if (vnode) {
     shadowDom[item.id] = el
@@ -81,12 +73,7 @@ async function handleGridChange(items: GridStackNode[]) {
     if (item.id && item.x !== undefined && item.y !== undefined) {
       updates.push({
         id: String(item.id),
-        position: {
-          x: item.x,
-          y: item.y,
-          w: item.w ?? 1,
-          h: item.h ?? 1
-        }
+        position: { x: item.x, y: item.y, w: item.w ?? 1, h: item.h ?? 1 }
       })
     }
   }
@@ -128,11 +115,7 @@ function initGridStack() {
       disableResize: true,
       acceptWidgets: false,
       staticGrid: false,
-      columnOpts: {
-        columnWidth: 88,
-        columnMax: 12,
-        layout: 'compact'
-      }
+      columnOpts: { columnWidth: 88, columnMax: 12, layout: 'compact' }
     },
     gridContainer.value
   )
@@ -220,6 +203,18 @@ onMounted(() => {
     initGridStack()
   })
 })
+
+/**
+ * 添加网格项
+ * @param item
+ */
+function addGridItem(item: GridItem) {
+  grid?.addWidget({
+    id: nanoid(10),
+    ...item.position,
+    ...(item.type === 'folder' ? item.size : {})
+  })
+}
 
 onBeforeUnmount(() => {
   Object.values(shadowDom).forEach(el => {
