@@ -41,6 +41,7 @@ function handleClick() {
 function handleContextMenu(event: MouseEvent) {
   event.preventDefault()
   event.stopPropagation()
+
   // 编辑模式下禁用右键菜单
   if (!props.isEditMode) {
     emit('contextmenu', event)
@@ -60,15 +61,13 @@ function handleContextMenu(event: MouseEvent) {
       <div
         v-if="isEditMode"
         class="absolute -top-1 -right-1 z-10 size-5 rounded-full flex items-center justify-center transition-all duration-200"
-        :class="isSelected
-          ? 'bg-blue-500 shadow-lg shadow-blue-500/30'
-          : 'bg-white/20 border border-white/30'
+        :class="
+          isSelected
+            ? 'bg-blue-500 shadow-lg shadow-blue-500/30'
+            : 'bg-white/20 border border-white/30'
         "
       >
-        <Check
-          v-if="isSelected"
-          class="size-3 text-white"
-        />
+        <Check v-if="isSelected" class="size-3 text-white" />
       </div>
     </Transition>
 
@@ -114,9 +113,16 @@ function handleContextMenu(event: MouseEvent) {
 }
 
 @keyframes wiggle {
-  0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(-1deg); }
-  75% { transform: rotate(1deg); }
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-1deg);
+  }
+  75% {
+    transform: rotate(1deg);
+  }
 }
 
 .scale-fade-enter-active,

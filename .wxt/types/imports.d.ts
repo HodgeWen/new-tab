@@ -2,6 +2,7 @@
 export {}
 declare global {
   const BingWallpaperProvider: typeof import('/home/whj/codes/new-tab/utils/wallpaper-provider').BingWallpaperProvider
+  const COMPONENTS_DI_KEY: typeof import('/home/whj/codes/new-tab/utils/di').COMPONENTS_DI_KEY
   const ContentScriptContext: typeof import('wxt/utils/content-script-context').ContentScriptContext
   const EffectScope: typeof import('vue').EffectScope
   const InvalidMatchPattern: typeof import('wxt/utils/match-patterns').InvalidMatchPattern
@@ -124,6 +125,7 @@ import { UnwrapRef } from 'vue'
 declare module 'vue' {
   interface ComponentCustomProperties {
     readonly BingWallpaperProvider: UnwrapRef<typeof import('/home/whj/codes/new-tab/utils/wallpaper-provider')['BingWallpaperProvider']>
+    readonly COMPONENTS_DI_KEY: UnwrapRef<typeof import('/home/whj/codes/new-tab/utils/di')['COMPONENTS_DI_KEY']>
     readonly ContentScriptContext: UnwrapRef<typeof import('wxt/utils/content-script-context')['ContentScriptContext']>
     readonly EffectScope: UnwrapRef<typeof import('vue')['EffectScope']>
     readonly InvalidMatchPattern: UnwrapRef<typeof import('wxt/utils/match-patterns')['InvalidMatchPattern']>

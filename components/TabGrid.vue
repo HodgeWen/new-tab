@@ -33,11 +33,7 @@ const shadowDom: Record<string, HTMLElement> = {}
 function itemToWidget(item: GridItem): GridStackWidget {
   const { position } = item
 
-  return {
-    id: item.id,
-    ...position,
-    noResize: true
-  }
+  return { id: item.id, ...position, noResize: true }
 }
 
 // 渲染 Vue 组件到 GridStack 元素
@@ -82,12 +78,7 @@ async function handleGridChange(items: GridStackNode[]) {
     if (item.id && item.x !== undefined && item.y !== undefined) {
       updates.push({
         id: String(item.id),
-        position: {
-          x: item.x,
-          y: item.y,
-          w: item.w ?? 1,
-          h: item.h ?? 1
-        }
+        position: { x: item.x, y: item.y, w: item.w ?? 1, h: item.h ?? 1 }
       })
     }
   }
@@ -155,11 +146,7 @@ function initGridStack() {
       disableResize: true,
       acceptWidgets: false,
       staticGrid: false,
-      columnOpts: {
-        columnWidth: 88,
-        columnMax: 12,
-        layout: 'compact'
-      }
+      columnOpts: { columnWidth: 88, columnMax: 12, layout: 'compact' }
     },
     gridContainer.value
   )

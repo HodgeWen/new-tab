@@ -21,6 +21,7 @@ declare module '#imports' {
   export { useModal } from '../composables/use-modal';
   export { useUI } from '../composables/useUI';
   export { encrypt, decrypt } from '../utils/crypto';
+  export { COMPONENTS_DI_KEY } from '../utils/di';
   export { generateId } from '../utils/id';
   export { BingWallpaperProvider, PicsumWallpaperProvider, WallpaperCategory, WallpaperProvider } from '../utils/wallpaper-provider';
 }

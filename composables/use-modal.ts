@@ -1,4 +1,5 @@
 import { o } from '@cat-kit/core'
+import { ref, reactive, watch } from 'vue'
 
 export function useModal<T extends Record<string, any>>(data: T) {
   const visible = ref(false)
@@ -15,9 +16,5 @@ export function useModal<T extends Record<string, any>>(data: T) {
     !v && Object.assign(form, initialData)
   })
 
-  return {
-    visible,
-    form,
-    open
-  }
+  return { visible, form, open }
 }

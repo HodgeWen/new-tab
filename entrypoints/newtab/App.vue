@@ -111,7 +111,7 @@
   <FolderEdit ref="folder-edit" />
 </template>
 <script setup lang="ts">
-import { onMounted, computed, ref, provide } from 'vue'
+import { onMounted, computed, ref, provide, useTemplateRef } from 'vue'
 import { useGridItemStore } from '@/stores/grid-items'
 import { useSettingsStore } from '@/stores/settings'
 import { useWallpaperStore } from '@/stores/wallpaper'
@@ -168,13 +168,7 @@ function openContextMenu(
   target: ContextMenuTarget,
   item: GridItem | null = null
 ) {
-  contextMenu.value = {
-    visible: true,
-    x,
-    y,
-    target,
-    targetItem: item
-  }
+  contextMenu.value = { visible: true, x, y, target, targetItem: item }
 }
 
 function closeContextMenu() {
@@ -336,9 +330,7 @@ function handleContextMenu(event: MouseEvent) {
 }
 
 const siteEditRef = useTemplateRef('site-edit')
-provide(COMPONENTS_DI_KEY, {
-  siteEdit: siteEditRef
-})
+provide(COMPONENTS_DI_KEY, { siteEdit: siteEditRef })
 </script>
 
 <style>
