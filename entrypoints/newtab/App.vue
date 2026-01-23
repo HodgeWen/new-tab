@@ -1,3 +1,115 @@
+<template>
+  <div
+    id="app"
+    class="min-h-screen w-full overflow-hidden relative font-sans"
+    @contextmenu="handleContextMenu"
+  >
+    <!-- 底层：默认深色渐变背景（始终可见） -->
+    <div class="absolute inset-0" :style="{ background: defaultGradient }" />
+
+    <!-- 壁纸层：带淡入动画 -->
+    <Transition name="wallpaper-fade">
+      <div
+        v-if="showWallpaper"
+        class="absolute inset-0"
+        :style="wallpaperStyle"
+      />
+    </Transition>
+
+    <!-- 背景遮罩层 -->
+    <div class="absolute inset-0 bg-black/30" />
+
+    <!-- 右上角按钮组 -->
+    <div class="fixed top-4 right-4 z-20 flex items-center gap-2">
+      <!-- 换壁纸按钮（仅在壁纸启用时显示） -->
+      <Button
+        v-if="settingsStore.settings.wallpaper.enabled"
+        variant="glass"
+        size="icon"
+        title="换一张壁纸"
+        :disabled="wallpaperStore.loading"
+        @click="wallpaperStore.switchToNext()"
+      >
+        <RefreshCw
+          class="size-5"
+          :class="{ 'animate-spin': wallpaperStore.loading }"
+        />
+      </Button>
+
+      <!-- 编辑按钮 -->
+      <Button
+        variant="glass"
+        size="icon"
+        :class="{ 'bg-white/25': isEditMode }"
+        title="编辑书签"
+        @click="toggleEditMode()"
+      >
+        <Pencil class="size-5" />
+      </Button>
+
+      <!-- 设置按钮 -->
+      <Button
+        variant="glass"
+        size="icon"
+        title="设置"
+        @click="openSettingsPanel()"
+      >
+        <SettingsIcon class="size-5" />
+      </Button>
+    </div>
+
+    <!-- 主内容区域 -->
+    <div
+      class="relative z-10 min-h-screen flex flex-col items-center pt-[15vh] px-4"
+    >
+      <!-- 搜索栏 -->
+      <SearchBar v-if="settingsStore.settings.showSearchBar" class="mb-12" />
+
+      <!-- 网格布局 -->
+      <TabGrid class="w-full max-w-6xl" />
+
+      <!-- 壁纸信息 -->
+      <div
+        v-if="
+          wallpaperStore.currentWallpaper &&
+          settingsStore.settings.wallpaper.enabled
+        "
+        class="fixed bottom-4 right-4 text-white/60 text-xs"
+      >
+        Photo by
+        <a
+          :href="wallpaperStore.currentWallpaper.authorUrl"
+          target="_blank"
+          class="hover:text-white/90 underline"
+        >
+          {{ wallpaperStore.currentWallpaper.author }}
+        </a>
+        on Picsum
+      </div>
+    </div>
+
+    <!-- 设置面板 -->
+    <SettingsPanel />
+
+    <!-- 右键菜单 -->
+    <ContextMenu />
+
+    <!-- 文件夹展开模态框 -->
+    <FolderModal />
+
+    <!-- 添加/编辑网站模态框 -->
+    <AddSiteModal />
+
+    <!-- 添加/编辑文件夹模态框 -->
+    <AddFolderModal />
+
+    <!-- 编辑工具栏 -->
+    <EditToolbar />
+  </div>
+
+  <SiteEdit ref="site-edit" />
+  <FolderEdit ref="folder-edit" />
+</template>
 <script setup lang="ts">
 import { onMounted, computed, ref, provide } from 'vue'
 import { useGridItemStore } from '@/stores/grid-items'
@@ -22,6 +134,9 @@ import FolderModal from '@/components/FolderModal.vue'
 import AddSiteModal from '@/components/AddSiteModal.vue'
 import AddFolderModal from '@/components/AddFolderModal.vue'
 import EditToolbar from '@/components/EditToolbar.vue'
+import { SiteEdit } from '@/components/site'
+import { FolderEdit } from '@/components/folder'
+import { COMPONENTS_DI_KEY } from '@/utils/di'
 
 const gridItemStore = useGridItemStore()
 const settingsStore = useSettingsStore()
@@ -219,117 +334,12 @@ function handleContextMenu(event: MouseEvent) {
     openContextMenu(event.clientX, event.clientY, 'blank')
   }
 }
+
+const siteEditRef = useTemplateRef('site-edit')
+provide(COMPONENTS_DI_KEY, {
+  siteEdit: siteEditRef
+})
 </script>
-
-<template>
-  <div
-    id="app"
-    class="min-h-screen w-full overflow-hidden relative font-sans"
-    @contextmenu="handleContextMenu"
-  >
-    <!-- 底层：默认深色渐变背景（始终可见） -->
-    <div class="absolute inset-0" :style="{ background: defaultGradient }" />
-
-    <!-- 壁纸层：带淡入动画 -->
-    <Transition name="wallpaper-fade">
-      <div
-        v-if="showWallpaper"
-        class="absolute inset-0"
-        :style="wallpaperStyle"
-      />
-    </Transition>
-
-    <!-- 背景遮罩层 -->
-    <div class="absolute inset-0 bg-black/30" />
-
-    <!-- 右上角按钮组 -->
-    <div class="fixed top-4 right-4 z-20 flex items-center gap-2">
-      <!-- 换壁纸按钮（仅在壁纸启用时显示） -->
-      <Button
-        v-if="settingsStore.settings.wallpaper.enabled"
-        variant="glass"
-        size="icon"
-        title="换一张壁纸"
-        :disabled="wallpaperStore.loading"
-        @click="wallpaperStore.switchToNext()"
-      >
-        <RefreshCw
-          class="size-5"
-          :class="{ 'animate-spin': wallpaperStore.loading }"
-        />
-      </Button>
-
-      <!-- 编辑按钮 -->
-      <Button
-        variant="glass"
-        size="icon"
-        :class="{ 'bg-white/25': isEditMode }"
-        title="编辑书签"
-        @click="toggleEditMode()"
-      >
-        <Pencil class="size-5" />
-      </Button>
-
-      <!-- 设置按钮 -->
-      <Button
-        variant="glass"
-        size="icon"
-        title="设置"
-        @click="openSettingsPanel()"
-      >
-        <SettingsIcon class="size-5" />
-      </Button>
-    </div>
-
-    <!-- 主内容区域 -->
-    <div
-      class="relative z-10 min-h-screen flex flex-col items-center pt-[15vh] px-4"
-    >
-      <!-- 搜索栏 -->
-      <SearchBar v-if="settingsStore.settings.showSearchBar" class="mb-12" />
-
-      <!-- 网格布局 -->
-      <TabGrid class="w-full max-w-6xl" />
-
-      <!-- 壁纸信息 -->
-      <div
-        v-if="
-          wallpaperStore.currentWallpaper &&
-          settingsStore.settings.wallpaper.enabled
-        "
-        class="fixed bottom-4 right-4 text-white/60 text-xs"
-      >
-        Photo by
-        <a
-          :href="wallpaperStore.currentWallpaper.authorUrl"
-          target="_blank"
-          class="hover:text-white/90 underline"
-        >
-          {{ wallpaperStore.currentWallpaper.author }}
-        </a>
-        on Picsum
-      </div>
-    </div>
-
-    <!-- 设置面板 -->
-    <SettingsPanel />
-
-    <!-- 右键菜单 -->
-    <ContextMenu />
-
-    <!-- 文件夹展开模态框 -->
-    <FolderModal />
-
-    <!-- 添加/编辑网站模态框 -->
-    <AddSiteModal />
-
-    <!-- 添加/编辑文件夹模态框 -->
-    <AddFolderModal />
-
-    <!-- 编辑工具栏 -->
-    <EditToolbar />
-  </div>
-</template>
 
 <style>
 html,

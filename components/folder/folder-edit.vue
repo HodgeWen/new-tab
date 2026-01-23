@@ -1,11 +1,13 @@
 <template>
-  <div class="site-modal">
+  <Dialog>
     <slot />
-  </div>
+  </Dialog>
 </template>
 
 <script setup lang="ts">
+import { Dialog } from '@/shadcn/ui/dialog'
+
 defineOptions({
-  name: 'SiteModal'
+  name: 'FolderEdit'
 })
 </script>

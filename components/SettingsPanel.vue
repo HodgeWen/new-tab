@@ -1,291 +1,3 @@
-<script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import { useUI } from '@/composables/useUI'
-import { useSettingsStore } from '@/stores/settings'
-import { useWallpaperStore } from '@/stores/wallpaper'
-import { useGridItemStore } from '@/stores/grid-items'
-import { webdavService } from '@/services/webdav'
-import { wallpaperService } from '@/services/wallpaper'
-import { db } from '@/services/database'
-
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle
-} from '@/shadcn/ui/dialog'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shadcn/ui/tabs'
-import { Switch } from '@/shadcn/ui/switch'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/shadcn/ui/select'
-import { Button } from '@/shadcn/ui/button'
-import { Input } from '@/shadcn/ui/input'
-import {
-  Settings,
-  Image,
-  Cloud,
-  RefreshCw,
-  Download,
-  Upload,
-  Plug,
-  Check,
-  Loader2,
-  CloudUpload,
-  Trash2
-} from 'lucide-vue-next'
-
-const ui = useUI()
-const settingsStore = useSettingsStore()
-const wallpaperStore = useWallpaperStore()
-const gridItemStore = useGridItemStore()
-
-// 当前标签页
-const activeTab = ref<string>('general')
-
-// WebDAV 配置
-const webdavUrl = ref('')
-const webdavUsername = ref('')
-const webdavPassword = ref('')
-const webdavTesting = ref(false)
-const webdavConnected = ref(false)
-const webdavMessage = ref('')
-
-// 备份列表
-const backupList = ref<
-  Array<{ name: string; path: string; lastModified: Date; size: number }>
->([])
-const backupLoading = ref(false)
-
-// 是否显示面板
-const isVisible = computed({
-  get: () => ui.settingsPanelOpen.value,
-  set: (value: boolean) => {
-    if (!value) ui.closeSettingsPanel()
-  }
-})
-
-// 切换搜索栏
-async function toggleSearchBar(checked: boolean) {
-  await settingsStore.updateSettings({ showSearchBar: checked })
-}
-
-// 更新壁纸设置
-async function updateWallpaperEnabled(enabled: boolean) {
-  await settingsStore.updateWallpaperSettings({ enabled })
-  if (enabled) {
-    await wallpaperStore.loadWallpaper()
-  }
-}
-
-async function updateWallpaperSource(source: unknown) {
-  if (!source) return
-  await settingsStore.updateWallpaperSettings({ source: String(source) as any })
-  await wallpaperStore.fetchNewWallpaper()
-}
-
-async function updateWallpaperInterval(interval: unknown) {
-  if (!interval) return
-  await settingsStore.updateWallpaperSettings({ interval: Number(interval) })
-}
-
-// 切换壁纸
-async function switchWallpaper() {
-  await wallpaperStore.switchToNext()
-}
-
-// 壁纸来源选项
-const wallpaperSources = wallpaperService.getProviders()
-
-// 测试 WebDAV 连接
-async function testWebdavConnection() {
-  webdavTesting.value = true
-  webdavMessage.value = ''
-
-  const result = await webdavService.testConnection(
-    webdavUrl.value,
-    webdavUsername.value,
-    webdavPassword.value
-  )
-
-  webdavTesting.value = false
-  webdavConnected.value = result.success
-  webdavMessage.value = result.message
-
-  if (result.success) {
-    // 保存配置
-    await webdavService.saveConfig({
-      url: webdavUrl.value,
-      username: webdavUsername.value,
-      password: webdavPassword.value
-    })
-    await settingsStore.updateWebDAVSettings({
-      enabled: true,
-      url: webdavUrl.value,
-      username: webdavUsername.value
-    })
-    // 连接并加载备份列表
-    await webdavService.connect(
-      webdavUrl.value,
-      webdavUsername.value,
-      webdavPassword.value
-    )
-    await loadBackupList()
-  }
-}
-
-// 加载备份列表
-async function loadBackupList() {
-  backupLoading.value = true
-  backupList.value = await webdavService.listBackups()
-  backupLoading.value = false
-}
-
-// 创建备份
-async function createBackup() {
-  backupLoading.value = true
-  const result = await webdavService.backup()
-  if (result.success) {
-    webdavMessage.value = `备份成功: ${result.filename}`
-    await loadBackupList()
-  } else {
-    webdavMessage.value = result.message || '备份失败'
-  }
-  backupLoading.value = false
-}
-
-// 恢复备份
-async function restoreBackup(filepath: string) {
-  if (!confirm('确定要恢复此备份吗？当前数据将被覆盖。')) return
-
-  backupLoading.value = true
-  const result = await webdavService.restore(filepath)
-  if (result.success) {
-    webdavMessage.value = '恢复成功，请刷新页面'
-    await gridItemStore.loadGridItems()
-    await settingsStore.loadSettings()
-  } else {
-    webdavMessage.value = result.message || '恢复失败'
-  }
-  backupLoading.value = false
-}
-
-// 删除备份
-async function deleteBackup(filepath: string) {
-  if (!confirm('确定要删除此备份吗？')) return
-
-  const success = await webdavService.deleteBackup(filepath)
-  if (success) {
-    await loadBackupList()
-  }
-}
-
-// 导出本地数据
-async function exportLocalData() {
-  const gridItems = await db.getGridItems()
-  const settings = localStorage.getItem('new-tab-settings')
-  const orders = localStorage.getItem('new-tab-orders')
-
-  const exportData = {
-    version: '2.0.0',
-    exportedAt: new Date().toISOString(),
-    gridItems,
-    settings: settings ? JSON.parse(settings) : null,
-    orders: orders ? JSON.parse(orders) : null
-  }
-
-  const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-    type: 'application/json'
-  })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `new-tab-backup-${new Date().toISOString().slice(0, 10)}.json`
-  a.click()
-  URL.revokeObjectURL(url)
-}
-
-// 导入本地数据
-async function importLocalData() {
-  const input = document.createElement('input')
-  input.type = 'file'
-  input.accept = '.json'
-  input.onchange = async e => {
-    const file = (e.target as HTMLInputElement).files?.[0]
-    if (!file) return
-
-    try {
-      const text = await file.text()
-      const data = JSON.parse(text)
-
-      // 1. 恢复 GridItems
-      if (data.gridItems) {
-        await db.clearGridItems()
-        await db.saveGridItems(data.gridItems)
-      }
-
-      // 2. 恢复设置
-      if (data.settings) {
-        localStorage.setItem('new-tab-settings', JSON.stringify(data.settings))
-      }
-
-      // 3. 恢复排序
-      if (data.orders) {
-        localStorage.setItem('new-tab-orders', JSON.stringify(data.orders))
-      }
-
-      // 重新加载应用状态
-      await gridItemStore.loadGridItems()
-      await settingsStore.loadSettings()
-      alert('导入成功！')
-    } catch (error) {
-      console.error('Import failed:', error)
-      alert('导入失败：数据格式无效')
-    }
-  }
-  input.click()
-}
-
-// 初始化
-watch(isVisible, async visible => {
-  if (visible) {
-    // 尝试自动连接 WebDAV
-    if (settingsStore.settings.webdav.enabled) {
-      webdavUrl.value = settingsStore.settings.webdav.url
-      webdavUsername.value = settingsStore.settings.webdav.username
-      const connected = await webdavService.autoConnect()
-      webdavConnected.value = connected
-      if (connected) {
-        await loadBackupList()
-      }
-    }
-  }
-})
-
-// 格式化文件大小
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / 1024 / 1024).toFixed(2)} MB`
-}
-
-// 格式化日期
-function formatDate(date: Date): string {
-  return date.toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
-</script>
-
 <template>
   <Dialog v-model:open="isVisible">
     <DialogContent
@@ -600,6 +312,293 @@ function formatDate(date: Date): string {
     </DialogContent>
   </Dialog>
 </template>
+
+<script setup lang="ts">
+import { ref, computed, watch } from 'vue'
+import { useUI } from '@/composables/useUI'
+import { useSettingsStore } from '@/stores/settings'
+import { useWallpaperStore } from '@/stores/wallpaper'
+import { useGridItemStore } from '@/stores/grid-items'
+import { webdavService } from '@/services/webdav'
+import { wallpaperService } from '@/services/wallpaper'
+import { db } from '@/services/database'
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle
+} from '@/shadcn/ui/dialog'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shadcn/ui/tabs'
+import { Switch } from '@/shadcn/ui/switch'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/shadcn/ui/select'
+import { Button } from '@/shadcn/ui/button'
+import { Input } from '@/shadcn/ui/input'
+import {
+  Settings,
+  Image,
+  Cloud,
+  RefreshCw,
+  Download,
+  Upload,
+  Plug,
+  Check,
+  Loader2,
+  CloudUpload,
+  Trash2
+} from 'lucide-vue-next'
+
+const ui = useUI()
+const settingsStore = useSettingsStore()
+const wallpaperStore = useWallpaperStore()
+const gridItemStore = useGridItemStore()
+
+// 当前标签页
+const activeTab = ref<string>('general')
+
+// WebDAV 配置
+const webdavUrl = ref('')
+const webdavUsername = ref('')
+const webdavPassword = ref('')
+const webdavTesting = ref(false)
+const webdavConnected = ref(false)
+const webdavMessage = ref('')
+
+// 备份列表
+const backupList = ref<
+  Array<{ name: string; path: string; lastModified: Date; size: number }>
+>([])
+const backupLoading = ref(false)
+
+// 是否显示面板
+const isVisible = computed({
+  get: () => ui.settingsPanelOpen.value,
+  set: (value: boolean) => {
+    if (!value) ui.closeSettingsPanel()
+  }
+})
+
+// 切换搜索栏
+async function toggleSearchBar(checked: boolean) {
+  await settingsStore.updateSettings({ showSearchBar: checked })
+}
+
+// 更新壁纸设置
+async function updateWallpaperEnabled(enabled: boolean) {
+  await settingsStore.updateWallpaperSettings({ enabled })
+  if (enabled) {
+    await wallpaperStore.loadWallpaper()
+  }
+}
+
+async function updateWallpaperSource(source: unknown) {
+  if (!source) return
+  await settingsStore.updateWallpaperSettings({ source: String(source) as any })
+  await wallpaperStore.fetchNewWallpaper()
+}
+
+async function updateWallpaperInterval(interval: unknown) {
+  if (!interval) return
+  await settingsStore.updateWallpaperSettings({ interval: Number(interval) })
+}
+
+// 切换壁纸
+async function switchWallpaper() {
+  await wallpaperStore.switchToNext()
+}
+
+// 壁纸来源选项
+const wallpaperSources = wallpaperService.getProviders()
+
+// 测试 WebDAV 连接
+async function testWebdavConnection() {
+  webdavTesting.value = true
+  webdavMessage.value = ''
+
+  const result = await webdavService.testConnection(
+    webdavUrl.value,
+    webdavUsername.value,
+    webdavPassword.value
+  )
+
+  webdavTesting.value = false
+  webdavConnected.value = result.success
+  webdavMessage.value = result.message
+
+  if (result.success) {
+    // 保存配置
+    await webdavService.saveConfig({
+      url: webdavUrl.value,
+      username: webdavUsername.value,
+      password: webdavPassword.value
+    })
+    await settingsStore.updateWebDAVSettings({
+      enabled: true,
+      url: webdavUrl.value,
+      username: webdavUsername.value
+    })
+    // 连接并加载备份列表
+    await webdavService.connect(
+      webdavUrl.value,
+      webdavUsername.value,
+      webdavPassword.value
+    )
+    await loadBackupList()
+  }
+}
+
+// 加载备份列表
+async function loadBackupList() {
+  backupLoading.value = true
+  backupList.value = await webdavService.listBackups()
+  backupLoading.value = false
+}
+
+// 创建备份
+async function createBackup() {
+  backupLoading.value = true
+  const result = await webdavService.backup()
+  if (result.success) {
+    webdavMessage.value = `备份成功: ${result.filename}`
+    await loadBackupList()
+  } else {
+    webdavMessage.value = result.message || '备份失败'
+  }
+  backupLoading.value = false
+}
+
+// 恢复备份
+async function restoreBackup(filepath: string) {
+  if (!confirm('确定要恢复此备份吗？当前数据将被覆盖。')) return
+
+  backupLoading.value = true
+  const result = await webdavService.restore(filepath)
+  if (result.success) {
+    webdavMessage.value = '恢复成功，请刷新页面'
+    await gridItemStore.loadGridItems()
+    await settingsStore.loadSettings()
+  } else {
+    webdavMessage.value = result.message || '恢复失败'
+  }
+  backupLoading.value = false
+}
+
+// 删除备份
+async function deleteBackup(filepath: string) {
+  if (!confirm('确定要删除此备份吗？')) return
+
+  const success = await webdavService.deleteBackup(filepath)
+  if (success) {
+    await loadBackupList()
+  }
+}
+
+// 导出本地数据
+async function exportLocalData() {
+  const gridItems = await db.getGridItems()
+  const settings = localStorage.getItem('new-tab-settings')
+  const orders = localStorage.getItem('new-tab-orders')
+
+  const exportData = {
+    version: '2.0.0',
+    exportedAt: new Date().toISOString(),
+    gridItems,
+    settings: settings ? JSON.parse(settings) : null,
+    orders: orders ? JSON.parse(orders) : null
+  }
+
+  const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+    type: 'application/json'
+  })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `new-tab-backup-${new Date().toISOString().slice(0, 10)}.json`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+// 导入本地数据
+async function importLocalData() {
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = '.json'
+  input.onchange = async e => {
+    const file = (e.target as HTMLInputElement).files?.[0]
+    if (!file) return
+
+    try {
+      const text = await file.text()
+      const data = JSON.parse(text)
+
+      // 1. 恢复 GridItems
+      if (data.gridItems) {
+        await db.importData(text)
+      }
+
+      // 2. 恢复设置
+      if (data.settings) {
+        localStorage.setItem('new-tab-settings', JSON.stringify(data.settings))
+      }
+
+      // 3. 恢复排序
+      if (data.orders) {
+        localStorage.setItem('new-tab-orders', JSON.stringify(data.orders))
+      }
+
+      // 重新加载应用状态
+      await gridItemStore.loadGridItems()
+      await settingsStore.loadSettings()
+      alert('导入成功！')
+    } catch (error) {
+      console.error('Import failed:', error)
+      alert('导入失败：数据格式无效')
+    }
+  }
+  input.click()
+}
+
+// 初始化
+watch(isVisible, async visible => {
+  if (visible) {
+    // 尝试自动连接 WebDAV
+    if (settingsStore.settings.webdav.enabled) {
+      webdavUrl.value = settingsStore.settings.webdav.url
+      webdavUsername.value = settingsStore.settings.webdav.username
+      const connected = await webdavService.autoConnect()
+      webdavConnected.value = connected
+      if (connected) {
+        await loadBackupList()
+      }
+    }
+  }
+})
+
+// 格式化文件大小
+function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / 1024 / 1024).toFixed(2)} MB`
+}
+
+// 格式化日期
+function formatDate(date: Date): string {
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+</script>
 
 <style scoped>
 /* Select 下拉选项背景 */

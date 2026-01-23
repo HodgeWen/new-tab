@@ -5,7 +5,8 @@ import type {
   SiteItem,
   FolderItem,
   GridSize,
-  GridPosition
+  GridPosition,
+  SiteForm
 } from '@/types'
 import { isFolderItem } from '@/types'
 import { db } from '@/services/database'
@@ -40,7 +41,7 @@ export const useGridItemStore = defineStore('gridItems', () => {
   async function loadGridItems() {
     loading.value = true
     try {
-      const items = await db.getGridItems()
+      const items = await db.gridItems.toArray()
 
       const loadedItems: Record<string, GridItem> = {}
       items.forEach(item => {
@@ -130,13 +131,11 @@ export const useGridItemStore = defineStore('gridItems', () => {
     const items = Object.values(gridItems.value).map(item =>
       JSON.parse(JSON.stringify(toRaw(item)))
     )
-    await db.saveGridItems(items)
+    await db.gridItems.bulkPut(items)
   }
 
   // 添加网站
-  async function addSite(
-    site: Omit<SiteItem, 'id' | 'type' | 'order' | 'createdAt' | 'updatedAt'>
-  ) {
+  async function addSite(site: Omit<SiteForm, 'id'>) {
     const id = generateId()
     const now = Date.now()
 
@@ -146,8 +145,11 @@ export const useGridItemStore = defineStore('gridItems', () => {
       order: 0, // 会被 sync 更新
       createdAt: now,
       updatedAt: now,
-      ...site,
-      pid: site.pid || null
+      position: {
+        w: 1,
+        h: 1
+      },
+      ...site
     }
 
     gridItems.value[id] = newSite
@@ -185,7 +187,6 @@ export const useGridItemStore = defineStore('gridItems', () => {
       id,
       type: 'folder',
       order: 0,
-      children: [],
       createdAt: now,
       updatedAt: now,
       ...folder,
@@ -217,11 +218,10 @@ export const useGridItemStore = defineStore('gridItems', () => {
     id: string,
     updates: Partial<SiteItem> | Partial<FolderItem>
   ) {
-    const item = gridItems.value[id]
-    if (!item) return
-
-    Object.assign(item, updates, { updatedAt: Date.now() })
-    await persistToDb()
+    await db.gridItems.update(id, {
+      ...updates,
+      updatedAt: Date.now()
+    })
   }
 
   // 删除网格项

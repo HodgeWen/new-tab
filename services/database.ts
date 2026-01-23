@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { GridItem, WallpaperInfo } from '@/types'
+import type { BackupData, GridItem, WallpaperInfo } from '@/types'
 
 /**
  * 网格项数据表记录
@@ -41,7 +41,6 @@ interface FaviconRecord {
  */
 class AppDatabase extends Dexie {
   gridItems!: EntityTable<GridItemRecord, 'id'>
-  favicons!: EntityTable<FaviconRecord, 'id'>
   wallpapers!: EntityTable<WallpaperRecord, 'id'>
 
   constructor() {
@@ -53,21 +52,6 @@ class AppDatabase extends Dexie {
       favicons: 'id'
     })
   }
-
-  // ==================== 网格项操作 ====================
-
-  async getGridItems(): Promise<GridItemRecord[]> {
-    return this.gridItems.toArray()
-  }
-
-  async saveGridItems(gridItems: GridItemRecord[]): Promise<void> {
-    await this.gridItems.bulkPut(gridItems)
-  }
-
-  async clearGridItems(): Promise<void> {
-    await this.gridItems.clear()
-  }
-
   // ==================== 壁纸缓存操作 ====================
 
   async getWallpaper(id: 'current' | 'next'): Promise<{
@@ -98,69 +82,25 @@ class AppDatabase extends Dexie {
     })
   }
 
-  // ==================== Favicon 缓存操作 ====================
-
-  /**
-   * 获取缓存的 favicon
-   * @param domain 网站域名
-   * @returns favicon 的 Base64 数据，如果不存在则返回 null
-   */
-  async getFavicon(domain: string): Promise<string | null> {
-    try {
-      const record = await this.favicons.get(domain)
-      return record?.dataUrl ?? null
-    } catch (error) {
-      console.error('[Database] getFavicon error:', error)
-      return null
-    }
-  }
-
-  /**
-   * 保存 favicon 到缓存
-   * @param domain 网站域名
-   * @param dataUrl Base64 格式的图标数据
-   */
-  async saveFavicon(domain: string, dataUrl: string): Promise<void> {
-    try {
-      await this.favicons.put({
-        id: domain,
-        dataUrl,
-        timestamp: Date.now()
-      })
-    } catch (error) {
-      console.error('[Database] saveFavicon error:', error)
-    }
-  }
-
   // ==================== 工具方法 ====================
 
   /**
    * 导出所有数据（不含壁纸 Blob）
    */
-  async exportData(): Promise<string> {
-    const gridItemsData = await this.getGridItems()
-
-    return JSON.stringify(
-      {
-        gridItems: gridItemsData,
-        exportedAt: new Date().toISOString(),
-        version: '2.0.0'
-      },
-      null,
-      2
-    )
+  async exportData(): Promise<Pick<BackupData, 'gridItems'>> {
+    return {
+      gridItems: await this.gridItems.toArray()
+    }
   }
 
   /**
    * 导入数据
    */
-  async importData(jsonString: string): Promise<boolean> {
+  async importData(data: BackupData): Promise<boolean> {
     try {
-      const data = JSON.parse(jsonString)
-
       if (data.gridItems) {
-        await this.clearGridItems()
-        await this.saveGridItems(data.gridItems)
+        await this.gridItems.clear()
+        await this.gridItems.bulkAdd(data.gridItems)
       }
 
       return true

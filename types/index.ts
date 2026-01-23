@@ -48,12 +48,20 @@ export interface SiteItem extends GridItem {
   favicon: string // favicon URL 或 base64
 }
 
+export type SiteForm = Pick<SiteItem, 'title' | 'url' | 'favicon'> & {
+  id: string | null
+  pid: string | null
+}
+
 /**
  * 文件夹项
  */
 export interface FolderItem extends GridItem {
   type: 'folder'
-  children: string[] // 子项 ID 列表
+}
+
+export type FolderForm = Pick<FolderItem, 'title' | 'position'> & {
+  id?: string
 }
 
 /**
@@ -95,6 +103,12 @@ export interface WallpaperInfo {
   author: string
   authorUrl: string
   downloadUrl: string
+}
+
+export interface BackupData {
+  gridItems: GridItem[]
+  settings: Settings
+  orders: [string, string[]][]
 }
 
 /**

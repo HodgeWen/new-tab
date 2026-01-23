@@ -48,6 +48,7 @@
     "@tailwindcss/vite": "^4.1.18",
     "@vueuse/core": "^14.1.0",
     "dexie": "^4.2.1",
+    "@cat-kit/core": "^1.0.0",
     "gridstack": "^12.4.2",
     "pinia": "^3.0.4",
     "reka-ui": "^2.7.0",
