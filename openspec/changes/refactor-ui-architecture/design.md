@@ -1,10 +1,18 @@
 ## Context
 
-当前项目存在两套 UI 状态管理机制：
+当前项目存在多个架构问题：
+
+**UI 层**：
 1. `UIContext` + `useUI()` - 通过 provide/inject 在 App.vue 提供
 2. `useUIStore` - Pinia store
+3. 用户已开始迁移工作，部分组件（如 `site-edit.vue`）已采用新模式
 
-用户已开始迁移工作，部分组件（如 `site-edit.vue`）已采用新模式。需要完成剩余迁移并清理旧代码。
+**数据层**：
+1. `favicons` 表冗余 - favicon 已存储在 `SiteItem.favicon` 字段
+2. Settings store 接口臃肿 - 暴露了过多的更新方法
+3. Grid-items store 有不必要的文件夹嵌套逻辑 - 实际只有 site 能移入文件夹
+
+需要完成剩余迁移、清理旧代码，并优化数据层。
 
 ## Goals / Non-Goals
 
@@ -13,11 +21,12 @@
 - 弹框组件自包含，逻辑内聚
 - 上下文菜单支持命令式调用和动态配置
 - 组件目录结构清晰，分组明确
+- 简化数据层，移除冗余逻辑
+- Settings store 只暴露 `settings` 属性，自动持久化
 
 **Non-Goals:**
 - 不改变业务逻辑
 - 不改变视觉样式
-- 不重构数据层（stores/grid-items, stores/settings 等）
 
 ## Decisions
 
@@ -156,6 +165,81 @@ components/
 - `SearchBar.vue`
 - `SettingsPanel.vue`
 - `TabGrid.vue`
+
+### Decision 5: 移除 favicons 表
+
+**选择**: 直接使用 `SiteItem.favicon` 字段
+
+**理由**:
+- `SiteItem` 已有 `favicon` 字段存储 favicon URL
+- 单独的 `favicons` 表造成数据冗余
+- Google Favicon Service URL 可直接使用，无需缓存
+
+**变更**:
+```typescript
+// 移除 database.ts 中的
+// - FaviconRecord 接口
+// - favicons 表定义
+// - getFavicon/saveFavicon 方法
+
+// 简化 favicon.ts
+class FaviconService {
+  getFaviconUrl(url: string, size = 64): string {
+    const domain = new URL(url).hostname
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=${size}`
+  }
+  
+  generateDefaultIcon(title: string): string {
+    // 基于标题生成 SVG 图标
+  }
+}
+```
+
+### Decision 6: Settings Store 简化
+
+**选择**: 只暴露 `settings`，使用 `watch` 自动持久化
+
+**理由**:
+- 减少 API 表面积，降低使用复杂度
+- 自动持久化消除手动调用 `saveSettings` 的心智负担
+- 直接修改 `settings.value.xxx = yyy` 即可自动保存
+
+**新接口**:
+```typescript
+export const useSettingsStore = defineStore('settings', () => {
+  const settings = ref<Settings>(loadFromStorage())
+  
+  // 深度监听，自动保存
+  watch(settings, (val) => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(toRaw(val)))
+  }, { deep: true })
+  
+  return { settings }
+})
+```
+
+**使用方式**:
+```typescript
+const store = useSettingsStore()
+// 直接修改，自动保存
+store.settings.showSearchBar = true
+store.settings.wallpaper.enabled = false
+```
+
+### Decision 7: Grid-items Store 简化
+
+**选择**: 移除文件夹嵌套逻辑，只有 site 能移入文件夹
+
+**理由**:
+- 实际业务中文件夹不支持嵌套
+- 简化 `orders` 数据结构和同步逻辑
+- 减少边界情况处理
+
+**变更**:
+- 移除 `FolderItem` 中的 `children` 字段（已在 types 中移除）
+- 使用 `orders: [itemId, childIds[]][]` 结构管理层级
+- `childIds` 只包含 `SiteItem` 的 ID
+- 移除 `addFolder` 中的 `pid` 处理逻辑
 
 ## Risks / Trade-offs
 
