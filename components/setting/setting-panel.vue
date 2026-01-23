@@ -314,8 +314,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import { useUI } from '@/composables/useUI'
+import { ref, watch } from 'vue'
 import { useSettingsStore } from '@/stores/settings'
 import { useWallpaperStore } from '@/stores/wallpaper'
 import { useGridItemStore } from '@/stores/grid-items'
@@ -356,7 +355,6 @@ import {
 } from 'lucide-vue-next'
 import { BackupData } from '@/types'
 
-const ui = useUI()
 const settingsStore = useSettingsStore()
 const wallpaperStore = useWallpaperStore()
 const gridItemStore = useGridItemStore()
@@ -382,13 +380,13 @@ const backupLoading = ref(false)
 const visible = ref(false)
 
 // 切换搜索栏
-async function toggleSearchBar(checked: boolean) {
-  await settingsStore.updateSettings({ showSearchBar: checked })
+function toggleSearchBar(checked: boolean) {
+  settingsStore.settings.showSearchBar = checked
 }
 
 // 更新壁纸设置
 async function updateWallpaperEnabled(enabled: boolean) {
-  await settingsStore.updateWallpaperSettings({ enabled })
+  settingsStore.settings.wallpaper.enabled = enabled
   if (enabled) {
     await wallpaperStore.loadWallpaper()
   }
@@ -396,13 +394,13 @@ async function updateWallpaperEnabled(enabled: boolean) {
 
 async function updateWallpaperSource(source: unknown) {
   if (!source) return
-  await settingsStore.updateWallpaperSettings({ source: String(source) as any })
+  settingsStore.settings.wallpaper.source = String(source) as any
   await wallpaperStore.fetchNewWallpaper()
 }
 
 async function updateWallpaperInterval(interval: unknown) {
   if (!interval) return
-  await settingsStore.updateWallpaperSettings({ interval: Number(interval) })
+  settingsStore.settings.wallpaper.interval = Number(interval)
 }
 
 // 切换壁纸
@@ -435,11 +433,9 @@ async function testWebdavConnection() {
       username: webdavUsername.value,
       password: webdavPassword.value
     })
-    await settingsStore.updateWebDAVSettings({
-      enabled: true,
-      url: webdavUrl.value,
-      username: webdavUsername.value
-    })
+    settingsStore.settings.webdav.enabled = true
+    settingsStore.settings.webdav.url = webdavUrl.value
+    settingsStore.settings.webdav.username = webdavUsername.value
     // 连接并加载备份列表
     await webdavService.connect(
       webdavUrl.value,
@@ -479,7 +475,10 @@ async function restoreBackup(filepath: string) {
   if (result.success) {
     webdavMessage.value = '恢复成功，请刷新页面'
     await gridItemStore.loadGridItems()
-    await settingsStore.loadSettings()
+    const rawSettings = localStorage.getItem('new-tab-settings')
+    if (rawSettings) {
+      Object.assign(settingsStore.settings, JSON.parse(rawSettings))
+    }
   } else {
     webdavMessage.value = result.message || '恢复失败'
   }
@@ -499,8 +498,9 @@ async function deleteBackup(filepath: string) {
 // 导出本地数据
 async function exportLocalData() {
   const dbData = await db.exportData()
-  const settings = settingsStore.settings
-  const orders = gridItemStore.rootOrder
+  const settings = structuredClone(settingsStore.settings)
+  const rawOrders = localStorage.getItem('new-tab-orders')
+  const orders = rawOrders ? JSON.parse(rawOrders) : []
 
   const exportData = {
     exportedAt: new Date().toISOString(),
@@ -537,14 +537,20 @@ async function importLocalData() {
       await db.importData(data)
 
       // 2. 恢复设置
-      localStorage.setItem('new-tab-settings', JSON.stringify(data.settings))
+      if (data.settings) {
+        localStorage.setItem('new-tab-settings', JSON.stringify(data.settings))
+      }
 
       // 3. 恢复排序
-      localStorage.setItem('new-tab-orders', JSON.stringify(data.orders))
+      if (data.orders) {
+        localStorage.setItem('new-tab-orders', JSON.stringify(data.orders))
+      }
 
       // 重新加载应用状态
       await gridItemStore.loadGridItems()
-      await settingsStore.loadSettings()
+      if (data.settings) {
+        Object.assign(settingsStore.settings, data.settings)
+      }
       alert('导入成功！')
     } catch (error) {
       console.error('Import failed:', error)

@@ -34,7 +34,12 @@ export const useGridItemStore = defineStore('gridItems', () => {
     const folder = gridItems.value[folderId]
     if (!folder || !isFolderItem(folder)) return []
 
-    return folder.children.map(id => gridItems.value[id]).filter(Boolean)
+    const entry = orders.value.find(([id]) => id === folderId)
+    if (!entry) return []
+
+    return entry[1]
+      .map(id => gridItems.value[id])
+      .filter(item => item && !isFolderItem(item)) as GridItem[]
   }
 
   // 加载网格项数据
@@ -81,7 +86,7 @@ export const useGridItemStore = defineStore('gridItems', () => {
       const childrenIds: string[] = []
       if (isFolderItem(item)) {
         const children = allItems
-          .filter(child => child.pid === item.id)
+          .filter(child => child.pid === item.id && !isFolderItem(child))
           .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
         childrenIds.push(...children.map(c => c.id))
       }
@@ -96,27 +101,53 @@ export const useGridItemStore = defineStore('gridItems', () => {
   // 根据 orders 同步更新 gridItems 的 hierarchy 和 order
   function syncGridItemsFromOrders() {
     const newRootOrder: string[] = []
+    const normalizedOrders: Orders = []
+    const seenIds = new Set<string>()
 
     orders.value.forEach(([id, childrenIds], index) => {
-      newRootOrder.push(id)
       const item = gridItems.value[id]
-      if (item) {
-        item.order = index
-        item.pid = null
-        if (isFolderItem(item)) {
-          // 确保 children 数组是新的引用
-          item.children = [...childrenIds]
-          // 更新子项
-          childrenIds.forEach((childId, childIndex) => {
-            const child = gridItems.value[childId]
-            if (child) {
-              child.pid = id
-              child.order = childIndex
-            }
-          })
-        }
+      if (!item) return
+
+      newRootOrder.push(id)
+      seenIds.add(id)
+      item.order = index
+      item.pid = null
+
+      if (isFolderItem(item)) {
+        const filteredChildren = childrenIds.filter(childId => {
+          const child = gridItems.value[childId]
+          return child && !isFolderItem(child) && childId !== id
+        })
+
+        filteredChildren.forEach((childId, childIndex) => {
+          const child = gridItems.value[childId]
+          if (child) {
+            child.pid = id
+            child.order = childIndex
+            seenIds.add(childId)
+          }
+        })
+
+        normalizedOrders.push([id, filteredChildren])
+      } else {
+        normalizedOrders.push([id, []])
       }
     })
+
+    const missingItems = Object.values(gridItems.value).filter(
+      item => !seenIds.has(item.id)
+    )
+    if (missingItems.length > 0) {
+      buildOrdersFromGridItems()
+      return
+    }
+
+    const ordersChanged =
+      JSON.stringify(normalizedOrders) !== JSON.stringify(orders.value)
+    orders.value = normalizedOrders
+    if (ordersChanged) {
+      saveOrders()
+    }
 
     rootOrder.value = newRootOrder
   }
@@ -155,7 +186,8 @@ export const useGridItemStore = defineStore('gridItems', () => {
     gridItems.value[id] = newSite
 
     // 更新 orders
-    if (site.pid) {
+    const targetFolder = site.pid ? gridItems.value[site.pid] : null
+    if (site.pid && targetFolder && isFolderItem(targetFolder)) {
       const parentEntry = orders.value.find(e => e[0] === site.pid)
       if (parentEntry) {
         parentEntry[1].push(id)
@@ -177,7 +209,7 @@ export const useGridItemStore = defineStore('gridItems', () => {
   async function addFolder(
     folder: Omit<
       FolderItem,
-      'id' | 'type' | 'order' | 'children' | 'createdAt' | 'updatedAt'
+      'id' | 'type' | 'order' | 'createdAt' | 'updatedAt' | 'pid'
     >
   ) {
     const id = generateId()
@@ -190,22 +222,12 @@ export const useGridItemStore = defineStore('gridItems', () => {
       createdAt: now,
       updatedAt: now,
       ...folder,
-      pid: folder.pid || null
+      pid: null
     }
 
     gridItems.value[id] = newFolder
 
-    if (folder.pid) {
-      // 理论上不支持文件夹嵌套，但逻辑上处理
-      const parentEntry = orders.value.find(e => e[0] === folder.pid)
-      if (parentEntry) {
-        parentEntry[1].push(id)
-      } else {
-        orders.value.push([id, []])
-      }
-    } else {
-      orders.value.push([id, []])
-    }
+    orders.value.push([id, []])
 
     saveOrders()
     syncGridItemsFromOrders()
@@ -264,6 +286,12 @@ export const useGridItemStore = defineStore('gridItems', () => {
     const item = gridItems.value[id]
     if (!item) return
 
+    const targetFolder = targetParentId ? gridItems.value[targetParentId] : null
+    if (targetParentId) {
+      if (!targetFolder || !isFolderItem(targetFolder)) return
+      if (isFolderItem(item)) return
+    }
+
     // 1. 从原位置移除
     let savedChildren: string[] = []
 
@@ -288,9 +316,8 @@ export const useGridItemStore = defineStore('gridItems', () => {
         parentEntry[1].splice(targetIndex, 0, id)
       }
     } else {
-      // 只有当它是文件夹或者它原本在根级且有子项时，我们需要保留子项
-      // 如果它原本是子项（site），savedChildren 是空的，这也正确
-      orders.value.splice(targetIndex, 0, [id, savedChildren])
+      const childrenToKeep = isFolderItem(item) ? savedChildren : []
+      orders.value.splice(targetIndex, 0, [id, childrenToKeep])
     }
 
     item.updatedAt = Date.now()
@@ -340,9 +367,14 @@ export const useGridItemStore = defineStore('gridItems', () => {
   // 重排序
   async function reorder(newOrder: string[], pid: string | null = null) {
     if (pid) {
+      const parent = gridItems.value[pid]
+      if (!parent || !isFolderItem(parent)) return
       const parentEntry = orders.value.find(e => e[0] === pid)
       if (parentEntry) {
-        parentEntry[1] = [...newOrder]
+        parentEntry[1] = newOrder.filter(id => {
+          const item = gridItems.value[id]
+          return item && !isFolderItem(item)
+        })
       }
     } else {
       // 重构根 orders

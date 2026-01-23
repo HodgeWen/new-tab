@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, toRaw } from 'vue'
+import { ref, toRaw, watch } from 'vue'
 import type { Settings } from '@/types'
 
 const STORAGE_KEY = 'new-tab-settings'
@@ -39,68 +39,33 @@ function deepMergeSettings(
 }
 
 export const useSettingsStore = defineStore('settings', () => {
-  const settings = ref<Settings>(structuredClone(defaultSettings))
-  const loading = ref(false)
-
-  function loadSettings() {
-    loading.value = true
+  function loadFromStorage(): Settings {
     try {
       const raw = localStorage.getItem(STORAGE_KEY)
       if (raw) {
-        settings.value = deepMergeSettings(defaultSettings, JSON.parse(raw))
-      } else {
-        // 首次运行，保存默认设置
-        saveSettings()
+        return deepMergeSettings(defaultSettings, JSON.parse(raw))
       }
     } catch (error) {
       console.error('[Settings] Failed to load settings:', error)
-      // 出错时重置为默认值
-      settings.value = structuredClone(defaultSettings)
-    } finally {
-      loading.value = false
     }
+    return structuredClone(defaultSettings)
   }
 
-  function saveSettings() {
-    try {
-      // 使用 toRaw 获取原始对象
-      const rawSettings = toRaw(settings.value)
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(rawSettings))
-    } catch (error) {
-      console.error('[Settings] Failed to save settings:', error)
-    }
-  }
+  const settings = ref<Settings>(loadFromStorage())
 
-  function toggleSearchBar() {
-    settings.value.showSearchBar = !settings.value.showSearchBar
-    saveSettings()
-  }
-
-  function updateSettings(config: Partial<Settings>) {
-    Object.assign(settings.value, config)
-    saveSettings()
-  }
-
-  function updateWallpaperSettings(
-    config: Partial<Settings['wallpaper']>
-  ) {
-    Object.assign(settings.value.wallpaper, config)
-    saveSettings()
-  }
-
-  function updateWebDAVSettings(config: Partial<Settings['webdav']>) {
-    Object.assign(settings.value.webdav, config)
-    saveSettings()
-  }
+  watch(
+    settings,
+    value => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(toRaw(value)))
+      } catch (error) {
+        console.error('[Settings] Failed to save settings:', error)
+      }
+    },
+    { deep: true }
+  )
 
   return {
-    settings,
-    loading,
-    loadSettings,
-    saveSettings,
-    toggleSearchBar,
-    updateSettings,
-    updateWallpaperSettings,
-    updateWebDAVSettings
+    settings
   }
 })

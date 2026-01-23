@@ -18,26 +18,11 @@ interface WallpaperRecord {
 }
 
 /**
- * Favicon 缓存表记录
- */
-interface FaviconRecord {
-  /** 网站域名作为主键 */
-  id: string
-  /** 网站 ID (可选) */
-  siteId?: string
-  /** Base64 图标数据 */
-  dataUrl: string
-  /** 缓存时间戳 */
-  timestamp: number
-}
-
-/**
  * 应用数据库 - 使用 Dexie.js
  *
  * 所有数据统一存储在 IndexedDB 中：
  * - grid_items: 网格项数据
  * - wallpapers: 壁纸缓存（Blob）
- * - favicons: 网站图标缓存
  */
 class AppDatabase extends Dexie {
   gridItems!: EntityTable<GridItemRecord, 'id'>
@@ -48,8 +33,7 @@ class AppDatabase extends Dexie {
 
     this.version(1).stores({
       gridItems: 'id',
-      wallpapers: 'id',
-      favicons: 'id'
+      wallpapers: 'id'
     })
   }
   // ==================== 壁纸缓存操作 ====================

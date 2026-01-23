@@ -1,13 +1,247 @@
-<template>
-  <Dialog class="folder-modal">
-    <slot />
-  </Dialog>
-</template>
-
 <script setup lang="ts">
-import { Dialog } from '@/shadcn/ui/dialog'
+import { computed, ref, watch, inject } from 'vue'
+import { useGridItemStore } from '@/stores/grid-items'
+import { isSiteItem, isFolderItem, type GridItem, type SiteItem } from '@/types'
+import { faviconService } from '@/services/favicon'
+import { useContextMenu } from '@/shadcn/ui/context-menu'
+import type { ContextMenuItemConfig } from '@/shadcn/ui/context-menu/use-context-menu'
+import { COMPONENTS_DI_KEY } from '@/utils/di'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle
+} from '@/shadcn/ui/dialog'
+import {
+  FolderOpen,
+  FolderInput,
+  FolderOutput,
+  Pencil,
+  Trash2
+} from 'lucide-vue-next'
 
 defineOptions({
   name: 'FolderModal'
 })
+
+const gridItemStore = useGridItemStore()
+const { show } = useContextMenu()
+const components = inject(COMPONENTS_DI_KEY, null)
+
+const visible = ref(false)
+const folderId = ref<string | null>(null)
+
+const folder = computed(() => {
+  if (!folderId.value) return null
+  const item = gridItemStore.gridItems[folderId.value]
+  return item && isFolderItem(item) ? item : null
+})
+
+const children = computed(() => {
+  if (!folder.value) return []
+  return gridItemStore.getFolderChildren(folder.value.id)
+})
+
+const availableFolders = computed(() => {
+  if (!folder.value) return []
+  return gridItemStore.allFolders.filter(item => item.id !== folder.value?.id)
+})
+
+const draggedId = ref<string | null>(null)
+const dragOverId = ref<string | null>(null)
+
+function handleDragStart(event: DragEvent, itemId: string) {
+  draggedId.value = itemId
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', itemId)
+  }
+}
+
+function handleDragOver(event: DragEvent, itemId: string) {
+  event.preventDefault()
+  if (draggedId.value && draggedId.value !== itemId) {
+    dragOverId.value = itemId
+  }
+}
+
+function handleDragLeave() {
+  dragOverId.value = null
+}
+
+async function handleDrop(event: DragEvent, targetId: string) {
+  event.preventDefault()
+  dragOverId.value = null
+
+  if (!draggedId.value || !folder.value || draggedId.value === targetId) {
+    draggedId.value = null
+    return
+  }
+
+  const currentOrder = children.value.map(item => item.id)
+  const oldIndex = currentOrder.indexOf(draggedId.value)
+  const newIndex = currentOrder.indexOf(targetId)
+
+  if (oldIndex !== -1 && newIndex !== -1) {
+    currentOrder.splice(oldIndex, 1)
+    currentOrder.splice(newIndex, 0, draggedId.value)
+    await gridItemStore.reorder(currentOrder, folder.value.id)
+  }
+
+  draggedId.value = null
+}
+
+function handleDragEnd() {
+  draggedId.value = null
+  dragOverId.value = null
+}
+
+function handleContextMenu(event: MouseEvent, item: GridItem) {
+  event.preventDefault()
+  event.stopPropagation()
+
+  if (!isSiteItem(item)) return
+
+  const items: ContextMenuItemConfig[] = [
+    {
+      icon: Pencil,
+      label: '编辑',
+      action: () => components?.siteEdit.value?.open({ ...item })
+    }
+  ]
+
+  if (availableFolders.value.length > 0) {
+    items.push({
+      type: 'submenu',
+      icon: FolderInput,
+      label: '移动到分组',
+      items: availableFolders.value.map(target => ({
+        label: target.title,
+        action: () =>
+          gridItemStore.moveGridItem(
+            item.id,
+            target.id,
+            gridItemStore.getFolderChildren(target.id).length
+          )
+      }))
+    })
+  }
+
+  items.push(
+    {
+      icon: FolderOutput,
+      label: '移出分组',
+      action: () =>
+        gridItemStore.moveGridItem(
+          item.id,
+          null,
+          gridItemStore.rootOrder.length
+        )
+    },
+    { type: 'divider' },
+    {
+      icon: Trash2,
+      label: '删除',
+      danger: true,
+      action: async () => {
+        if (confirm('确定要删除这个网站吗？')) {
+          await gridItemStore.deleteGridItem(item.id)
+        }
+      }
+    }
+  )
+
+  show({
+    x: event.clientX,
+    y: event.clientY,
+    items
+  })
+}
+
+function openFolder(folderIdValue: string) {
+  folderId.value = folderIdValue
+  visible.value = true
+}
+
+function openSite(site: SiteItem) {
+  window.open(site.url, '_self')
+}
+
+watch(visible, value => {
+  if (!value) {
+    folderId.value = null
+  }
+})
+
+defineExpose({ open: openFolder })
 </script>
+
+<template>
+  <Dialog v-model:open="visible" :modal="false">
+    <DialogContent
+      v-if="folder"
+      class="glass-dialog max-w-md p-0 text-white border-white/20 bg-black/40 backdrop-blur-xl"
+    >
+      <DialogHeader class="px-6 py-4 border-b border-white/10">
+        <DialogTitle class="text-lg font-semibold text-white">
+          {{ folder.title }}
+        </DialogTitle>
+        <DialogDescription class="sr-only">
+          查看和管理文件夹内的网站
+        </DialogDescription>
+      </DialogHeader>
+
+      <div class="p-6">
+        <div class="grid grid-cols-4 gap-4">
+          <template v-for="item in children" :key="item.id">
+            <div
+              v-if="isSiteItem(item)"
+              class="group flex flex-col items-center cursor-pointer select-none transition-all"
+              :class="{
+                'opacity-50': draggedId === item.id,
+                'scale-105': dragOverId === item.id
+              }"
+              draggable="true"
+              @dragstart="handleDragStart($event, item.id)"
+              @dragover="handleDragOver($event, item.id)"
+              @dragleave="handleDragLeave"
+              @drop="handleDrop($event, item.id)"
+              @dragend="handleDragEnd"
+              @click="openSite(item)"
+              @contextmenu="handleContextMenu($event, item)"
+            >
+              <div
+                class="w-14 h-14 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center mb-2 transition-all group-hover:scale-105"
+              >
+                <img
+                  :src="item.favicon || faviconService.getFaviconUrl(item.url)"
+                  :alt="item.title"
+                  class="w-8 h-8 rounded pointer-events-none"
+                  @error="
+                    ($event.target as HTMLImageElement).src =
+                      faviconService.generateDefaultIcon(item.title)
+                  "
+                />
+              </div>
+              <span
+                class="text-xs text-white/80 text-center line-clamp-2 max-w-[72px]"
+              >
+                {{ item.title }}
+              </span>
+            </div>
+          </template>
+        </div>
+
+        <div
+          v-if="children.length === 0"
+          class="text-center py-8 text-white/50"
+        >
+          <FolderOpen class="size-12 mx-auto mb-3" />
+          <p>文件夹是空的</p>
+          <p class="text-xs mt-1">拖拽网站到这里添加</p>
+        </div>
+      </div>
+    </DialogContent>
+  </Dialog>
+</template>

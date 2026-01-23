@@ -58,9 +58,10 @@ export type SiteForm = Pick<SiteItem, 'title' | 'url' | 'favicon'> & {
  */
 export interface FolderItem extends GridItem {
   type: 'folder'
+  size: GridSize
 }
 
-export type FolderForm = Pick<FolderItem, 'title' | 'position'> & {
+export type FolderForm = Pick<FolderItem, 'title' | 'size'> & {
   id?: string
 }
 
