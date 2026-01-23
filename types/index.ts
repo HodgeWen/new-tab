@@ -48,12 +48,12 @@ export interface FolderItem extends BaseGridItem {
 
 export type GridItem = SiteItem | FolderItem
 
-export type SiteForm = Pick<SiteItem, 'title' | 'url' | 'favicon'> & {
+export type SiteForm = Pick<SiteItem, 'title' | 'url' | 'favicon' | 'type'> & {
   id: string | null
   pid: string | null
 }
 
-export type FolderForm = Pick<FolderItem, 'title' | 'size'> & {
+export type FolderForm = Pick<FolderItem, 'title' | 'size' | 'type'> & {
   id: string | null
 }
 

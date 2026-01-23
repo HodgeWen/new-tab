@@ -84,7 +84,7 @@
 import { computed, ref, watch } from 'vue'
 import { useModal } from '@/composables/use-modal'
 import { useGridItemStore } from '@/stores/grid-items'
-import { type GridSize, type FolderSizeName } from '@/types'
+import { type GridSize, type FolderSizeName, FolderForm } from '@/types'
 import {
   Dialog,
   DialogContent,
@@ -97,17 +97,19 @@ import { Input } from '@/shadcn/ui/input'
 import { Folder } from 'lucide-vue-next'
 import { FOLDER_SIZE_PRESETS } from './helper'
 import { o } from '@cat-kit/core'
+import { COMPONENTS_DI_KEY } from '@/utils/di'
 
 defineOptions({ name: 'FolderEdit' })
-
-type FolderForm = { id: string | null; title: string; size: GridSize }
 
 const gridItemStore = useGridItemStore()
 const loading = ref(false)
 
 const selectedPreset = ref<FolderSizeName>('square')
 
+const components = inject(COMPONENTS_DI_KEY, null)
+
 const { visible, form, open } = useModal<FolderForm>({
+  type: 'folder',
   id: null,
   title: '',
   size: o(FOLDER_SIZE_PRESETS[selectedPreset.value]).pick(['w', 'h'])
@@ -147,10 +149,11 @@ async function handleSubmit() {
       await gridItemStore.updateGridItem(form.id, { title: form.title.trim() })
       await gridItemStore.updateFolderSize(form.id, currentSize.value)
     } else {
-      await gridItemStore.addFolder({
+      components?.gridContainer.value?.addWidget({
+        type: 'folder',
         title: form.title.trim(),
         size: currentSize.value
-      })
+      } as FolderForm)
     }
     closeModal()
   } finally {

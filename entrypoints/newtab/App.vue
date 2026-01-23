@@ -1,9 +1,5 @@
 <template>
-  <div
-    id="app"
-    class="min-h-screen w-full overflow-hidden relative font-sans"
-    @contextmenu="handleContextMenu"
-  >
+  <div id="app" class="relative font-sans" @contextmenu="handleContextMenu">
     <!-- 底层：默认深色渐变背景（始终可见） -->
     <div class="absolute inset-0" :style="{ background: defaultGradient }" />
 
@@ -20,7 +16,7 @@
     <div class="absolute inset-0 bg-black/30" />
 
     <!-- 右上角按钮组 -->
-    <div class="fixed top-4 right-4 z-20 flex items-center gap-2">
+    <div class="absolute top-4 right-4 z-20 flex gap-2">
       <!-- 换壁纸按钮（仅在壁纸启用时显示） -->
       <Button
         v-if="settingsStore.settings.wallpaper.enabled"
@@ -66,7 +62,7 @@
       <SearchBar v-if="settingsStore.settings.showSearchBar" class="mb-12" />
 
       <!-- 网格布局 -->
-      <GridContainer class="w-full max-w-6xl" />
+      <GridContainer class="w-full max-w-6xl" ref="grid-container" />
 
       <!-- 壁纸信息 -->
       <div
@@ -84,13 +80,11 @@
         >
           {{ wallpaperStore.currentWallpaper.author }}
         </a>
-        on Picsum
       </div>
     </div>
   </div>
   <!-- 设置面板 -->
   <SettingsPanel ref="settings-panel" />
-
   <!-- 右键菜单 -->
   <ContextMenuRenderer />
   <!-- 文件夹展开模态框 -->
@@ -103,7 +97,7 @@
   <FolderEdit ref="folder-edit" />
 </template>
 <script setup lang="ts">
-import { onMounted, computed, ref, provide, useTemplateRef } from 'vue'
+import { onMounted, computed, provide, useTemplateRef } from 'vue'
 import { useGridItemStore } from '@/stores/grid-items'
 import { useSettingsStore } from '@/stores/settings'
 import { useWallpaperStore } from '@/stores/wallpaper'
@@ -117,7 +111,6 @@ import {
   FolderPlus
 } from 'lucide-vue-next'
 import { Button } from '@/shadcn/ui/button'
-
 import { SearchBar } from '@/components/search'
 import GridContainer from '@/components/grid/grid-container.vue'
 import { SettingsPanel } from '@/components/setting'
@@ -137,8 +130,9 @@ const siteEdit = useTemplateRef('site-edit')
 const folderEdit = useTemplateRef('folder-edit')
 const settingsPanel = useTemplateRef('settings-panel')
 const folderModal = useTemplateRef('folder-modal')
+const gridContainer = useTemplateRef('grid-container')
 
-provide(COMPONENTS_DI_KEY, { siteEdit, folderEdit, folderModal })
+provide(COMPONENTS_DI_KEY, { siteEdit, folderEdit, folderModal, gridContainer })
 
 // 默认深色渐变背景（始终显示在最底层）
 const defaultGradient =
@@ -210,13 +204,6 @@ function openSettingsPanel() {
 </script>
 
 <style>
-html,
-body {
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-}
-
 /* 壁纸淡入动画 */
 .wallpaper-fade-enter-active {
   transition: opacity 0.3s ease-out;

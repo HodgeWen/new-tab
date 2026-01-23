@@ -96,6 +96,7 @@ import { Globe } from 'lucide-vue-next'
 defineOptions({ name: 'SiteEdit' })
 
 const { visible, form, open } = useModal<SiteForm>({
+  type: 'site',
   title: '',
   url: '',
   favicon: '',
@@ -106,6 +107,7 @@ const { visible, form, open } = useModal<SiteForm>({
 const gridItemStore = useGridItemStore()
 const loading = ref(false)
 const isEdit = computed(() => Boolean(form.id))
+const components = inject(COMPONENTS_DI_KEY, null)
 
 function closeModal() {
   visible.value = false
@@ -124,7 +126,8 @@ function handleUrlChange() {
     if (!form.title) {
       try {
         const domain = new URL(fullUrl).hostname.replace('www.', '')
-        form.title = domain.charAt(0).toUpperCase() + domain.slice(1).split('.')[0]
+        form.title =
+          domain.charAt(0).toUpperCase() + domain.slice(1).split('.')[0]
       } catch {
         // 忽略解析错误
       }
@@ -155,12 +158,12 @@ async function handleSubmit() {
         favicon
       })
     } else {
-      await gridItemStore.addSite({
+      components?.gridContainer.value?.addWidget({
         title: form.title.trim(),
         url: fullUrl,
         favicon,
         pid: form.pid
-      })
+      } as SiteForm)
     }
     closeModal()
   } finally {

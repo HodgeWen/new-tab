@@ -173,7 +173,6 @@ export const useGridItemStore = defineStore('gridItems', () => {
     const newSite: SiteItem = {
       id,
       type: 'site',
-      order: 0, // 会被 sync 更新
       createdAt: now,
       updatedAt: now,
 

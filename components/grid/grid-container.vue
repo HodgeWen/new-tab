@@ -24,7 +24,11 @@ import {
   type GridItem,
   type SiteItem as ISiteItem,
   type FolderItem as IFolderItem,
-  GridItemType
+  GridItemType,
+  BaseGridItem,
+  GridSize,
+  FolderForm,
+  SiteForm
 } from '@/types'
 import { SiteItem } from '@/components/site'
 import { FolderItem } from '@/components/folder'
@@ -206,13 +210,13 @@ onMounted(() => {
 
 /**
  * 添加网格项
- * @param item
+ * @param item 网格项
  */
-function addGridItem(item: GridItem) {
+function addWidget(item: SiteForm | FolderForm) {
   grid?.addWidget({
     id: nanoid(10),
-    ...item.position,
-    ...(item.type === 'folder' ? item.size : {})
+    content: item.title,
+    ...(item.type === 'site' ? { w: 1, h: 1 } : item.size)
   })
 }
 
@@ -226,6 +230,8 @@ onBeforeUnmount(() => {
     grid = null
   }
 })
+
+defineExpose({ addWidget })
 </script>
 
 <style>
