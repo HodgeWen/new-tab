@@ -77,7 +77,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, inject, ref } from 'vue'
 import { useModal } from '@/composables/use-modal'
 import { useGridItemStore } from '@/stores/grid-items'
 import type { SiteForm } from '@/types'
@@ -92,6 +92,7 @@ import {
 import { Button } from '@/shadcn/ui/button'
 import { Input } from '@/shadcn/ui/input'
 import { Globe } from 'lucide-vue-next'
+import { COMPONENTS_DI_KEY } from '@/utils/di'
 
 defineOptions({ name: 'SiteEdit' })
 

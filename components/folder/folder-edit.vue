@@ -81,7 +81,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, inject, ref, watch } from 'vue'
 import { useModal } from '@/composables/use-modal'
 import { useGridItemStore } from '@/stores/grid-items'
 import { type GridSize, type FolderSizeName, FolderForm } from '@/types'

@@ -114,6 +114,7 @@ function handleContextMenu(event: MouseEvent) {
       label: '编辑',
       action: () => {
         components?.folderEdit.value?.open({
+          type: 'folder',
           id: item.id,
           title: item.title,
           size: item.size

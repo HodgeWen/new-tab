@@ -8,6 +8,7 @@ process.setMaxListeners(20)
 
 export default defineConfig({
   modules: ['@wxt-dev/module-vue'],
+  imports: false,
   manifest: {
     name: 'New Tab',
     description: '美观实用的浏览器新标签页扩展',
@@ -23,17 +24,10 @@ export default defineConfig({
       'https://picsum.photos/*',
       'https://fastly.picsum.photos/*'
     ],
-    chrome_url_overrides: {
-      newtab: 'newtab.html'
-    }
+    chrome_url_overrides: { newtab: 'newtab.html' }
   },
   vite: () => ({
     plugins: [tailwindcss(), vueJsx()],
-    resolve: {
-      alias: {
-        '@': __dirname,
-        '~': __dirname
-      }
-    }
+    resolve: { alias: { '@': __dirname, '~': __dirname } }
   })
 })
