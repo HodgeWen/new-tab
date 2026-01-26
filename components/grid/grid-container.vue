@@ -151,6 +151,7 @@ function addWidget(item: SiteForm | FolderForm) {
   const y = +el.getAttribute('gs-y')!
 
   // 同步到Store中
+  console.log({ ...item, id: widgetData.id, position: { x, y } })
   gridItemStore.addGridItem({ ...item, id: widgetData.id, position: { x, y } })
 }
 

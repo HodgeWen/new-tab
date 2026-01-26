@@ -163,8 +163,6 @@ const showWallpaper = computed(() => {
 })
 
 onMounted(async () => {
-  await gridItemStore.loadGridItems()
-
   if (settingsStore.settings.wallpaper.enabled) {
     await wallpaperStore.loadWallpaper()
   }

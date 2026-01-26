@@ -474,7 +474,7 @@ async function restoreBackup(filepath: string) {
   const result = await webdavService.restore(filepath)
   if (result.success) {
     webdavMessage.value = '恢复成功，请刷新页面'
-    await gridItemStore.loadGridItems()
+
     const rawSettings = localStorage.getItem('new-tab-settings')
     if (rawSettings) {
       Object.assign(settingsStore.settings, JSON.parse(rawSettings))
@@ -547,7 +547,6 @@ async function importLocalData() {
       }
 
       // 重新加载应用状态
-      await gridItemStore.loadGridItems()
       if (data.settings) {
         Object.assign(settingsStore.settings, data.settings)
       }

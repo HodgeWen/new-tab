@@ -146,13 +146,15 @@ async function handleSubmit() {
   loading.value = true
   try {
     if (form.id) {
-      await gridItemStore.updateGridItem(form.id, { title: form.title.trim() })
-      await gridItemStore.updateFolderSize(form.id, currentSize.value)
+      await gridItemStore.updateGridItem(form.id, {
+        title: form.title.trim(),
+        size: form.size
+      })
     } else {
       components?.gridContainer.value?.addWidget({
         type: 'folder',
         title: form.title.trim(),
-        size: currentSize.value
+        size: form.size
       } as FolderForm)
     }
     closeModal()

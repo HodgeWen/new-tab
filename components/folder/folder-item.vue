@@ -19,7 +19,6 @@
           :key="site.id"
           :item="site"
           preview
-          size="sm"
         />
       </div>
 

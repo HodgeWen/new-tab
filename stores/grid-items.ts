@@ -198,6 +198,7 @@ export const useGridItemStore = defineStore('gridItems', () => {
     items,
     itemsMap,
     folders,
+    loadGridItems,
 
     onLoad,
     offLoad,

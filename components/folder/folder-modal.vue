@@ -62,7 +62,13 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/shadcn/ui/dialog'
-import { FolderOpen, FolderInput, FolderOutput, Pencil, Trash2 } from 'lucide-vue-next'
+import {
+  FolderOpen,
+  FolderInput,
+  FolderOutput,
+  Pencil,
+  Trash2
+} from 'lucide-vue-next'
 import { SiteItem } from '@/components/site'
 
 defineOptions({ name: 'FolderModal' })
