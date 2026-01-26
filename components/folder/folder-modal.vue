@@ -15,11 +15,10 @@
 
       <div class="p-6">
         <div class="grid grid-cols-4 gap-4">
-          >
           <div
             v-for="site in folder.children"
             :key="site.id"
-            class="group flex flex-col items-center cursor-pointer select-none transition-all"
+            class="transition-all"
             :class="{
               'opacity-50': draggedId === site.id,
               'scale-105': dragOverId === site.id
@@ -30,27 +29,9 @@
             @dragleave="handleDragLeave"
             @drop="handleDrop($event, site.id)"
             @dragend="handleDragEnd"
-            @click="openSite(site)"
             @contextmenu="handleContextMenu($event, site)"
           >
-            <div
-              class="w-14 h-14 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center mb-2 transition-all group-hover:scale-105"
-            >
-              <img
-                :src="site.favicon || faviconService.getFaviconUrl(site.url)"
-                :alt="site.title"
-                class="w-8 h-8 rounded pointer-events-none"
-                @error="
-                  ($event.target as HTMLImageElement).src =
-                    faviconService.generateDefaultIcon(site.title)
-                "
-              />
-            </div>
-            <span
-              class="text-xs text-white/80 text-center line-clamp-2 max-w-[72px]"
-            >
-              {{ site.title }}
-            </span>
+            <SiteItem :item="site" />
           </div>
         </div>
 
@@ -66,11 +47,11 @@
     </DialogContent>
   </Dialog>
 </template>
+
 <script setup lang="ts">
 import { computed, ref, shallowRef, watch, inject } from 'vue'
 import { useGridItemStore } from '@/stores/grid-items'
-import type { SiteItem, FolderItem } from '@/types'
-import { faviconService } from '@/services/favicon'
+import type { SiteItem as ISiteItem, FolderItem } from '@/types'
 import { useContextMenu } from '@/shadcn/ui/context-menu'
 import type { ContextMenuItemConfig } from '@/shadcn/ui/context-menu/use-context-menu'
 import { COMPONENTS_DI_KEY } from '@/utils/di'
@@ -81,13 +62,8 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/shadcn/ui/dialog'
-import {
-  FolderOpen,
-  FolderInput,
-  FolderOutput,
-  Pencil,
-  Trash2
-} from 'lucide-vue-next'
+import { FolderOpen, FolderInput, FolderOutput, Pencil, Trash2 } from 'lucide-vue-next'
+import { SiteItem } from '@/components/site'
 
 defineOptions({ name: 'FolderModal' })
 
@@ -97,7 +73,7 @@ const components = inject(COMPONENTS_DI_KEY, null)
 
 const visible = ref(false)
 const folderId = ref<string | null>(null)
-const folder = shallowRef<FolderItem & { children: SiteItem[] }>()
+const folder = shallowRef<FolderItem & { children: ISiteItem[] }>()
 
 const availableFolders = computed(() => {
   if (!folder.value) return []
@@ -153,7 +129,7 @@ function handleDragEnd() {
   dragOverId.value = null
 }
 
-function handleContextMenu(event: MouseEvent, item: SiteItem) {
+function handleContextMenu(event: MouseEvent, item: ISiteItem) {
   event.preventDefault()
   event.stopPropagation()
 
@@ -172,12 +148,7 @@ function handleContextMenu(event: MouseEvent, item: SiteItem) {
       label: '移动到分组',
       items: availableFolders.value.map(target => ({
         label: target.title,
-        action: () =>
-          gridItemStore.moveGridItem(
-            item.id,
-            target.id,
-            gridItemStore.getFolderChildren(target.id).length
-          )
+        action: () => gridItemStore.moveGridItemToFolder(item.id, target.id)
       }))
     })
   }
@@ -186,12 +157,7 @@ function handleContextMenu(event: MouseEvent, item: SiteItem) {
     {
       icon: FolderOutput,
       label: '移出分组',
-      action: () =>
-        gridItemStore.moveGridItem(
-          item.id,
-          null,
-          gridItemStore.rootOrder.length
-        )
+      action: () => gridItemStore.moveGridItemOutOfFolder(item.id)
     },
     { type: 'divider' },
     {
@@ -200,7 +166,7 @@ function handleContextMenu(event: MouseEvent, item: SiteItem) {
       danger: true,
       action: async () => {
         if (confirm('确定要删除这个网站吗？')) {
-          await gridItemStore.deleteGridItem(item.id)
+          await gridItemStore.deleteGridItems([item.id])
         }
       }
     }
@@ -209,13 +175,9 @@ function handleContextMenu(event: MouseEvent, item: SiteItem) {
   show({ x: event.clientX, y: event.clientY, items })
 }
 
-function openFolder(data: FolderItem & { children: SiteItem[] }) {
+function openFolder(data: FolderItem & { children: ISiteItem[] }) {
   folder.value = data
   visible.value = true
-}
-
-function openSite(site: SiteItem) {
-  window.open(site.url, '_self')
 }
 
 watch(visible, value => {

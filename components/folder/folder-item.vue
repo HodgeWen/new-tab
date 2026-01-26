@@ -6,7 +6,7 @@
   >
     <div class="flex-1 rounded-2xl glass p-2 overflow-hidden cursor-default">
       <div
-        v-if="item.children.length > 0"
+        v-if="previewSites.length > 0"
         class="grid place-items-center w-full h-full"
         :style="{
           gridTemplateColumns: `repeat(${layout.cols}, 1fr)`,
@@ -14,18 +14,12 @@
           gap: layout.gap
         }"
       >
-        <img
-          v-for="site in item.children"
+        <SiteItem
+          v-for="site in previewSites"
           :key="site.id"
-          :src="site.favicon"
-          :alt="site.title"
-          :title="site.title"
-          class="rounded-lg object-contain hover:bg-white/10 transition-colors cursor-pointer"
-          @click.stop="handlePreviewClick(site.url)"
-          @error="
-            ;($event.target as HTMLImageElement).src =
-              faviconService.generateDefaultIcon(site.title)
-          "
+          :item="site"
+          preview
+          size="sm"
         />
       </div>
 
@@ -55,12 +49,12 @@
 import { computed, inject } from 'vue'
 import type { FolderUIItem, GridSize } from '@/types'
 import { useGridItemStore } from '@/stores/grid-items'
-import { faviconService } from '@/services/favicon'
 import { useContextMenu } from '@/shadcn/ui/context-menu'
 import type { ContextMenuItemConfig } from '@/shadcn/ui/context-menu/use-context-menu'
 import { COMPONENTS_DI_KEY } from '@/utils/di'
 import { FolderOpen, Maximize2, Pencil, Trash2 } from 'lucide-vue-next'
 import { FOLDER_SIZE_PRESETS } from './helper'
+import { SiteItem } from '@/components/site'
 
 defineOptions({ name: 'FolderItem' })
 
@@ -83,6 +77,11 @@ const layout = computed(() => {
   return { items, cols, rows, gap: '1rem' }
 })
 
+/** 预览显示的网站（限制数量） */
+const previewSites = computed(() => {
+  return item.children.slice(0, layout.value.items)
+})
+
 function getSizeStyles(size: GridSize) {
   const baseSize = 72
   const gap = 16
@@ -98,10 +97,6 @@ const sizeStyles = computed(() => getSizeStyles(item.size))
 
 function handleFolderClick() {
   emit('open')
-}
-
-function handlePreviewClick(url: string) {
-  window.open(url, '_self')
 }
 
 function handleContextMenu(event: MouseEvent) {
@@ -128,7 +123,9 @@ function handleContextMenu(event: MouseEvent) {
       items: Object.entries(FOLDER_SIZE_PRESETS).map(([_, value]) => ({
         label: value.label,
         action: () => {
-          gridItemStore.updateFolderSize(item.id, { w: value.w, h: value.h })
+          gridItemStore.updateGridItem(item.id, {
+            size: { w: value.w, h: value.h }
+          })
         }
       }))
     },
@@ -139,7 +136,7 @@ function handleContextMenu(event: MouseEvent) {
       danger: true,
       action: async () => {
         if (confirm('确定要删除这个文件夹吗？文件夹内的网站将移到外部。')) {
-          await gridItemStore.deleteGridItem(item.id)
+          await gridItemStore.deleteGridItems([item.id])
         }
       }
     }

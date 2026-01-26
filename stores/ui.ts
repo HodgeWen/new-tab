@@ -13,7 +13,7 @@ export const useUIStore = defineStore('ui', () => {
   const selectedCount = computed(() => checkedSites.value.size)
 
   const rootSites = computed(() => {
-    return gridItemStore.rootGridItems.filter(item => item.type === 'site')
+    return gridItemStore.items.filter(item => item.type === 'site')
   })
 
   const isAllSitesChecked = computed(() => {
