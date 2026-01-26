@@ -4,7 +4,7 @@
 
     <!-- 空状态 -->
     <div
-      v-if="gridItemStore.rootGridItems.length === 0 && !gridItemStore.loading"
+      v-if="gridItemStore.items.length === 0"
       class="flex flex-col items-center justify-center py-20 text-white/50"
     >
       <BookmarkPlus class="size-16 mb-4" />
@@ -16,7 +16,7 @@
 
 <script setup lang="tsx">
 import { BookmarkPlus } from 'lucide-vue-next'
-import { ref, onMounted, onBeforeUnmount, watch, nextTick, render } from 'vue'
+import { ref, onMounted, onBeforeUnmount, render } from 'vue'
 import { GridStack, type GridStackNode, type GridStackWidget } from 'gridstack'
 import 'gridstack/dist/gridstack.min.css'
 import { useGridItemStore } from '@/stores/grid-items'
@@ -25,8 +25,6 @@ import {
   type SiteItem as ISiteItem,
   type FolderItem as IFolderItem,
   GridItemType,
-  BaseGridItem,
-  GridSize,
   FolderForm,
   SiteForm
 } from '@/types'
@@ -42,12 +40,6 @@ const gridContainer = ref<HTMLElement>()
 let grid: GridStack | null = null
 let isUpdating = false
 const shadowDom: Record<string, HTMLElement> = {}
-
-function itemToWidget(item: GridItem): GridStackWidget {
-  const { position } = item
-
-  return { id: item.id, ...position, noResize: true }
-}
 
 const renderMap: Record<GridItemType, (item: GridItem) => any> = {
   site: item => {
@@ -94,18 +86,11 @@ async function handleGridChange(items: GridStackNode[]) {
   }
 }
 
-function loadGridItems() {
-  if (!grid) return
-
-  const widgets = gridItemStore.rootGridItems.map(itemToWidget)
-  grid.load(widgets)
-}
-
 function initGridStack() {
   if (!gridContainer.value || grid) return
 
   GridStack.renderCB = (el: HTMLElement, widget: GridStackWidget) => {
-    const item = gridItemStore.gridItems[String(widget.id)]
+    const item = gridItemStore.itemsMap.get(widget.id!)
     if (!item) return
     renderWidgetContent(el, item)
   }
@@ -137,75 +122,16 @@ function initGridStack() {
     if (isUpdating) return
     handleGridChange(items)
   })
-
-  loadGridItems()
 }
 
-watch(
-  () => [
-    gridItemStore.rootGridItems.map(b => b.id).join(','),
-    ...gridItemStore.rootGridItems.map(
-      b =>
-        `${b.id}:${b.position?.w}x${b.position?.h}:${b.position?.x},${b.position?.y}`
-    )
-  ],
-  (newVal, oldVal) => {
-    if (
-      !isUpdating &&
-      grid &&
-      JSON.stringify(newVal) !== JSON.stringify(oldVal)
-    ) {
-      nextTick(() => {
-        const newIds = newVal[0] as string
-        const oldIds = oldVal ? (oldVal[0] as string) : ''
+gridItemStore.onLoad(items => {
+  grid?.load(
+    items.map(item => {
+      const { position } = item
 
-        if (newIds !== oldIds) {
-          Object.keys(shadowDom).forEach(id => {
-            render(null, shadowDom[id])
-            delete shadowDom[id]
-          })
-          grid!.removeAll(false)
-          loadGridItems()
-        } else {
-          gridItemStore.rootGridItems.forEach(item => {
-            const el = grid!
-              .getGridItems()
-              .find(w => w.gridstackNode?.id === item.id)
-            if (el && item.position) {
-              const node = el.gridstackNode
-              if (
-                node &&
-                (node.w !== item.position.w ||
-                  node.h !== item.position.h ||
-                  node.x !== item.position.x ||
-                  node.y !== item.position.y)
-              ) {
-                grid!.update(el, {
-                  w: item.position.w,
-                  h: item.position.h,
-                  x: item.position.x,
-                  y: item.position.y
-                })
-                const contentEl = el.querySelector(
-                  '.grid-stack-item-content'
-                ) as HTMLElement
-                if (contentEl) {
-                  renderWidgetContent(contentEl, item)
-                }
-              }
-            }
-          })
-        }
-      })
-    }
-  },
-  { deep: true }
-)
-
-onMounted(() => {
-  nextTick(() => {
-    initGridStack()
-  })
+      return { id: item.id, ...position, noResize: true }
+    })
+  )
 })
 
 /**
@@ -213,12 +139,24 @@ onMounted(() => {
  * @param item 网格项
  */
 function addWidget(item: SiteForm | FolderForm) {
-  grid?.addWidget({
+  if (!grid) return
+
+  const widgetData = {
     id: nanoid(10),
     content: item.title,
     ...(item.type === 'site' ? { w: 1, h: 1 } : item.size)
-  })
+  }
+  const el = grid.addWidget(widgetData)
+  const x = +el.getAttribute('gs-x')!
+  const y = +el.getAttribute('gs-y')!
+
+  // 同步到Store中
+  gridItemStore.addGridItem({ ...item, id: widgetData.id, position: { x, y } })
 }
+
+onMounted(() => {
+  initGridStack()
+})
 
 onBeforeUnmount(() => {
   Object.values(shadowDom).forEach(el => {

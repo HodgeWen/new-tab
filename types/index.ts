@@ -59,6 +59,8 @@ export type FolderForm = Pick<FolderItem, 'title' | 'size' | 'type'> & {
 
 export type FolderUIItem = FolderItem & { children: SiteItem[] }
 
+export type GridUIItem = FolderUIItem | SiteItem
+
 /**
  * WebDAV 配置
  */

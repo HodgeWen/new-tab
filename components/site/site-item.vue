@@ -68,7 +68,7 @@ import {
 
 defineOptions({ name: 'SiteItem' })
 
-const { item } = defineProps<{ item: SiteItem }>()
+const { item, preview } = defineProps<{ item: SiteItem; preview?: boolean }>()
 
 const gridItemStore = useGridItemStore()
 const uiStore = useUIStore()
@@ -84,8 +84,11 @@ const faviconUrl = computed(() => {
 
 const isSelected = computed(() => uiStore.checkedSites.has(item.id))
 
+/**
+ * 除了当前所在的文件夹的其他文件夹
+ */
 const availableFolders = computed(() => {
-  return gridItemStore.allFolders.filter(folder => folder.id !== item.pid)
+  return gridItemStore.folders.filter(folder => folder.id !== item.pid)
 })
 
 function handleClick() {
@@ -110,19 +113,17 @@ function handleContextMenu(event: MouseEvent) {
     { icon: Pencil, label: '编辑', action: openEdit }
   ]
 
-  if (availableFolders.value.length > 0) {
+  // 如果网站在文件夹内
+  if (item.pid && availableFolders.value.length) {
     items.push({
       type: 'submenu',
       icon: FolderInput,
       label: '移动到分组',
       items: availableFolders.value.map(folder => ({
         label: folder.title,
-        action: () =>
-          gridItemStore.moveGridItem(
-            item.id,
-            folder.id,
-            gridItemStore.getFolderChildren(folder.id).length
-          )
+        action: () => {
+          gridItemStore.moveGridItemToFolder(item.id, folder.id)
+        }
       }))
     })
   }
@@ -131,12 +132,9 @@ function handleContextMenu(event: MouseEvent) {
     items.push({
       icon: FolderOutput,
       label: '移出分组',
-      action: () =>
-        gridItemStore.moveGridItem(
-          item.id,
-          null,
-          gridItemStore.rootOrder.length
-        )
+      action: () => {
+        gridItemStore.moveGridItemOutOfFolder(item.id)
+      }
     })
   }
 
@@ -146,10 +144,8 @@ function handleContextMenu(event: MouseEvent) {
       icon: Trash2,
       label: '删除',
       danger: true,
-      action: async () => {
-        if (confirm('确定要删除这个网站吗？')) {
-          await gridItemStore.deleteGridItem(item.id)
-        }
+      action: () => {
+        gridItemStore.deleteGridItems([item.id])
       }
     }
   )

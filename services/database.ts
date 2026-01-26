@@ -4,7 +4,7 @@ import type { BackupData, FolderItem, SiteItem, WallpaperInfo } from '@/types'
 /**
  * 网格项数据表记录
  */
-type GridItemRecord = SiteItem | FolderItem
+export type GridItemRecord = SiteItem | FolderItem
 
 /**
  * 壁纸缓存表记录

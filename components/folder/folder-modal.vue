@@ -101,7 +101,7 @@ const folder = shallowRef<FolderItem & { children: SiteItem[] }>()
 
 const availableFolders = computed(() => {
   if (!folder.value) return []
-  return gridItemStore.allFolders.filter(item => item.id !== folder.value?.id)
+  return gridItemStore.folders.filter(item => item.id !== folder.value?.id)
 })
 
 const draggedId = ref<string | null>(null)

@@ -45,9 +45,9 @@
             :side-offset="8"
           >
             <!-- 现有文件夹列表 -->
-            <template v-if="gridItemStore.allFolders.length > 0">
+            <template v-if="gridItemStore.folders.length > 0">
               <DropdownMenuItem
-                v-for="folder in gridItemStore.allFolders"
+                v-for="folder in gridItemStore.folders"
                 :key="folder.id"
                 class="focus:bg-white/10 focus:text-white cursor-pointer"
                 @click="moveToFolder(folder.id)"
