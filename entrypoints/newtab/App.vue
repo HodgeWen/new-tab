@@ -98,7 +98,6 @@
 </template>
 <script setup lang="ts">
 import { onMounted, computed, provide, useTemplateRef } from 'vue'
-import { useGridItemStore } from '@/stores/grid-items'
 import { useSettingsStore } from '@/stores/settings'
 import { useWallpaperStore } from '@/stores/wallpaper'
 import { useUIStore } from '@/stores/ui'
@@ -120,7 +119,6 @@ import { FolderEdit, FolderModal } from '@/components/folder'
 import ContextMenuRenderer from '@/shadcn/ui/context-menu/context-menu-renderer.vue'
 import { COMPONENTS_DI_KEY } from '@/utils/di'
 
-const gridItemStore = useGridItemStore()
 const settingsStore = useSettingsStore()
 const wallpaperStore = useWallpaperStore()
 const uiStore = useUIStore()

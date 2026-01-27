@@ -4,3 +4,4 @@
 /// <reference path="./types/paths.d.ts" />
 /// <reference path="./types/i18n.d.ts" />
 /// <reference path="./types/globals.d.ts" />
+/// <reference path="./types/shims-vue.d.ts" />

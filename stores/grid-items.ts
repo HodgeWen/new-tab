@@ -67,6 +67,7 @@ export const useGridItemStore = defineStore('gridItems', () => {
 
   async function loadGridItems() {
     const gridItems = await db.gridItems.toArray()
+
     gridItems.forEach(setItemsMap)
 
     // 如果orders为空，则根据gridItems构建初始items
@@ -160,7 +161,21 @@ export const useGridItemStore = defineStore('gridItems', () => {
    * @param ids 要删除的网格项ID列表
    * @returns
    */
-  async function deleteGridItems(ids: string[]) {}
+  function deleteGridItems(ids: string[]) {
+    ids.forEach(id => itemsMap.delete(id))
+    const idSet = new Set(ids)
+
+    const siteToMoveOut: string[] = []
+    items.value = items.value.filter(item => {
+      if (idSet.has(item.id)) {
+        if (item.type !== 'folder') {
+          siteToMoveOut.push(item.id)
+        }
+        return false
+      }
+      return true
+    })
+  }
 
   /**
    * 移动网格项到指定文件夹
@@ -170,7 +185,7 @@ export const useGridItemStore = defineStore('gridItems', () => {
    */
   async function moveGridItemToFolder(id: string, pid: string) {}
 
-  async function moveGridItemOutOfFolder(id: string) {}
+  async function moveGridItemOutOfFolder(ids: string[]) {}
 
   // 重排序
   async function reorder(newOrder: string[], pid: string | null = null) {}

@@ -64,8 +64,6 @@ const emit = defineEmits<{ open: [] }>()
 const gridItemStore = useGridItemStore()
 const { show } = useContextMenu()
 
-const components = inject(COMPONENTS_DI_KEY)!
-
 const layout = computed(() => {
   const { w, h } = item.size
 
@@ -75,6 +73,8 @@ const layout = computed(() => {
 
   return { items, cols, rows, gap: '1rem' }
 })
+
+const components = inject(COMPONENTS_DI_KEY)
 
 /** 预览显示的网站（限制数量） */
 const previewSites = computed(() => {
@@ -134,9 +134,11 @@ function handleContextMenu(event: MouseEvent) {
       label: '删除',
       danger: true,
       action: async () => {
-        if (confirm('确定要删除这个文件夹吗？文件夹内的网站将移到外部。')) {
-          await gridItemStore.deleteGridItems([item.id])
-        }
+        console.log(components)
+        components?.gridContainer.value?.removeWidget(
+          event.target as HTMLElement,
+          item
+        )
       }
     }
   ]

@@ -29,10 +29,7 @@ const menuStyle = computed(() => {
     }
   }
 
-  return {
-    left: `${x}px`,
-    top: `${y}px`
-  }
+  return { left: `${x}px`, top: `${y}px` }
 })
 
 function isDivider(item: ContextMenuItemConfig): item is ContextMenuDivider {
@@ -92,10 +89,7 @@ onUnmounted(() => {
         :style="menuStyle"
       >
         <template v-for="(item, index) in state.items" :key="index">
-          <div
-            v-if="isDivider(item)"
-            class="my-1.5 border-t border-white/10"
-          />
+          <div v-if="isDivider(item)" class="my-1.5 border-t border-white/10" />
 
           <div
             v-else-if="isSubmenu(item)"
@@ -151,9 +145,9 @@ onUnmounted(() => {
               class="size-4"
               :class="item.danger ? '' : 'text-white/70'"
             />
-            <span class="text-sm" :class="item.danger ? '' : 'text-white/90'">{{
-              item.label
-            }}</span>
+            <span class="text-sm" :class="item.danger ? '' : 'text-white/90'">
+              {{ item.label }}
+            </span>
           </button>
         </template>
       </div>

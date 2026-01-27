@@ -81,10 +81,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, ref, watch } from 'vue'
+import { computed, inject, ref, toRaw, watch } from 'vue'
 import { useModal } from '@/composables/use-modal'
 import { useGridItemStore } from '@/stores/grid-items'
-import { type GridSize, type FolderSizeName, FolderForm } from '@/types'
+import { type FolderSizeName, FolderForm } from '@/types'
 import {
   Dialog,
   DialogContent,
@@ -121,11 +121,6 @@ const sizeOptions = Object.entries(FOLDER_SIZE_PRESETS).map(([key, value]) => ({
   ...value
 }))
 
-const currentSize = computed<GridSize>(() => {
-  const preset = FOLDER_SIZE_PRESETS[selectedPreset.value]
-  return { w: preset.w, h: preset.h }
-})
-
 watch(selectedPreset, value => {
   o(form.size).extend(o(FOLDER_SIZE_PRESETS[value]).pick(['w', 'h']))
 })
@@ -154,7 +149,7 @@ async function handleSubmit() {
       components?.gridContainer.value?.addWidget({
         type: 'folder',
         title: form.title.trim(),
-        size: form.size
+        size: toRaw(form.size)
       } as FolderForm)
     }
     closeModal()

@@ -16,17 +16,26 @@
 
 <script setup lang="tsx">
 import { BookmarkPlus } from 'lucide-vue-next'
-import { ref, onMounted, onBeforeUnmount, render } from 'vue'
+import {
+  ref,
+  onMounted,
+  onBeforeUnmount,
+  render,
+  VNode,
+  getCurrentInstance,
+  inject
+} from 'vue'
 import { GridStack, type GridStackNode, type GridStackWidget } from 'gridstack'
 import 'gridstack/dist/gridstack.min.css'
 import { useGridItemStore } from '@/stores/grid-items'
 import {
   type GridItem,
   type SiteItem as ISiteItem,
-  type FolderItem as IFolderItem,
+  type FolderUIItem,
   GridItemType,
   FolderForm,
-  SiteForm
+  SiteForm,
+  GridUIItem
 } from '@/types'
 import { SiteItem } from '@/components/site'
 import { FolderItem } from '@/components/folder'
@@ -41,21 +50,12 @@ let grid: GridStack | null = null
 let isUpdating = false
 const shadowDom: Record<string, HTMLElement> = {}
 
-const renderMap: Record<GridItemType, (item: GridItem) => any> = {
+const renderMap: Record<GridItemType, (item: GridItem) => VNode> = {
   site: item => {
     return <SiteItem item={item as ISiteItem} />
   },
   folder: item => {
-    return <FolderItem item={item as IFolderItem} />
-  }
-}
-
-function renderWidgetContent(el: HTMLElement, item: GridItem) {
-  const vnode = renderMap[item.type](item)
-
-  if (vnode) {
-    shadowDom[item.id] = el
-    render(vnode, el)
+    return <FolderItem item={item as FolderUIItem} />
   }
 }
 
@@ -91,8 +91,14 @@ function initGridStack() {
 
   GridStack.renderCB = (el: HTMLElement, widget: GridStackWidget) => {
     const item = gridItemStore.itemsMap.get(widget.id!)
+
     if (!item) return
-    renderWidgetContent(el, item)
+
+    const vnode = renderMap[item.type](item)
+    if (vnode) {
+      shadowDom[item.id] = el
+      render(vnode, el)
+    }
   }
 
   grid = GridStack.init(
@@ -110,6 +116,7 @@ function initGridStack() {
   )
 
   grid.on('removed', (_event: Event, items: GridStackNode[]) => {
+    console.log('removed', items)
     items.forEach(item => {
       if (shadowDom[item.id!]) {
         render(null, shadowDom[item.id!])
@@ -151,8 +158,17 @@ function addWidget(item: SiteForm | FolderForm) {
   const y = +el.getAttribute('gs-y')!
 
   // 同步到Store中
-  console.log({ ...item, id: widgetData.id, position: { x, y } })
   gridItemStore.addGridItem({ ...item, id: widgetData.id, position: { x, y } })
+}
+
+function removeWidget(el: HTMLElement, item: GridUIItem) {
+  if (!grid) return
+
+  console.log(el, item)
+  grid.removeWidget(el)
+
+  if (item.type === 'folder') {
+  }
 }
 
 onMounted(() => {
@@ -170,7 +186,7 @@ onBeforeUnmount(() => {
   }
 })
 
-defineExpose({ addWidget })
+defineExpose({ addWidget, removeWidget })
 </script>
 
 <style>
