@@ -85,8 +85,6 @@
   </div>
   <!-- 设置面板 -->
   <SettingsPanel ref="settings-panel" />
-  <!-- 右键菜单 -->
-  <ContextMenuRenderer />
   <!-- 文件夹展开模态框 -->
   <FolderModal ref="folder-modal" />
   <!-- 编辑工具栏 -->
@@ -116,7 +114,6 @@ import { SettingsPanel } from '@/components/setting'
 import { EditToolbar } from '@/components/edit-toolbar'
 import { SiteEdit } from '@/components/site'
 import { FolderEdit, FolderModal } from '@/components/folder'
-import ContextMenuRenderer from '@/shadcn/ui/context-menu/context-menu-renderer.vue'
 import { COMPONENTS_DI_KEY } from '@/utils/di'
 
 const settingsStore = useSettingsStore()
