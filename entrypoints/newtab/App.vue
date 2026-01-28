@@ -99,7 +99,6 @@ import { onMounted, computed, provide, useTemplateRef } from 'vue'
 import { useSettingsStore } from '@/stores/settings'
 import { useWallpaperStore } from '@/stores/wallpaper'
 import { useUIStore } from '@/stores/ui'
-import { useContextMenu } from '@/shadcn/ui/context-menu'
 import {
   RefreshCw,
   Pencil,
@@ -115,11 +114,11 @@ import { EditToolbar } from '@/components/edit-toolbar'
 import { SiteEdit } from '@/components/site'
 import { FolderEdit, FolderModal } from '@/components/folder'
 import { COMPONENTS_DI_KEY } from '@/utils/di'
+import { showContextmenu } from '@/shadcn/ui/context-menu'
 
 const settingsStore = useSettingsStore()
 const wallpaperStore = useWallpaperStore()
 const uiStore = useUIStore()
-const { show } = useContextMenu()
 
 const siteEdit = useTemplateRef('site-edit')
 const folderEdit = useTemplateRef('folder-edit')
@@ -165,12 +164,12 @@ onMounted(async () => {
 
 function handleContextMenu(event: MouseEvent) {
   const target = event.target as HTMLElement
-  const bookmarkCard = target.closest('.site-item')
-  const folderCard = target.closest('.folder-item')
+  const site = target.closest('.site-item')
+  const folder = target.closest('.folder-item')
 
-  if (!bookmarkCard && !folderCard) {
+  if (!site && !folder) {
     event.preventDefault()
-    show({
+    showContextmenu({
       x: event.clientX,
       y: event.clientY,
       items: [
@@ -180,7 +179,6 @@ function handleContextMenu(event: MouseEvent) {
           label: '新增文件夹',
           action: () => folderEdit.value?.open()
         },
-        { type: 'divider' },
         {
           icon: SettingsIcon,
           label: '设置',

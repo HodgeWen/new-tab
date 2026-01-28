@@ -48,12 +48,11 @@
 import { computed, inject } from 'vue'
 import type { FolderUIItem, GridSize } from '@/types'
 import { useGridItemStore } from '@/stores/grid-items'
-import { useContextMenu } from '@/shadcn/ui/context-menu'
-import type { ContextMenuItemConfig } from '@/shadcn/ui/context-menu/use-context-menu'
 import { COMPONENTS_DI_KEY } from '@/utils/di'
 import { FolderOpen, Maximize2, Pencil, Trash2 } from 'lucide-vue-next'
 import { FOLDER_SIZE_PRESETS } from './helper'
 import { SiteItem } from '@/components/site'
+import { ContextmenuItem, showContextmenu } from '@/shadcn/ui/context-menu'
 
 defineOptions({ name: 'FolderItem' })
 
@@ -62,7 +61,6 @@ const { item } = defineProps<{ item: FolderUIItem }>()
 const emit = defineEmits<{ open: [] }>()
 
 const gridItemStore = useGridItemStore()
-const { show } = useContextMenu()
 
 const layout = computed(() => {
   const { w, h } = item.size
@@ -102,7 +100,7 @@ function handleContextMenu(event: MouseEvent) {
   event.preventDefault()
   event.stopPropagation()
 
-  const items: ContextMenuItemConfig[] = [
+  const items: ContextmenuItem[] = [
     {
       icon: Pencil,
       label: '编辑',
@@ -116,10 +114,9 @@ function handleContextMenu(event: MouseEvent) {
       }
     },
     {
-      type: 'submenu',
       icon: Maximize2,
       label: '调整尺寸',
-      items: Object.entries(FOLDER_SIZE_PRESETS).map(([_, value]) => ({
+      children: Object.entries(FOLDER_SIZE_PRESETS).map(([_, value]) => ({
         label: value.label,
         action: () => {
           gridItemStore.updateGridItem(item.id, {
@@ -128,13 +125,11 @@ function handleContextMenu(event: MouseEvent) {
         }
       }))
     },
-    { type: 'divider' },
     {
       icon: Trash2,
       label: '删除',
-      danger: true,
-      action: async () => {
-        console.log(components)
+
+      action: () => {
         components?.gridContainer.value?.removeWidget(
           event.target as HTMLElement,
           item
@@ -143,7 +138,7 @@ function handleContextMenu(event: MouseEvent) {
     }
   ]
 
-  show({ x: event.clientX, y: event.clientY, items })
+  showContextmenu({ x: event.clientX, y: event.clientY, items })
 }
 </script>
 

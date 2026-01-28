@@ -52,8 +52,6 @@
 import { computed, ref, shallowRef, watch, inject } from 'vue'
 import { useGridItemStore } from '@/stores/grid-items'
 import type { SiteItem as ISiteItem, FolderItem } from '@/types'
-import { useContextMenu } from '@/shadcn/ui/context-menu'
-import type { ContextMenuItemConfig } from '@/shadcn/ui/context-menu/use-context-menu'
 import { COMPONENTS_DI_KEY } from '@/utils/di'
 import {
   Dialog,
@@ -70,11 +68,11 @@ import {
   Trash2
 } from 'lucide-vue-next'
 import { SiteItem } from '@/components/site'
+import { ContextmenuItem, showContextmenu } from '@/shadcn/ui/context-menu'
 
 defineOptions({ name: 'FolderModal' })
 
 const gridItemStore = useGridItemStore()
-const { show } = useContextMenu()
 const components = inject(COMPONENTS_DI_KEY, null)
 
 const visible = ref(false)
@@ -139,7 +137,7 @@ function handleContextMenu(event: MouseEvent, item: ISiteItem) {
   event.preventDefault()
   event.stopPropagation()
 
-  const items: ContextMenuItemConfig[] = [
+  const items: ContextmenuItem[] = [
     {
       icon: Pencil,
       label: '编辑',
@@ -149,10 +147,9 @@ function handleContextMenu(event: MouseEvent, item: ISiteItem) {
 
   if (availableFolders.value.length > 0) {
     items.push({
-      type: 'submenu',
       icon: FolderInput,
       label: '移动到分组',
-      items: availableFolders.value.map(target => ({
+      children: availableFolders.value.map(target => ({
         label: target.title,
         action: () => gridItemStore.moveGridItemToFolder(item.id, target.id)
       }))
@@ -163,22 +160,18 @@ function handleContextMenu(event: MouseEvent, item: ISiteItem) {
     {
       icon: FolderOutput,
       label: '移出分组',
-      action: () => gridItemStore.moveGridItemOutOfFolder(item.id)
+      action: () => gridItemStore.moveGridItemOutOfFolder([item.id])
     },
-    { type: 'divider' },
     {
       icon: Trash2,
       label: '删除',
-      danger: true,
-      action: async () => {
-        if (confirm('确定要删除这个网站吗？')) {
-          await gridItemStore.deleteGridItems([item.id])
-        }
+      action: () => {
+        gridItemStore.deleteGridItems([item.id])
       }
     }
   )
 
-  show({ x: event.clientX, y: event.clientY, items })
+  showContextmenu({ x: event.clientX, y: event.clientY, items })
 }
 
 function openFolder(data: FolderItem & { children: ISiteItem[] }) {

@@ -54,8 +54,7 @@ import type { SiteItem } from '@/types'
 import { faviconService } from '@/services/favicon'
 import { useGridItemStore } from '@/stores/grid-items'
 import { useUIStore } from '@/stores/ui'
-import { useContextMenu } from '@/shadcn/ui/context-menu'
-import type { ContextMenuItemConfig } from '@/shadcn/ui/context-menu/use-context-menu'
+import { ContextmenuItem, showContextmenu } from '@/shadcn/ui/context-menu'
 import { COMPONENTS_DI_KEY } from '@/utils/di'
 import {
   Check,
@@ -71,7 +70,6 @@ const { item, preview } = defineProps<{ item: SiteItem; preview?: boolean }>()
 
 const gridItemStore = useGridItemStore()
 const uiStore = useUIStore()
-const { show } = useContextMenu()
 const components = inject(COMPONENTS_DI_KEY, null)
 
 const faviconUrl = computed(() => {
@@ -108,17 +106,16 @@ function handleContextMenu(event: MouseEvent) {
 
   if (uiStore.isEditMode) return
 
-  const items: ContextMenuItemConfig[] = [
+  const items: ContextmenuItem[] = [
     { icon: Pencil, label: '编辑', action: openEdit }
   ]
 
   // 如果网站在文件夹内
   if (item.pid && availableFolders.value.length) {
     items.push({
-      type: 'submenu',
       icon: FolderInput,
       label: '移动到分组',
-      items: availableFolders.value.map(folder => ({
+      children: availableFolders.value.map(folder => ({
         label: folder.title,
         action: () => {
           gridItemStore.moveGridItemToFolder(item.id, folder.id)
@@ -132,24 +129,20 @@ function handleContextMenu(event: MouseEvent) {
       icon: FolderOutput,
       label: '移出分组',
       action: () => {
-        gridItemStore.moveGridItemOutOfFolder(item.id)
+        gridItemStore.moveGridItemOutOfFolder([item.id])
       }
     })
   }
 
-  items.push(
-    { type: 'divider' },
-    {
-      icon: Trash2,
-      label: '删除',
-      danger: true,
-      action: () => {
-        gridItemStore.deleteGridItems([item.id])
-      }
+  items.push({
+    icon: Trash2,
+    label: '删除',
+    action: () => {
+      gridItemStore.deleteGridItems([item.id])
     }
-  )
+  })
 
-  show({ x: event.clientX, y: event.clientY, items })
+  showContextmenu({ x: event.clientX, y: event.clientY, items })
 }
 </script>
 

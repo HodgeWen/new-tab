@@ -1,2 +1,7 @@
-export { useContextMenu } from './use-context-menu'
-export { contextmenu } from './api'
+export { showContextmenu } from './api'
+export type {
+  ContextmenuItem,
+  ContextmenuConfig,
+  ContextmenuConfigWithContext,
+  ContextmenuConfigWithoutContext
+} from './type'
