@@ -1,14 +1,7 @@
 {
+  "extends": "@cat-kit/tsconfig/tsconfig.vue.json",
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
     "noEmit": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "strict": true,
-    "skipLibCheck": true,
     "paths": {
       "@": [".."],
       "@/*": ["../*"],
@@ -20,9 +13,6 @@
       "~~/*": ["../*"]
     }
   },
-  "include": [
-    "../**/*",
-    "./wxt.d.ts"
-  ],
+  "include": ["../**/*", "./wxt.d.ts"],
   "exclude": ["../.output"]
 }

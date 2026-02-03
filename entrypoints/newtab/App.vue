@@ -1,211 +1,44 @@
 <template>
-  <div id="app" class="relative font-sans" @contextmenu="handleContextMenu">
-    <!-- 底层：默认深色渐变背景（始终可见） -->
-    <div class="absolute inset-0" :style="{ background: defaultGradient }" />
-
-    <!-- 壁纸层：带淡入动画 -->
-    <Transition name="wallpaper-fade">
-      <div
-        v-if="showWallpaper"
-        class="absolute inset-0"
-        :style="wallpaperStyle"
-      />
-    </Transition>
-
-    <!-- 背景遮罩层 -->
-    <div class="absolute inset-0 bg-black/30" />
-
-    <!-- 右上角按钮组 -->
-    <div class="absolute top-4 right-4 z-20 flex gap-2">
-      <!-- 换壁纸按钮（仅在壁纸启用时显示） -->
-      <Button
-        v-if="settingsStore.settings.wallpaper.enabled"
-        variant="glass"
-        size="icon"
-        title="换一张壁纸"
-        :disabled="wallpaperStore.loading"
-        @click="wallpaperStore.switchToNext()"
-      >
-        <RefreshCw
-          class="size-5"
-          :class="{ 'animate-spin': wallpaperStore.loading }"
-        />
-      </Button>
-
-      <!-- 编辑按钮 -->
-      <Button
-        variant="glass"
-        size="icon"
-        :class="{ 'bg-white/25': uiStore.isEditMode }"
-        title="编辑书签"
-        @click="uiStore.toggleEditMode()"
-      >
-        <Pencil class="size-5" />
-      </Button>
-
-      <!-- 设置按钮 -->
-      <Button
-        variant="glass"
-        size="icon"
-        title="设置"
-        @click="openSettingsPanel()"
-      >
-        <SettingsIcon class="size-5" />
-      </Button>
+  <div class="container" @contextmenu="handleContextmenu">
+    <!-- 主内容 -->
+    <div class="main">
+      <NGridLayout />
     </div>
 
-    <!-- 主内容区域 -->
-    <div
-      class="relative z-10 min-h-screen flex flex-col items-center pt-[15vh] px-4"
-    >
-      <!-- 搜索栏 -->
-      <SearchBar v-if="settingsStore.settings.showSearchBar" class="mb-12" />
-
-      <!-- 网格布局 -->
-      <GridContainer class="w-full max-w-6xl" ref="grid-container" />
-
-      <!-- 壁纸信息 -->
-      <div
-        v-if="
-          wallpaperStore.currentWallpaper &&
-          settingsStore.settings.wallpaper.enabled
-        "
-        class="fixed bottom-4 right-4 text-white/60 text-xs"
-      >
-        Photo by
-        <a
-          :href="wallpaperStore.currentWallpaper.authorUrl"
-          target="_blank"
-          class="hover:text-white/90 underline"
-        >
-          {{ wallpaperStore.currentWallpaper.author }}
-        </a>
-      </div>
-    </div>
+    <!-- 操作按钮 -->
+    <NActions />
   </div>
-  <!-- 设置面板 -->
-  <SettingsPanel ref="settings-panel" />
-  <!-- 文件夹展开模态框 -->
-  <FolderModal ref="folder-modal" />
-  <!-- 编辑工具栏 -->
-  <EditToolbar />
-  <!-- 网站编辑模态框 -->
-  <SiteEdit ref="site-edit" />
-  <!-- 文件夹编辑模态框 -->
-  <FolderEdit ref="folder-edit" />
+
+  <NFolderModal ref="folder-modal" />
+  <NSiteModal ref="site-modal" />
+  <NSettingModal ref="setting-modal" />
 </template>
-<script setup lang="ts">
-import { onMounted, computed, provide, useTemplateRef } from 'vue'
-import { useSettingsStore } from '@/stores/settings'
-import { useWallpaperStore } from '@/stores/wallpaper'
-import { useUIStore } from '@/stores/ui'
-import {
-  RefreshCw,
-  Pencil,
-  Settings as SettingsIcon,
-  Plus,
-  FolderPlus
-} from 'lucide-vue-next'
-import { Button } from '@/shadcn/ui/button'
-import { SearchBar } from '@/components/search'
-import GridContainer from '@/components/grid/grid-container.vue'
-import { SettingsPanel } from '@/components/setting'
-import { EditToolbar } from '@/components/edit-toolbar'
-import { SiteEdit } from '@/components/site'
-import { FolderEdit, FolderModal } from '@/components/folder'
-import { COMPONENTS_DI_KEY } from '@/utils/di'
-import { showContextmenu } from '@/shadcn/ui/context-menu'
 
-const settingsStore = useSettingsStore()
-const wallpaperStore = useWallpaperStore()
-const uiStore = useUIStore()
+<script lang="ts" setup>
+import { NGridLayout } from '@/components/grid-layout'
+import { NFolderModal } from '@/components/folder-modal'
+import { NSiteModal } from '@/components/site-modal'
+import { NSettingModal } from '@/components/setting-modal'
+import { useTemplateRef } from 'vue'
+import { connectModals } from '@/store/modals'
+import { NActions } from '@/components/actions'
+import { showContextmenu } from '@/components/context-menu'
 
-const siteEdit = useTemplateRef('site-edit')
-const folderEdit = useTemplateRef('folder-edit')
-const settingsPanel = useTemplateRef('settings-panel')
 const folderModal = useTemplateRef('folder-modal')
-const gridContainer = useTemplateRef('grid-container')
+const siteModal = useTemplateRef('site-modal')
+const settingModal = useTemplateRef('setting-modal')
 
-provide(COMPONENTS_DI_KEY, { siteEdit, folderEdit, folderModal, gridContainer })
+connectModals({ folder: folderModal, site: siteModal, setting: settingModal })
 
-// 默认深色渐变背景（始终显示在最底层）
-const defaultGradient =
-  'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)'
-
-// 壁纸背景样式
-const wallpaperStyle = computed(() => {
-  if (
-    !settingsStore.settings.wallpaper.enabled ||
-    !wallpaperStore.currentWallpaperUrl
-  ) {
-    return null
-  }
-  return {
-    backgroundImage: `url(${wallpaperStore.currentWallpaperUrl})`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center'
-  }
-})
-
-// 壁纸是否准备好显示
-const showWallpaper = computed(() => {
-  return (
-    settingsStore.settings.wallpaper.enabled &&
-    wallpaperStore.isReady &&
-    wallpaperStore.currentWallpaperUrl
-  )
-})
-
-onMounted(async () => {
-  if (settingsStore.settings.wallpaper.enabled) {
-    await wallpaperStore.loadWallpaper()
-  }
-})
-
-function handleContextMenu(event: MouseEvent) {
+function handleContextmenu(event: MouseEvent) {
   const target = event.target as HTMLElement
   const site = target.closest('.site-item')
   const folder = target.closest('.folder-item')
 
-  if (!site && !folder) {
-    event.preventDefault()
-    showContextmenu({
-      x: event.clientX,
-      y: event.clientY,
-      items: [
-        { icon: Plus, label: '新增网站', action: () => siteEdit.value?.open() },
-        {
-          icon: FolderPlus,
-          label: '新增文件夹',
-          action: () => folderEdit.value?.open()
-        },
-        {
-          icon: SettingsIcon,
-          label: '设置',
-          action: () => settingsPanel.value?.open()
-        }
-      ]
-    })
-  }
-}
+  if (site || folder) return
 
-function openSettingsPanel() {
-  settingsPanel.value?.open()
+  event.preventDefault()
+  event.stopPropagation()
+  showContextmenu({ x: event.clientX, y: event.clientY, items: [] })
 }
 </script>
-
-<style>
-/* 壁纸淡入动画 */
-.wallpaper-fade-enter-active {
-  transition: opacity 0.3s ease-out;
-}
-
-.wallpaper-fade-leave-active {
-  transition: opacity 0.3s ease-in;
-}
-
-.wallpaper-fade-enter-from,
-.wallpaper-fade-leave-to {
-  opacity: 0;
-}
-</style>

@@ -1,3 +1,0 @@
-# 预留 pre-commit 钩子位置
-# 如需启用 lint-staged，取消下面一行的注释：
-# npx lint-staged
