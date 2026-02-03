@@ -29,11 +29,7 @@
                 : 'hover:bg-white/20 hover:text-white'
             "
           >
-            <component
-              :is="item.icon"
-              v-if="item.icon"
-              class="size-4 text-white/60"
-            />
+            <component :is="item.icon" v-if="item.icon" class="size-4 text-white/60" />
             <span class="flex-1">{{ item.label }}</span>
             <ChevronRight class="size-4 text-white/40" />
           </div>
@@ -55,11 +51,7 @@
                 class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-white/90 outline-none select-none cursor-default hover:bg-white/20 hover:text-white active:bg-white/25 transition-colors duration-150"
                 @click="handleAction(sub)"
               >
-                <component
-                  :is="sub.icon"
-                  v-if="sub.icon"
-                  class="size-4 text-white/60"
-                />
+                <component :is="sub.icon" v-if="sub.icon" class="size-4 text-white/60" />
                 <span class="flex-1 text-left">{{ sub.label }}</span>
               </button>
             </div>
@@ -72,11 +64,7 @@
           class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-white/90 outline-none select-none cursor-default hover:bg-white/20 hover:text-white active:bg-white/25 transition-colors duration-150"
           @click="handleAction(item)"
         >
-          <component
-            :is="item.icon"
-            v-if="item.icon"
-            class="size-4 text-white/60"
-          />
+          <component :is="item.icon" v-if="item.icon" class="size-4 text-white/60" />
           <span class="flex-1 text-left">{{ item.label }}</span>
         </button>
       </template>
@@ -89,12 +77,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { ChevronRight } from 'lucide-vue-next'
 import type { ContextmenuItem } from './type'
 
-const props = defineProps<{
-  x: number
-  y: number
-  context?: any
-  items: ContextmenuItem<any>[]
-}>()
+const props = defineProps<{ x: number; y: number; context?: any; items: ContextmenuItem<any>[] }>()
 
 const emit = defineEmits<{ close: [] }>()
 

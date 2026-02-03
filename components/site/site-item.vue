@@ -55,7 +55,7 @@ import { faviconService } from '@/services/favicon'
 import { useGridItemStore } from '@/stores/grid-items'
 import { useUIStore } from '@/stores/ui'
 import { ContextmenuItem, showContextmenu } from '@/shadcn/ui/context-menu'
-import { COMPONENTS_DI_KEY } from '@/utils/di'
+import { COMPONENTS_DI_KEY, type ComponentsDI } from '@/utils/di'
 import {
   Check,
   FolderInput,
@@ -66,38 +66,43 @@ import {
 
 defineOptions({ name: 'SiteItem' })
 
-const { item, preview } = defineProps<{ item: SiteItem; preview?: boolean }>()
+const props = defineProps<{
+  item: SiteItem
+  preview?: boolean
+  components?: ComponentsDI
+}>()
 
 const gridItemStore = useGridItemStore()
 const uiStore = useUIStore()
-const components = inject(COMPONENTS_DI_KEY, null)
+// 优先使用 props 传入的 components，否则尝试 inject
+const components = props.components ?? inject(COMPONENTS_DI_KEY, null)
 
 const faviconUrl = computed(() => {
-  if (item.favicon) {
-    return item.favicon
+  if (props.item.favicon) {
+    return props.item.favicon
   }
-  return faviconService.generateDefaultIcon(item.title)
+  return faviconService.generateDefaultIcon(props.item.title)
 })
 
-const isSelected = computed(() => uiStore.checkedSites.has(item.id))
+const isSelected = computed(() => uiStore.checkedSites.has(props.item.id))
 
 /**
  * 除了当前所在的文件夹的其他文件夹
  */
 const availableFolders = computed(() => {
-  return gridItemStore.folders.filter(folder => folder.id !== item.pid)
+  return gridItemStore.folders.filter(folder => folder.id !== props.item.pid)
 })
 
 function handleClick() {
   if (uiStore.isEditMode) {
-    uiStore.toggleCheckSite(item.id)
+    uiStore.toggleCheckSite(props.item.id)
   } else {
-    window.open(item.url, '_self')
+    window.open(props.item.url, '_self')
   }
 }
 
 function openEdit() {
-  components?.siteEdit.value?.open({ ...item })
+  components?.siteEdit.value?.open({ ...props.item })
 }
 
 function handleContextMenu(event: MouseEvent) {
@@ -111,25 +116,25 @@ function handleContextMenu(event: MouseEvent) {
   ]
 
   // 如果网站在文件夹内
-  if (item.pid && availableFolders.value.length) {
+  if (props.item.pid && availableFolders.value.length) {
     items.push({
       icon: FolderInput,
       label: '移动到分组',
       children: availableFolders.value.map(folder => ({
         label: folder.title,
         action: () => {
-          gridItemStore.moveGridItemToFolder(item.id, folder.id)
+          gridItemStore.moveGridItemToFolder(props.item.id, folder.id)
         }
       }))
     })
   }
 
-  if (item.pid) {
+  if (props.item.pid) {
     items.push({
       icon: FolderOutput,
       label: '移出分组',
       action: () => {
-        gridItemStore.moveGridItemOutOfFolder([item.id])
+        gridItemStore.moveGridItemOutOfFolder([props.item.id])
       }
     })
   }
@@ -138,7 +143,7 @@ function handleContextMenu(event: MouseEvent) {
     icon: Trash2,
     label: '删除',
     action: () => {
-      gridItemStore.deleteGridItems([item.id])
+      gridItemStore.deleteGridItems([props.item.id])
     }
   })
 

@@ -26,17 +26,17 @@
     </div>
 
     <div
-      class="mt-1 text-center leading-tight cursor-pointer hover:text-white transition-colors"
+      class="mt-1 text-center leading-tight cursor-pointer hover:text-white transition-colors flex items-center justify-center gap-1"
       @click="handleFolderClick"
     >
       <span
-        class="text-xs text-white/80 line-clamp-1 text-shadow group-hover:text-white"
+        class="text-xs text-white/80 truncate text-shadow group-hover:text-white"
       >
         {{ item.title }}
       </span>
       <span
         v-if="item.children.length > layout.items"
-        class="text-xs text-white/50"
+        class="text-xs text-white/50 shrink-0"
       >
         +{{ item.children.length - layout.items }}
       </span>
@@ -48,7 +48,7 @@
 import { computed, inject } from 'vue'
 import type { FolderUIItem, GridSize } from '@/types'
 import { useGridItemStore } from '@/stores/grid-items'
-import { COMPONENTS_DI_KEY } from '@/utils/di'
+import { COMPONENTS_DI_KEY, type ComponentsDI } from '@/utils/di'
 import { FolderOpen, Maximize2, Pencil, Trash2 } from 'lucide-vue-next'
 import { FOLDER_SIZE_PRESETS } from './helper'
 import { SiteItem } from '@/components/site'
@@ -56,14 +56,15 @@ import { ContextmenuItem, showContextmenu } from '@/shadcn/ui/context-menu'
 
 defineOptions({ name: 'FolderItem' })
 
-const { item } = defineProps<{ item: FolderUIItem }>()
-
-const emit = defineEmits<{ open: [] }>()
+const props = defineProps<{
+  item: FolderUIItem
+  components?: ComponentsDI
+}>()
 
 const gridItemStore = useGridItemStore()
 
 const layout = computed(() => {
-  const { w, h } = item.size
+  const { w, h } = props.item.size
 
   const cols = w === 2 ? 3 : 1
   const rows = h === 2 ? 3 : 1
@@ -72,11 +73,12 @@ const layout = computed(() => {
   return { items, cols, rows, gap: '1rem' }
 })
 
-const components = inject(COMPONENTS_DI_KEY)
+// 优先使用 props 传入的 components，否则尝试 inject
+const components = props.components ?? inject(COMPONENTS_DI_KEY)
 
 /** 预览显示的网站（限制数量） */
 const previewSites = computed(() => {
-  return item.children.slice(0, layout.value.items)
+  return props.item.children.slice(0, layout.value.items)
 })
 
 function getSizeStyles(size: GridSize) {
@@ -90,10 +92,10 @@ function getSizeStyles(size: GridSize) {
   }
 }
 
-const sizeStyles = computed(() => getSizeStyles(item.size))
+const sizeStyles = computed(() => getSizeStyles(props.item.size))
 
 function handleFolderClick() {
-  emit('open')
+  components?.folderModal.value?.open(props.item)
 }
 
 function handleContextMenu(event: MouseEvent) {
@@ -107,9 +109,9 @@ function handleContextMenu(event: MouseEvent) {
       action: () => {
         components?.folderEdit.value?.open({
           type: 'folder',
-          id: item.id,
-          title: item.title,
-          size: item.size
+          id: props.item.id,
+          title: props.item.title,
+          size: props.item.size
         })
       }
     },
@@ -119,7 +121,7 @@ function handleContextMenu(event: MouseEvent) {
       children: Object.entries(FOLDER_SIZE_PRESETS).map(([_, value]) => ({
         label: value.label,
         action: () => {
-          gridItemStore.updateGridItem(item.id, {
+          gridItemStore.updateGridItem(props.item.id, {
             size: { w: value.w, h: value.h }
           })
         }
@@ -130,10 +132,7 @@ function handleContextMenu(event: MouseEvent) {
       label: '删除',
 
       action: () => {
-        components?.gridContainer.value?.removeWidget(
-          event.target as HTMLElement,
-          item
-        )
+        gridItemStore.deleteGridItems([props.item.id])
       }
     }
   ]

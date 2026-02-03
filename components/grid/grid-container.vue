@@ -40,6 +40,7 @@ import {
 import { SiteItem } from '@/components/site'
 import { FolderItem } from '@/components/folder'
 import { nanoid } from 'nanoid'
+import { COMPONENTS_DI_KEY } from '@/utils/di'
 
 const emit = defineEmits<{ 'open-folder': [id: string] }>()
 
@@ -50,12 +51,19 @@ let grid: GridStack | null = null
 let isUpdating = false
 const shadowDom: Record<string, HTMLElement> = {}
 
+// 获取当前组件实例的 appContext，用于渲染子组件时继承依赖注入
+const instance = getCurrentInstance()
+const appContext = instance?.appContext
+
+// inject 组件依赖，用于传递给子组件
+const components = inject(COMPONENTS_DI_KEY)
+
 const renderMap: Record<GridItemType, (item: GridItem) => VNode> = {
   site: item => {
-    return <SiteItem item={item as ISiteItem} />
+    return <SiteItem item={item as ISiteItem} components={components} />
   },
   folder: item => {
-    return <FolderItem item={item as FolderUIItem} />
+    return <FolderItem item={item as FolderUIItem} components={components} />
   }
 }
 
@@ -96,6 +104,10 @@ function initGridStack() {
 
     const vnode = renderMap[item.type](item)
     if (vnode) {
+      // 设置 appContext 以继承依赖注入
+      if (appContext) {
+        vnode.appContext = appContext
+      }
       shadowDom[item.id] = el
       render(vnode, el)
     }
@@ -135,11 +147,60 @@ gridItemStore.onLoad(items => {
   grid?.load(
     items.map(item => {
       const { position } = item
+      // 文件夹使用 item.size，网站默认 1x1
+      const size = item.type === 'folder' ? item.size : { w: 1, h: 1 }
 
-      return { id: item.id, ...position, noResize: true }
+      return { id: item.id, ...position, ...size, noResize: true }
     })
   )
 })
+
+// 监听删除事件，从 GridStack 中移除 widget
+function handleDelete(ids: string[]) {
+  if (!grid) return
+  ids.forEach(id => {
+    const el = shadowDom[id]?.closest('.grid-stack-item') as HTMLElement
+    if (el) {
+      grid!.removeWidget(el, false) // false 表示不触发 removed 事件，因为我们会手动清理
+      // 手动清理 shadowDom
+      if (shadowDom[id]) {
+        render(null, shadowDom[id])
+        delete shadowDom[id]
+      }
+    }
+  })
+}
+
+gridItemStore.onDelete(handleDelete)
+
+// 监听更新事件，更新 GridStack widget 尺寸
+function handleUpdate(id: string, updates: Partial<GridUIItem>) {
+  if (!grid) return
+
+  // 如果更新了尺寸，需要更新 GridStack widget
+  if ('size' in updates && updates.size) {
+    const el = shadowDom[id]?.closest('.grid-stack-item') as HTMLElement
+    if (el) {
+      isUpdating = true
+      grid.update(el, { w: updates.size.w, h: updates.size.h })
+      setTimeout(() => {
+        isUpdating = false
+      }, 100)
+    }
+  }
+
+  // 重新渲染组件
+  const item = gridItemStore.itemsMap.get(id)
+  if (item && shadowDom[id]) {
+    const vnode = renderMap[item.type](item)
+    if (vnode && appContext) {
+      vnode.appContext = appContext
+    }
+    render(vnode, shadowDom[id])
+  }
+}
+
+gridItemStore.onUpdate(handleUpdate)
 
 /**
  * 添加网格项
@@ -161,14 +222,9 @@ function addWidget(item: SiteForm | FolderForm) {
   gridItemStore.addGridItem({ ...item, id: widgetData.id, position: { x, y } })
 }
 
-function removeWidget(el: HTMLElement, item: GridUIItem) {
-  if (!grid) return
-
-  console.log(el, item)
-  grid.removeWidget(el)
-
-  if (item.type === 'folder') {
-  }
+async function removeWidget(_el: HTMLElement, item: GridUIItem) {
+  // 直接调用 store 删除，onDelete 事件会自动处理 GridStack widget 的移除
+  await gridItemStore.deleteGridItems([item.id])
 }
 
 onMounted(() => {
@@ -176,6 +232,9 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  gridItemStore.offDelete(handleDelete)
+  gridItemStore.offUpdate(handleUpdate)
+
   Object.values(shadowDom).forEach(el => {
     render(null, el)
   })
