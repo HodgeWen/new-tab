@@ -3,6 +3,15 @@
   "version": "1.1.0",
   "private": true,
   "description": "美观实用的浏览器新标签页扩展",
+  "keywords": [
+    "browser-extension",
+    "gridstack",
+    "new-tab",
+    "typescript",
+    "vue3",
+    "webdav",
+    "wxt"
+  ],
   "type": "module",
   "scripts": {
     "dev:web": "vite",
@@ -26,5 +35,8 @@
     "typescript": "^5.9.3",
     "vue-tsc": "^3.2.4",
     "wxt": "^0.20.13"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

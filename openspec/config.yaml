@@ -1,20 +1,12 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  Tech stack: Vue 3.5, TypeScript, WXT, Vite, GridStack, Dexie, WebDAV
+  We use Vue Composition API with <script setup>, prefer TSX/JSX
+  Target platforms: Chrome, Edge, Firefox
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+rules:
+  proposal:
+    - 提案需简洁，考虑浏览器扩展的权限和存储限制
+  tasks:
+    - 单个任务控制在 1-2 小时内完成
