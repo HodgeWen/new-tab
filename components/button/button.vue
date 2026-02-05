@@ -21,9 +21,7 @@ const {
   square?: boolean
 }>()
 
-const emits = defineEmits<{
-  click: [event: MouseEvent]
-}>()
+const emits = defineEmits<{ click: [event: MouseEvent] }>()
 
 const slots = useSlots()
 
@@ -44,10 +42,7 @@ const handleClick = (event: MouseEvent) => {
 <template>
   <button
     class="button"
-    :class="[
-      `variant-${variant}`,
-      { block, loading, 'is-square': isSquare, 'has-icon': !!icon }
-    ]"
+    :class="[`variant-${variant}`, { block, loading, 'is-square': isSquare, 'has-icon': !!icon }]"
     :disabled="disabled || loading"
     @click="handleClick"
   >
@@ -73,7 +68,7 @@ const handleClick = (event: MouseEvent) => {
   font-size: var(--text-body);
   font-weight: var(--font-medium);
   white-space: nowrap;
-  transition: all var(--transition-fast);
+  transition: all var(--transition-spring);
   user-select: none;
   text-decoration: none;
   border-radius: var(--radius-md);
@@ -113,7 +108,6 @@ const handleClick = (event: MouseEvent) => {
 .variant-glass:hover:not(:disabled) {
   background: var(--glass-bg-hover);
   border-color: var(--glass-border-strong);
-  transform: translateY(-1px);
   box-shadow: var(--glass-shadow);
 }
 
@@ -171,7 +165,11 @@ const handleClick = (event: MouseEvent) => {
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

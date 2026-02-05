@@ -43,3 +43,10 @@ export interface WallpaperInfo {
   authorUrl: string
   downloadUrl: string
 }
+
+export interface Setting {
+  searchBar: boolean
+  wallpaper: boolean
+  wallpaperInterval: number
+  webdav: { url: string; username: string; password: string }
+}

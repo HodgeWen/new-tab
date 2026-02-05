@@ -2,6 +2,9 @@
 
 本文档旨在为 AI 代理提供关于本项目的设计规范、代码风格及最佳实践的指导。
 
+**重要提示：**
+在编写或修改 Vue 组件时，请务必参考 `vue-development-guides` 和 `vue-best-practices` 技能，以确保代码质量和风格一致性。
+
 ## 1. 主题系统 (Theme System)
 
 本项目使用基于 **CSS 变量** 的统一主题系统，核心设计语言为 **毛玻璃风格 (Glassmorphism)**。
@@ -94,6 +97,7 @@ entrypoints/newtab/
 - **层级阴影**: 根据层级选择 `--glass-shadow-subtle`、`--glass-shadow` 或 `--glass-shadow-elevated`
 - **圆角**: 使用 `var(--radius-*)` 变量
 - **统一尺寸**: 组件默认高度统一为 40px，不再支持 size 变体。
+- **紧凑间距**: 默认容器内边距建议使用 `var(--spacing-md)` (16px)，避免过度留白。
 
 ### 1.4 交互细节
 
@@ -107,41 +111,15 @@ entrypoints/newtab/
 
 组件样式**必须在各自的 `.vue` 文件中使用 `<style scoped>` 定义**，引用全局 CSS 变量。
 
-#### Button 组件特别说明
-- 当 Button 仅包含图标（或无文字内容）时，应呈现为正方形（宽高相等）。
-- 默认高度固定为 40px。
-
-```vue
-<template>
-  <button class="my-button" :class="{ 'is-square': isSquare }">
-    <slot />
-  </button>
-</template>
-
-<style scoped>
-.my-button {
-  height: 40px;
-  /* ... glass styles ... */
-}
-.is-square {
-  width: 40px;
-  padding: 0;
-}
-</style>
-```
-
 ### 2.2 组件开发原则
 
-1. **优先复用**：优先复用现有的基础组件（Button, Input, Modal 等）
-2. **使用变量**：所有样式值必须使用 CSS 变量，便于主题统一
-3. **Scoped 样式**：使用 `<style scoped>` 避免样式污染
-4. **毛玻璃风格**：新组件默认应具备 Glassmorphism 特征
-5. **Vue 最佳实践**：
-   - 使用 `<script setup lang="ts">`
-   - 使用 `lucide-vue-next` 图标库
-   - 使用 Props 解构 (Vue 3.5+)
-   - 使用 `defineModel` 处理双向绑定
-   - 使用 `useTemplateRef` 替代传统的 DOM refs
+1. **优先复用**：优先复用现有的基础组件（Button, Input, Modal 等）。
+2. **主题一致**：所有样式值必须使用 CSS 变量，确保支持主题切换。
+3. **视觉风格**：新组件应默认具备 Glassmorphism（毛玻璃）特征。
+4. **图标库**：统一使用 `lucide-vue-next` 图标库。
+5. **Vue 版本特性**：项目使用 Vue 3.5+，请充分利用 Props 解构、`useTemplateRef` 等新特性。
+
+*注：关于更详细的 Vue 编码规范及最佳实践，请直接参考 `vue-best-practices` 技能。*
 
 ### 2.3 工具类（可选）
 
@@ -175,3 +153,20 @@ entrypoints/newtab/
 - `.animate-fade-in` - 淡入
 - `.animate-slide-up` - 从下方滑入
 - `.animate-scale-in` - 缩放弹入
+
+## 3. 技术栈说明 (Technology Stack)
+
+本项目基于以下核心依赖构建，请在对应场景下正确使用：
+
+- **Core Framework**: `Vue 3.5+` (配合 TypeScript)
+  - 核心 UI 框架，支持 Composition API 和最新 Vue 特性。
+- **Extension Framework**: `WXT`
+  - 处理浏览器扩展生命周期、Manifest 配置及构建流程。
+- **UI & Layout**:
+  - `gridstack`: 用于实现可拖拽、可调整大小的网格布局（主要用于新标签页 Widget 系统）。
+  - `lucide-vue-next`: 项目统一的图标组件库。
+- **Data & Storage**:
+  - `dexie`: IndexedDB 的包装库，用于高性能的本地数据存储。
+  - `webdav`: 用于处理 WebDAV 协议，实现数据的云端同步功能。
+- **Utilities**:
+  - `nanoid`: 生成唯一 ID。

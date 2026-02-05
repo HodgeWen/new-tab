@@ -102,7 +102,7 @@ const handleOverlayClick = () => {
 }
 
 .modal-header {
-  padding: var(--spacing-lg);
+  padding: var(--spacing-md);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -135,13 +135,13 @@ const handleOverlayClick = () => {
 }
 
 .modal-body {
-  padding: var(--spacing-lg);
+  padding: var(--spacing-md);
   overflow-y: auto;
   flex: 1;
 }
 
 .modal-footer {
-  padding: var(--spacing-md) var(--spacing-lg);
+  padding: var(--spacing-md);
   border-top: 1px solid var(--glass-border);
   display: flex;
   align-items: center;

@@ -1,8 +1,22 @@
 <template>
   <div class="actions">
-    <n-button :icon="RefreshCw" @click="handleRefresh"></n-button>
-    <n-button :icon="Pencil" @click="handleEdit"></n-button>
-    <n-button :icon="Settings" @click="modals.setting?.open()"></n-button>
+    <n-button 
+      variant="glass" 
+      :icon="RefreshCw" 
+      @click="handleRefresh"
+    />
+    
+    <n-button 
+      variant="glass" 
+      :icon="Pencil" 
+      @click="handleEdit"
+    />
+    
+    <n-button 
+      variant="glass" 
+      :icon="Settings" 
+      @click="modals.setting?.open()"
+    />
   </div>
 </template>
 
@@ -21,3 +35,15 @@ function handleEdit() {
   console.log('edit')
 }
 </script>
+
+<style scoped>
+.actions {
+  position: fixed;
+  top: var(--spacing-lg);
+  right: var(--spacing-lg);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+</style>
