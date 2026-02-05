@@ -7,5 +7,7 @@ import { useGridStack } from './use-grid-stack'
 
 defineOptions({ name: 'NGridLayout' })
 
-useGridStack('gridContainer')
+const { addWidget } = useGridStack('gridContainer')
+
+defineExpose({ addWidget })
 </script>

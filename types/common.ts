@@ -45,8 +45,32 @@ export interface WallpaperInfo {
 }
 
 export interface Setting {
+  /**
+   * 是否显示搜索栏
+   */
   searchBar: boolean
+  /**
+   * 是否启用壁纸
+   */
   wallpaper: boolean
+  /**
+   * 壁纸提供者
+   */
+  wallpaperProvider: string
+  /**
+   * 壁纸轮播间隔
+   */
+
   wallpaperInterval: number
+  /**
+   * WebDAV 配置
+   */
   webdav: { url: string; username: string; password: string }
+}
+
+export interface UIState {
+  /**
+   * 是否处于编辑模式
+   */
+  editing: boolean
 }

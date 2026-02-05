@@ -5,6 +5,7 @@ import type { Setting } from '@/types/common'
 export const setting = reactive<Setting>({
   searchBar: true,
   wallpaper: true,
+  wallpaperProvider: '',
   wallpaperInterval: 30 * 60 * 1000,
   webdav: { url: '', username: '', password: '' }
 })

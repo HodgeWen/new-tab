@@ -76,8 +76,13 @@ const handleClick = () => {
 }
 
 .item-content:hover {
-  background: var(--color-primary-subtle);
-  color: var(--color-primary);
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+.item-content:hover .icon,
+.item-content:hover .arrow {
+  opacity: 1;
 }
 
 .icon {
