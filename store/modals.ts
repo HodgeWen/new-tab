@@ -1,13 +1,13 @@
-import { readonly, useTemplateRef, type TemplateRef } from 'vue'
+import { readonly, type TemplateRef } from 'vue'
 
-import type { FolderModal } from '@/components/folder-modal'
-import type { SettingModal } from '@/components/setting-modal'
-import type { SiteModal } from '@/components/site-modal'
+import type { NFolderModal } from '@/components/folder-modal'
+import type { NSettingModal } from '@/components/setting-modal'
+import type { NSiteModal } from '@/components/site-modal'
 
 export type Modals = {
-  folder: TemplateRef<InstanceType<typeof FolderModal>>
-  site: TemplateRef<InstanceType<typeof SiteModal>>
-  setting: TemplateRef<InstanceType<typeof SettingModal>>
+  folder: TemplateRef<InstanceType<typeof NFolderModal>>
+  site: TemplateRef<InstanceType<typeof NSiteModal>>
+  setting: TemplateRef<InstanceType<typeof NSettingModal>>
 }
 
 const _modals: Partial<Modals> = {}
