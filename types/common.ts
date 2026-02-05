@@ -1,19 +1,16 @@
-export interface ItemSize {
-  w: number
-  h: number
-}
-
-export interface ItemPosition {
-  x: number
-  y: number
-}
-
 export type ItemType = 'folder' | 'site'
+
+/**
+ * 文件夹尺寸预设
+ * - 'horizontal': 2x1 (横向)
+ * - 'vertical': 1x2 (纵向)
+ * - 'square': 2x2 (方形)
+ */
+export type FolderSize = 'horizontal' | 'vertical' | 'square'
 
 export interface GridItem {
   type: ItemType
   id: string
-  position: ItemPosition
   title: string
 }
 
@@ -29,7 +26,7 @@ export interface SiteItem extends GridItem {
 
 export interface FolderItem extends GridItem {
   type: 'folder'
-  size: ItemSize
+  size: FolderSize
 }
 
 /**

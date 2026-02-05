@@ -58,11 +58,11 @@ export function useGridStack(ref: string) {
   function addWidget(item: SiteItemForm | FolderItemForm) {
     if (!gridStack) return
     const id = nanoid(10)
-    const el = gridStack.addWidget({ id, content: item.title })
-    const x = +(el.getAttribute('gs-x') ?? 0)
-    const y = +(el.getAttribute('gs-y') ?? 0)
-
-    addGridItem({ ...item, id, position: { x, y } })
+    const newItem = { ...item, id }
+    addGridItem(newItem)
+    const el = gridStack.addWidget({ id, content: newItem.title })
+    shadowDom[id] = el
+    render(renderMap[newItem.type](newItem), el)
   }
 
   return { addWidget }
