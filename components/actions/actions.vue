@@ -10,6 +10,7 @@
 import { NButton } from '@/components/button'
 import { Pencil, RefreshCw, Settings } from 'lucide-vue-next'
 import { modals } from '@/store/modals'
+
 defineOptions({ name: 'NActions' })
 
 function handleRefresh() {
