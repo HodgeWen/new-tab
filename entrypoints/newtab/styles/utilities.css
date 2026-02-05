@@ -1,0 +1,191 @@
+/* ============================================
+ * 工具类 / Utility Classes
+ * ============================================ */
+
+/* === 玻璃效果 / Glass Effects === */
+
+/* 基础玻璃面板 */
+.glass {
+  background: var(--glass-bg);
+  background-image: var(--gradient-glass);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow-subtle);
+  border-radius: var(--radius-lg);
+}
+
+/* 强化玻璃面板 - 用于重要容器 */
+.glass-elevated {
+  background: var(--glass-bg);
+  background-image: var(--gradient-glass);
+  backdrop-filter: blur(var(--glass-blur-strong));
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong));
+  border: 1px solid var(--glass-border-strong);
+  box-shadow: var(--glass-shadow-elevated);
+  border-radius: var(--radius-xl);
+}
+
+/* 微妙玻璃 - 用于列表项等 */
+.glass-subtle {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  transition: 
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.glass-subtle:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border);
+  box-shadow: var(--glass-shadow-subtle);
+}
+
+/* === 布局工具 / Layout Utilities === */
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-gap { gap: var(--spacing-sm); }
+
+/* === 文本工具 / Text Utilities === */
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.text-center { text-align: center; }
+.text-secondary { color: var(--text-secondary); }
+.text-muted { color: var(--text-muted); }
+
+.text-caption { font-size: var(--text-caption); }
+.text-body { font-size: var(--text-body); }
+.text-title { font-size: var(--text-title); }
+
+.font-medium { font-weight: var(--font-medium); }
+
+/* === 滚动条 / Scrollbar === */
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* 自定义滚动条样式 */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--glass-border) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--glass-border);
+  border-radius: var(--radius-full);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--glass-border-strong);
+}
+
+/* === 交互反馈 / Interactive Feedback === */
+
+/* 按下效果 */
+.pressable {
+  transition: transform var(--transition-fast);
+}
+
+.pressable:active {
+  transform: scale(0.97);
+}
+
+/* 悬停提升效果 */
+.hoverable {
+  transition: 
+    transform var(--transition-normal),
+    box-shadow var(--transition-normal);
+}
+
+.hoverable:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--glass-shadow);
+}
+
+/* === 动画 / Animations === */
+
+/* 淡入 */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 从下方滑入 */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 缩放弹入 */
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in var(--transition-normal) both;
+}
+
+.animate-slide-up {
+  animation: slide-up var(--transition-normal) both;
+}
+
+.animate-scale-in {
+  animation: scale-in var(--transition-spring) both;
+}
