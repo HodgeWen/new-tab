@@ -4,14 +4,14 @@
 
     <n-button variant="glass" :icon="Pencil" @click="handleEdit" />
 
-    <n-button variant="glass" :icon="Settings" @click="modals.setting?.open()" />
+    <n-button variant="glass" :icon="Settings" @click="components.setting?.open()" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { NButton } from '@/components/button'
 import { Pencil, RefreshCw, Settings } from 'lucide-vue-next'
-import { modals } from '@/store/components'
+import { components } from '@/store/components'
 
 defineOptions({ name: 'NActions' })
 
