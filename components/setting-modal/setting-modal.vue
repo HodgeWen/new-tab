@@ -23,14 +23,17 @@
         <div v-if="formData.wallpaper" class="sub-settings">
           <div class="form-item">
             <label>壁纸源</label>
-            <n-input v-model="formData.wallpaperProvider" placeholder="请输入壁纸源 API" />
+            <n-select
+              v-model="formData.wallpaperProvider"
+              :options="providerOptions"
+              placeholder="选择壁纸源"
+            />
           </div>
           <div class="form-item">
-            <label>轮播间隔 (毫秒)</label>
-            <n-input
-              type="number"
-              v-model.number="formData.wallpaperInterval"
-              placeholder="例如: 3600000"
+            <label>切换间隔</label>
+            <n-select
+              v-model="formData.wallpaperInterval"
+              :options="intervalOptions"
             />
           </div>
         </div>
@@ -72,11 +75,26 @@ import { NModal } from '@/components/modal'
 import { NInput } from '@/components/input'
 import { NSwitch } from '@/components/switch'
 import { NButton } from '@/components/button'
+import { NSelect } from '@/components/select'
 import { useModal } from '@/hooks/use-modal'
 import { setting } from '@/store/setting'
+import { wallpaperProviders } from '@/utils/wallpaper-providers'
 import type { Setting } from '@/types/common'
 
 defineOptions({ name: 'NSettingModal' })
+
+const providerOptions = wallpaperProviders.map((p) => ({
+  label: p.name,
+  value: p.id
+}))
+
+const intervalOptions = [
+  { label: '30 分钟', value: 30 * 60 * 1000 },
+  { label: '1 小时', value: 60 * 60 * 1000 },
+  { label: '6 小时', value: 6 * 60 * 60 * 1000 },
+  { label: '12 小时', value: 12 * 60 * 60 * 1000 },
+  { label: '24 小时', value: 24 * 60 * 60 * 1000 }
+]
 
 const {
   form: formData,
@@ -85,8 +103,8 @@ const {
 } = useModal<Setting>({
   searchBar: true,
   wallpaper: true,
-  wallpaperProvider: '',
-  wallpaperInterval: 0,
+  wallpaperProvider: 'bing',
+  wallpaperInterval: 30 * 60 * 1000,
   webdav: { url: '', username: '', password: '' }
 })
 

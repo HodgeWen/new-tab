@@ -1,4 +1,14 @@
 <template>
+  <!-- 壁纸背景 -->
+  <transition name="wallpaper-fade">
+    <div
+      v-if="wallpaperUrl"
+      :key="wallpaperUrl"
+      class="wallpaper"
+      :style="{ backgroundImage: `url(${wallpaperUrl})` }"
+    />
+  </transition>
+
   <div class="container">
     <!-- 主内容 -->
     <div class="main" @contextmenu="openGlobalContextmenu">
@@ -26,6 +36,9 @@ import { connectComponents } from '@/store/components'
 import { NActions } from '@/components/actions'
 import { showContextmenu } from '@/components/context-menu'
 import { setting } from '@/store/setting'
+import { useWallpaper } from '@/hooks/use-wallpaper'
+
+const { wallpaperUrl } = useWallpaper()
 
 const folderModal = useTemplateRef('folder-modal')
 const siteModal = useTemplateRef('site-modal')
@@ -66,6 +79,15 @@ function openGlobalContextmenu(event: MouseEvent) {
 </script>
 
 <style scoped>
+.wallpaper {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
 .container {
   width: 100%;
   height: 100%;
@@ -89,5 +111,17 @@ function openGlobalContextmenu(event: MouseEvent) {
 .main {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* 壁纸淡入淡出 */
+.wallpaper-fade-enter-active {
+  transition: opacity 0.8s ease;
+}
+.wallpaper-fade-leave-active {
+  transition: opacity 0.4s ease;
+}
+.wallpaper-fade-enter-from,
+.wallpaper-fade-leave-to {
+  opacity: 0;
 }
 </style>

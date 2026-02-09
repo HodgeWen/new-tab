@@ -71,3 +71,9 @@ export interface UIState {
    */
   editing: boolean
 }
+
+export interface WallpaperProvider {
+  name: string
+  id: string
+  getWallpaper: () => Promise<WallpaperInfo>
+}

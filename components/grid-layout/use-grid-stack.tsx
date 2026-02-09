@@ -1,36 +1,61 @@
-import { GridStack, type GridStackWidget } from 'gridstack'
+import { GridStack, type GridStackNode, type GridStackWidget } from 'gridstack'
 import { nanoid } from 'nanoid'
-import { onMounted, useTemplateRef, render, type VNode } from 'vue'
+import { onBeforeUnmount, onMounted, useTemplateRef, render, type VNode, watchEffect } from 'vue'
 
 import type { ItemType } from '@/types/common'
 import type { FolderItemForm, FolderItemUI, GridItemUI, SiteItemForm, SiteItemUI } from '@/types/ui'
 
 import { NFolderItem } from '@/components/folder-item'
+import { FOLDER_SIZE_MAP } from '@/components/folder-item/shared'
 import { NSiteItem } from '@/components/site-item'
-import { addGridItem, gridItemsMap } from '@/store/grid-items'
+import {
+  addGridItem,
+  deleteGridItem,
+  gridItems,
+  gridItemsMap,
+  loadGridItems
+} from '@/store/grid-items'
+import { appendToOrder, removeFromOrder, sortByOrder, updateGridOrder } from '@/store/grid-order'
 
+/**
+ * Vue 组件渲染映射表
+ */
 const renderMap: Record<ItemType, (item: GridItemUI) => VNode> = {
   site: (item) => {
     return <NSiteItem item={item as SiteItemUI} />
   },
-  folder: (item) => {
-    return <NFolderItem item={item as FolderItemUI} />
-  }
+  folder: (item) => <NFolderItem item={item as FolderItemUI} />
 }
 
+/**
+ * 获取 widget 的网格尺寸
+ * - site: 固定 1x1
+ * - folder: 根据 size 预设从 FOLDER_SIZE_MAP 获取
+ */
+function getWidgetSize(item: GridItemUI): { w: number; h: number } {
+  if (item.type === 'site') {
+    return { w: 1, h: 1 }
+  }
+  return FOLDER_SIZE_MAP[(item as FolderItemUI).size] ?? { w: 2, h: 2 }
+}
+
+loadGridItems()
+
 export function useGridStack(ref: string) {
-  let gridStack: GridStack | null = null
+  let grid: GridStack | null = null
 
   const gridContainer = useTemplateRef<HTMLElement>(ref)
 
+  /** 追踪已渲染的 DOM 元素，用于清理 Vue 渲染 */
   const shadowDom: Record<string, HTMLElement> = {}
+
+  // 设置渲染回调（必须在 init 之前）
   GridStack.renderCB = (el: HTMLElement, widget: GridStackWidget) => {
     const item = gridItemsMap.get(widget.id!)
 
     if (!item) return
 
     const createVNode = renderMap[item.type]
-
     const vnode = createVNode(item)
     if (vnode) {
       shadowDom[item.id] = el
@@ -40,7 +65,8 @@ export function useGridStack(ref: string) {
 
   onMounted(() => {
     if (!gridContainer.value) return
-    gridStack = GridStack.init(
+
+    grid = GridStack.init(
       {
         cellHeight: 92,
         margin: 8,
@@ -53,17 +79,110 @@ export function useGridStack(ref: string) {
       },
       gridContainer.value
     )
+
+    // 监听 removed 事件，清理对应的 Vue 渲染
+    grid.on('removed', (_event: Event, items: GridStackNode[]) => {
+      items.forEach((item) => {
+        const id = item.id!
+        if (shadowDom[id]) {
+          render(null, shadowDom[id])
+          delete shadowDom[id]
+        }
+      })
+    })
+
+    // 监听拖拽结束，保存排序到 localStorage
+    grid.on('dragstop', () => {
+      if (!grid) return
+      const nodes = grid.engine.nodes.slice().sort((a, b) => {
+        if (a.y !== b.y) return a.y! - b.y!
+        return a.x! - b.x!
+      })
+      const ids = nodes.map((node) => node.id).filter(Boolean) as string[]
+      updateGridOrder(ids)
+    })
   })
 
-  function addWidget(item: SiteItemForm | FolderItemForm) {
-    if (!gridStack) return
-    const id = nanoid(10)
-    const newItem = { ...item, id }
-    addGridItem(newItem)
-    const el = gridStack.addWidget({ id, content: newItem.title })
-    shadowDom[id] = el
-    render(renderMap[newItem.type](newItem), el)
+  watchEffect(() => {
+    if (gridItems.value.length && grid) {
+      grid.load(
+        gridItems.value.map((item) => {
+          return { id: item.id }
+        })
+      )
+    }
+  })
+
+  onBeforeUnmount(() => {
+    // 清理所有 Vue 渲染
+    Object.values(shadowDom).forEach((el) => render(null, el))
+    grid?.destroy(false)
+    grid = null
+  })
+
+  /**
+   * 从 store 加载已有 widgets 到 GridStack
+   * 按 gridOrder 排序后批量添加，不指定 x/y 让 GridStack 自动 compact
+   */
+  function loadWidgets() {
+    if (!grid) return
+
+    const items = Array.from(gridItemsMap.values())
+    if (items.length === 0) return
+
+    const sortedItems = sortByOrder(items)
+
+    grid.batchUpdate(true)
+    sortedItems.forEach((item) => {
+      const { w, h } = getWidgetSize(item)
+      grid!.addWidget({ id: item.id, w, h })
+    })
+    grid.batchUpdate(false)
   }
 
-  return { addWidget }
+  /**
+   * 添加新 widget
+   */
+  function addWidget(item: SiteItemForm | FolderItemForm) {
+    if (!grid) return
+
+    const id = nanoid(10)
+    const newItem = { ...item, id } as GridItemUI
+    addGridItem(newItem)
+    appendToOrder(id)
+
+    const { w, h } = getWidgetSize(newItem)
+    grid.addWidget({ id, w, h })
+  }
+
+  /**
+   * 移除 widget
+   */
+  function removeWidget(id: string) {
+    if (!grid) return
+
+    const el = gridContainer.value?.querySelector(`.grid-stack-item[gs-id="${id}"]`)
+    if (el) {
+      grid.removeWidget(el as HTMLElement)
+      removeFromOrder(id)
+      deleteGridItem(id)
+    }
+  }
+
+  /**
+   * 重新渲染指定 widget 的内容（数据变更后调用）
+   */
+  function updateWidget(id: string) {
+    const el = shadowDom[id]
+    if (!el) return
+
+    const item = gridItemsMap.get(id)
+    if (!item) return
+
+    const createVNode = renderMap[item.type]
+    const vnode = createVNode(item)
+    render(vnode, el)
+  }
+
+  return { addWidget, removeWidget, updateWidget, loadWidgets }
 }
