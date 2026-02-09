@@ -21,6 +21,7 @@
   </div>
 
   <NFolderModal ref="folder-modal" />
+  <NFolderView ref="folder-view" />
   <NSiteModal ref="site-modal" />
   <NSettingModal ref="setting-modal" />
 </template>
@@ -28,6 +29,7 @@
 <script lang="ts" setup>
 import { NGridLayout } from '@/components/grid-layout'
 import { NFolderModal } from '@/components/folder-modal'
+import { NFolderView } from '@/components/folder-view'
 import { NSiteModal } from '@/components/site-modal'
 import { NSettingModal } from '@/components/setting-modal'
 import { NSearcher } from '@/components/searcher'
@@ -41,11 +43,18 @@ import { useWallpaper } from '@/hooks/use-wallpaper'
 const { wallpaperUrl } = useWallpaper()
 
 const folderModal = useTemplateRef('folder-modal')
+const folderView = useTemplateRef('folder-view')
 const siteModal = useTemplateRef('site-modal')
 const settingModal = useTemplateRef('setting-modal')
 const gridLayout = useTemplateRef('grid-layout')
 
-connectComponents({ folder: folderModal, site: siteModal, setting: settingModal, gridLayout })
+connectComponents({
+  folder: folderModal,
+  folderView,
+  site: siteModal,
+  setting: settingModal,
+  gridLayout
+})
 
 function openGlobalContextmenu(event: MouseEvent) {
   const target = event.target as HTMLElement
@@ -69,8 +78,7 @@ function openGlobalContextmenu(event: MouseEvent) {
       {
         label: '新增文件夹',
         action: () => {
-          gridLayout.value?.addWidget({ type: 'folder', title: '新文件夹', size: { w: 2, h: 2 } })
-          // folderModal.value?.open()
+          folderModal.value?.open()
         }
       }
     ]

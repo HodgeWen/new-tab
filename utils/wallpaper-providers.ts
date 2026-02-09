@@ -30,10 +30,11 @@ export const BingWallpaperProvider: WallpaperProvider = {
       `https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=${count}&mkt=zh-CN`
     )
     const data = await res.json()
-    const images = Array.isArray(data.images) ? data.images : []
+    const images: any[] = Array.isArray(data.images) ? data.images : []
     const image =
-      images.find((item) => !options?.excludeId || (item.hsh || item.startdate) !== options.excludeId) ||
-      images[0]
+      images.find(
+        (item) => !options?.excludeId || (item.hsh || item.startdate) !== options.excludeId
+      ) || images[0]
 
     if (!image) {
       throw new Error('Bing wallpaper response is empty')

@@ -18,20 +18,7 @@
             :class="{ active: form.size === option.value }"
             @click="form.size = option.value"
           >
-            <div class="size-preview">
-              <div
-                class="size-grid"
-                :style="{
-                  gridTemplateColumns: `repeat(${option.w}, 1fr)`,
-                  gridTemplateRows: `repeat(${option.h}, 1fr)`,
-                  aspectRatio: `${option.w} / ${option.h}`
-                }"
-              >
-                <div v-for="i in option.w * option.h" :key="i" class="size-cell" />
-              </div>
-            </div>
-            <span class="size-label">{{ option.label }}</span>
-            <span class="size-desc">{{ option.w }}×{{ option.h }}</span>
+            {{ option.label }}
           </div>
         </div>
       </div>
@@ -61,17 +48,17 @@ import type { FolderSize } from '@/types/common'
 
 defineOptions({ name: 'NFolderModal' })
 
-const sizeOptions: { value: FolderSize; label: string; w: number; h: number }[] = [
-  { value: 'horizontal', label: '横向', w: 2, h: 1 },
-  { value: 'vertical', label: '纵向', w: 1, h: 2 },
-  { value: 'square', label: '方形', w: 2, h: 2 }
+const sizeOptions: { value: FolderSize; label: string }[] = [
+  { value: 'horizontal', label: '横向 2×1' },
+  { value: 'vertical', label: '纵向 1×2' },
+  { value: 'square', label: '方形 2×2' }
 ]
 
 const {
   form,
   open: openModal,
   visible
-} = useModal<FolderItemForm>({ type: 'folder', title: '', size: 'horizontal' })
+} = useModal<FolderItemForm>({ type: 'folder', id: null, title: '', size: 'horizontal' })
 
 const isEdit = computed(() => !!form.id)
 
@@ -89,9 +76,11 @@ function handleSave() {
   if (isEdit.value) {
     // 先更新 store 数据，再重新渲染
     updateGridItem({ ...form, id: form.id! } as FolderItemUI)
-    components.gridLayout?.value?.updateWidget(form.id!)
+    components.gridLayout?.updateWidget(form.id!)
   } else {
-    components.gridLayout?.value?.addWidget({ ...form })
+    // 显式构造干净的表单数据，避免残留字段（如 deepExtend 遗留的 sites）
+    const formData: FolderItemForm = { type: 'folder', title: form.title.trim(), size: form.size }
+    components.gridLayout?.addWidget(formData)
   }
 
   visible.value = false
@@ -123,77 +112,35 @@ defineExpose({ open })
 /* 尺寸选择器 */
 .size-options {
   display: flex;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
 }
 
 .size-option {
   flex: 1;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-md);
+  justify-content: center;
+  padding: var(--spacing-sm) var(--spacing-md);
   border-radius: var(--radius-md);
   border: 1px solid var(--glass-border);
   background: var(--glass-bg);
+  color: var(--text-primary);
+  font-size: var(--text-body);
   cursor: pointer;
-  transition: all var(--transition-normal);
+  transition: all var(--transition-fast);
   user-select: none;
 }
 
 .size-option:hover {
   background: var(--glass-bg-hover);
   border-color: var(--glass-border-strong);
-  transform: translateY(-2px);
-  box-shadow: var(--glass-shadow);
 }
 
 .size-option.active {
   border-color: var(--color-primary);
   background: var(--color-primary-subtle);
-  box-shadow: 0 0 0 2px var(--color-primary-subtle);
-}
-
-.size-preview {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: var(--spacing-sm) 0;
-}
-
-.size-grid {
-  display: grid;
-  gap: 3px;
-  width: 48px;
-}
-
-.size-cell {
-  width: 100%;
-  aspect-ratio: 1;
-  border-radius: 4px;
-  background: var(--glass-border-strong);
-  transition: background var(--transition-fast);
-}
-
-.size-option.active .size-cell {
-  background: var(--color-primary);
-  opacity: 0.6;
-}
-
-.size-label {
-  font-size: var(--text-body);
-  color: var(--text-primary);
-  font-weight: var(--font-medium);
-}
-
-.size-desc {
-  font-size: var(--text-caption);
-  color: var(--text-secondary);
-}
-
-.size-option.active .size-label {
   color: var(--color-primary);
+  font-weight: var(--font-medium);
 }
 
 /* Footer */

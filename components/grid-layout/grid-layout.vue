@@ -7,10 +7,17 @@ import { useGridStack } from './use-grid-stack'
 
 defineOptions({ name: 'NGridLayout' })
 
-const { addWidget, removeWidget, detachWidget, updateWidget, loadWidgets, batchRemoveWidgets } =
+const { addWidget, removeWidget, detachWidget, attachWidget, updateWidget, batchRemoveWidgets } =
   useGridStack('gridContainer')
 
-defineExpose({ addWidget, removeWidget, detachWidget, updateWidget, loadWidgets, batchRemoveWidgets })
+defineExpose({
+  addWidget,
+  removeWidget,
+  detachWidget,
+  attachWidget,
+  updateWidget,
+  batchRemoveWidgets
+})
 </script>
 
 <style>

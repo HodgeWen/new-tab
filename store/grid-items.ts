@@ -2,6 +2,7 @@ import { readonly, ref } from 'vue'
 
 import type { GridItemRecord } from '@/types/db'
 import type { FolderItemUI, GridItemUI, SiteItemUI } from '@/types/ui'
+
 import { db } from '@/utils/db'
 
 const _gridItems = ref<GridItemUI[]>([])
@@ -12,15 +13,30 @@ export const gridItems = readonly(_gridItems)
 /** 网格项 Map，用于快速查找（运行时） */
 export const gridItemsMap = new Map<string, GridItemUI>()
 
-/** 同步列表与 Map */
+/** 同步列表与 Map，并构建文件夹与子站点的关系 */
 function syncList() {
-  _gridItems.value = Array.from(gridItemsMap.values())
+  // 清除所有文件夹的 sites
+  for (const item of gridItemsMap.values()) {
+    if (item.type === 'folder') (item as FolderItemUI).sites = []
+  }
+  // 根据 pid 将站点分配到对应文件夹
+  for (const item of gridItemsMap.values()) {
+    if (item.type === 'site' && (item as SiteItemUI).pid) {
+      const folder = gridItemsMap.get((item as SiteItemUI).pid!)
+      if (folder?.type === 'folder') (folder as FolderItemUI).sites!.push(item as SiteItemUI)
+    }
+  }
+  // 仅保留顶层项（文件夹 + 无 pid 的站点），有 pid 的站点通过文件夹渲染
+  _gridItems.value = Array.from(gridItemsMap.values()).filter(
+    (item) => item.type !== 'site' || !(item as SiteItemUI).pid
+  )
 }
 
-/** 将 UI 数据转换为数据库记录 */
+/** 将 UI 数据转换为数据库记录（剥离运行时计算的 sites 字段） */
 function toRecord(item: GridItemUI, createdAt?: number): GridItemRecord {
   const now = Date.now()
-  return { ...item, createdAt: createdAt ?? now, updatedAt: now } as GridItemRecord
+  const { sites: _, ...data } = item as FolderItemUI
+  return { ...data, createdAt: createdAt ?? now, updatedAt: now } as GridItemRecord
 }
 
 /**
@@ -32,10 +48,11 @@ export async function loadGridItems(): Promise<void> {
   gridItemsMap.clear()
   for (const record of records) {
     // 剥离数据库字段，保留 UI 所需数据
-    const { createdAt: _, updatedAt: __, ...rest } = record as GridItemRecord & {
-      createdAt: number
-      updatedAt: number
-    }
+    const {
+      createdAt: _,
+      updatedAt: __,
+      ...rest
+    } = record as GridItemRecord & { createdAt: number; updatedAt: number }
     gridItemsMap.set(record.id, rest as GridItemUI)
   }
   syncList()
@@ -58,8 +75,9 @@ export function addGridItem(item: GridItemUI) {
 export function updateGridItem(item: GridItemUI) {
   gridItemsMap.set(item.id, item)
   syncList()
-  // 使用 update 仅更新变更字段，保留 createdAt
-  db.gridItems.update(item.id, { ...item, updatedAt: Date.now() })
+  // 使用 update 仅更新变更字段，保留 createdAt；剥离运行时 sites 字段
+  const { sites: _, ...data } = item as FolderItemUI
+  db.gridItems.update(item.id, { ...data, updatedAt: Date.now() })
 }
 
 /**

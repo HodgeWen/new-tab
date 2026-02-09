@@ -10,7 +10,7 @@
   >
     <img v-if="item.icon" class="site-icon" :src="item.icon" :alt="item.title" draggable="false" />
     <span v-else class="site-icon site-icon--fallback">{{ initial }}</span>
-    <span v-if="!inFolder" class="site-title">{{ item.title }}</span>
+    <span class="site-title">{{ item.title }}</span>
     <span v-if="isEditing" class="site-check" :class="{ checked: isSelected }" />
   </a>
 </template>
@@ -34,10 +34,7 @@ import { selectedIds, toggleSelect, ui } from '@/store/ui'
 
 defineOptions({ name: 'NSiteItem' })
 
-const { item, inFolder = false } = defineProps<{
-  item: SiteItemUI
-  inFolder?: boolean
-}>()
+const { item, inFolder = false } = defineProps<{ item: SiteItemUI; inFolder?: boolean }>()
 
 /** 仅在 grid-stack 中且处于编辑模式时显示勾选 */
 const isEditing = computed(() => ui.editing && !inFolder)
@@ -86,7 +83,10 @@ function handleContextMenu(e: MouseEvent) {
     menuItems.push({
       icon: FolderOutput,
       label: '移出文件夹',
-      action: (site) => moveSiteItemOutOfFolder(site)
+      action: (site) => {
+        moveSiteItemOutOfFolder(site)
+        components.gridLayout?.attachWidget(site.id)
+      }
     })
   }
 
@@ -103,12 +103,7 @@ function handleContextMenu(e: MouseEvent) {
     }
   })
 
-  showContextmenu({
-    x: e.clientX,
-    y: e.clientY,
-    context: item,
-    items: menuItems
-  })
+  showContextmenu({ x: e.clientX, y: e.clientY, context: item, items: menuItems })
 }
 </script>
 

@@ -29,12 +29,9 @@
               placeholder="选择壁纸源"
             />
           </div>
-          <div class="form-item">
+          <div class="form-item" v-if="wallpaperProvider?.refreshable">
             <label>切换间隔</label>
-            <n-select
-              v-model="formData.wallpaperInterval"
-              :options="intervalOptions"
-            />
+            <n-select v-model="formData.wallpaperInterval" :options="intervalOptions" />
           </div>
         </div>
       </transition>
@@ -78,15 +75,13 @@ import { NButton } from '@/components/button'
 import { NSelect } from '@/components/select'
 import { useModal } from '@/hooks/use-modal'
 import { setting } from '@/store/setting'
-import { wallpaperProviders } from '@/utils/wallpaper-providers'
+import { getWallpaperProvider, wallpaperProviders } from '@/utils/wallpaper-providers'
 import type { Setting } from '@/types/common'
+import { computed } from '#imports'
 
 defineOptions({ name: 'NSettingModal' })
 
-const providerOptions = wallpaperProviders.map((p) => ({
-  label: p.name,
-  value: p.id
-}))
+const providerOptions = wallpaperProviders.map((p) => ({ label: p.name, value: p.id }))
 
 const intervalOptions = [
   { label: '30 分钟', value: 30 * 60 * 1000 },
@@ -106,6 +101,10 @@ const {
   wallpaperProvider: 'bing',
   wallpaperInterval: 30 * 60 * 1000,
   webdav: { url: '', username: '', password: '' }
+})
+
+const wallpaperProvider = computed(() => {
+  return getWallpaperProvider(formData.wallpaperProvider)
 })
 
 const open = () => {

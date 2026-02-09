@@ -8,6 +8,7 @@ import type { NSiteModal } from '@/components/site-modal'
 export type Components = {
   folder: TemplateRef<InstanceType<typeof NFolderModal>>
   site: TemplateRef<InstanceType<typeof NSiteModal>>
+  folderView: TemplateRef<InstanceType<typeof import('@/components/folder-view').NFolderView>>
   setting: TemplateRef<InstanceType<typeof NSettingModal>>
   gridLayout: TemplateRef<InstanceType<typeof NGridLayout>>
 }

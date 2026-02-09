@@ -1,6 +1,7 @@
+import { throttle } from '@cat-kit/core'
 import { GridStack, type GridStackNode, type GridStackWidget } from 'gridstack'
 import { nanoid } from 'nanoid'
-import { onBeforeUnmount, onMounted, useTemplateRef, render, type VNode, watch, watchEffect } from 'vue'
+import { onBeforeUnmount, onMounted, useTemplateRef, render, type VNode, watch } from 'vue'
 
 import type { ItemType } from '@/types/common'
 import type { FolderItemForm, FolderItemUI, GridItemUI, SiteItemForm, SiteItemUI } from '@/types/ui'
@@ -12,12 +13,16 @@ import {
   addGridItem,
   batchDeleteGridItems,
   deleteGridItem,
-  gridItems,
   gridItemsMap,
   loadGridItems
 } from '@/store/grid-items'
 import { appendToOrder, removeFromOrder, sortByOrder, updateGridOrder } from '@/store/grid-order'
 import { ui } from '@/store/ui'
+
+/** 判断是否为顶层项（文件夹 或 无 pid 的站点） */
+function isTopLevel(item: GridItemUI): boolean {
+  return item.type !== 'site' || !(item as SiteItemUI).pid
+}
 
 /**
  * Vue 组件渲染映射表
@@ -41,7 +46,8 @@ function getWidgetSize(item: GridItemUI): { w: number; h: number } {
   return FOLDER_SIZE_MAP[(item as FolderItemUI).size] ?? { w: 2, h: 2 }
 }
 
-loadGridItems()
+/** 存储 Promise，在 onMounted 中 await 确保数据就绪 */
+const gridItemsReady = loadGridItems()
 
 export function useGridStack(ref: string) {
   let grid: GridStack | null = null
@@ -50,6 +56,14 @@ export function useGridStack(ref: string) {
 
   /** 追踪已渲染的 DOM 元素，用于清理 Vue 渲染 */
   const shadowDom: Record<string, HTMLElement> = {}
+
+  /**
+   * 通过 GridStack 引擎查找 widget 元素
+   * 使用 grid.engine.nodes 替代 DOM querySelector，更可靠
+   */
+  function findWidgetEl(id: string): HTMLElement | undefined {
+    return grid?.engine.nodes.find((n) => n.id === id)?.el as HTMLElement | undefined
+  }
 
   // 设置渲染回调（必须在 init 之前）
   GridStack.renderCB = (el: HTMLElement, widget: GridStackWidget) => {
@@ -65,18 +79,15 @@ export function useGridStack(ref: string) {
     }
   }
 
-  onMounted(() => {
+  onMounted(async () => {
     if (!gridContainer.value) return
 
     grid = GridStack.init(
       {
         cellHeight: 92,
         margin: 8,
-        float: false,
         animate: false,
         disableResize: true,
-        acceptWidgets: false,
-        staticGrid: false,
         columnOpts: { columnWidth: 88, columnMax: 12, layout: 'compact' }
       },
       gridContainer.value
@@ -103,16 +114,15 @@ export function useGridStack(ref: string) {
       const ids = nodes.map((node) => node.id).filter(Boolean) as string[]
       updateGridOrder(ids)
     })
-  })
 
-  watchEffect(() => {
-    if (gridItems.value.length && grid) {
-      grid.load(
-        gridItems.value.map((item) => {
-          return { id: item.id }
-        })
-      )
-    }
+    grid.on(
+      'resizecontent',
+      throttle((ev, items) => {}, 300)
+    )
+
+    // 等待数据就绪后一次性加载 widgets
+    await gridItemsReady
+    loadWidgets()
   })
 
   onBeforeUnmount(() => {
@@ -123,13 +133,14 @@ export function useGridStack(ref: string) {
   })
 
   /**
-   * 从 store 加载已有 widgets 到 GridStack
+   * 从 store 加载已有 widgets 到 GridStack（内部方法）
    * 按 gridOrder 排序后批量添加，不指定 x/y 让 GridStack 自动 compact
    */
   function loadWidgets() {
     if (!grid) return
 
-    const items = Array.from(gridItemsMap.values())
+    // 仅加载顶层项到 GridStack，有 pid 的站点通过文件夹渲染
+    const items = Array.from(gridItemsMap.values()).filter(isTopLevel)
     if (items.length === 0) return
 
     const sortedItems = sortByOrder(items)
@@ -163,9 +174,9 @@ export function useGridStack(ref: string) {
   function removeWidget(id: string) {
     if (!grid) return
 
-    const el = gridContainer.value?.querySelector(`.grid-stack-item[gs-id="${id}"]`)
+    const el = findWidgetEl(id)
     if (el) {
-      grid.removeWidget(el as HTMLElement)
+      grid.removeWidget(el)
       removeFromOrder(id)
       deleteGridItem(id)
     }
@@ -178,15 +189,31 @@ export function useGridStack(ref: string) {
   function detachWidget(id: string) {
     if (!grid) return
 
-    const el = gridContainer.value?.querySelector(`.grid-stack-item[gs-id="${id}"]`)
+    const el = findWidgetEl(id)
     if (el) {
-      grid.removeWidget(el as HTMLElement)
+      grid.removeWidget(el)
       removeFromOrder(id)
     }
   }
 
   /**
+   * 将已有项重新添加到 GridStack（数据已在 store 中）
+   * 用于将站点从文件夹移出后恢复到网格
+   */
+  function attachWidget(id: string) {
+    if (!grid) return
+
+    const item = gridItemsMap.get(id)
+    if (!item) return
+
+    const { w, h } = getWidgetSize(item)
+    appendToOrder(id)
+    grid.addWidget({ id, w, h })
+  }
+
+  /**
    * 重新渲染指定 widget 的内容（数据变更后调用）
+   * 同时同步更新 GridStack widget 的网格尺寸
    */
   function updateWidget(id: string) {
     const el = shadowDom[id]
@@ -194,6 +221,13 @@ export function useGridStack(ref: string) {
 
     const item = gridItemsMap.get(id)
     if (!item) return
+
+    // 同步 GridStack widget 的网格尺寸（如文件夹 size 变更时）
+    const widgetEl = findWidgetEl(id)
+    if (widgetEl) {
+      const { w, h } = getWidgetSize(item)
+      grid!.update(widgetEl, { w, h })
+    }
 
     const createVNode = renderMap[item.type]
     const vnode = createVNode(item)
@@ -209,9 +243,9 @@ export function useGridStack(ref: string) {
 
     grid.batchUpdate(true)
     ids.forEach((id) => {
-      const el = gridContainer.value?.querySelector(`.grid-stack-item[gs-id="${id}"]`)
+      const el = findWidgetEl(id)
       if (el) {
-        grid!.removeWidget(el as HTMLElement)
+        grid!.removeWidget(el)
       }
       removeFromOrder(id)
     })
@@ -228,5 +262,5 @@ export function useGridStack(ref: string) {
     }
   )
 
-  return { addWidget, removeWidget, detachWidget, updateWidget, loadWidgets, batchRemoveWidgets }
+  return { addWidget, removeWidget, detachWidget, attachWidget, updateWidget, batchRemoveWidgets }
 }

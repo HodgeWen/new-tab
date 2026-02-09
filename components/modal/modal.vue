@@ -1,12 +1,13 @@
 <script setup lang="ts">
+import { ref, watch } from 'vue'
 import { X } from 'lucide-vue-next'
 
-defineOptions({ name: 'NModal' })
+defineOptions({ name: 'NModal', inheritAttrs: false })
 
 const {
   title,
   width = '500px',
-  closeOnOverlay = true,
+  closeOnOverlay,
   showClose = true
 } = defineProps<{
   title?: string
@@ -16,14 +17,30 @@ const {
 }>()
 
 const modelValue = defineModel<boolean>({ required: true })
+const emits = defineEmits<{ close: [] }>()
 
-const emits = defineEmits<{
-  close: []
-}>()
+// 内部可见性状态与 modelValue 解耦，确保离场过渡动画完整播放后再通知父组件
+const visible = ref(false)
+let pendingCloseEvent = false
+
+watch(modelValue, (val) => {
+  if (val) visible.value = true
+  else visible.value = false
+}, { immediate: true })
 
 const close = () => {
-  modelValue.value = false
-  emits('close')
+  pendingCloseEvent = true
+  visible.value = false
+}
+
+const onAfterLeave = () => {
+  if (modelValue.value) {
+    modelValue.value = false
+  }
+  if (pendingCloseEvent) {
+    emits('close')
+    pendingCloseEvent = false
+  }
 }
 
 const handleOverlayClick = () => {
@@ -35,14 +52,11 @@ const handleOverlayClick = () => {
 
 <template>
   <teleport to="body">
-    <transition name="modal-fade">
-      <div
-        v-if="modelValue"
-        class="modal-overlay"
-        @click="handleOverlayClick"
-      >
+    <transition name="modal-fade" @after-leave="onAfterLeave">
+      <div v-if="visible" class="modal-overlay" @click="handleOverlayClick">
         <div
           class="modal-container"
+          v-bind="$attrs"
           :style="{ width: typeof width === 'number' ? `${width}px` : width }"
           @click.stop
         >

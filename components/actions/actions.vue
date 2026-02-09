@@ -1,10 +1,7 @@
 <template>
   <div class="actions" :class="{ 'is-editing': ui.editing }">
     <template v-if="ui.editing">
-      <n-button
-        variant="ghost"
-        @click="handleToggleSelectAll"
-      >
+      <n-button variant="ghost" @click="handleToggleSelectAll">
         {{ isAllSelected ? '取消全选' : '全选' }}
       </n-button>
 
@@ -42,8 +39,6 @@
 import { computed, onBeforeUnmount, onMounted } from 'vue'
 import { Check, Pencil, RefreshCw, Settings, Trash2 } from 'lucide-vue-next'
 
-import type { SiteItemUI } from '@/types/ui'
-
 import { NButton } from '@/components/button'
 import { gridItems } from '@/store/grid-items'
 import { components } from '@/store/components'
@@ -55,11 +50,9 @@ defineOptions({ name: 'NActions' })
 
 const { loading, canRefresh, refreshWallpaper } = useWallpaper()
 
-/** 可选择的顶层 grid item 的 ID（排除文件夹内的站点） */
+/** 可选择的顶层 site item 的 ID（gridItems 已仅包含顶层项） */
 const selectableIds = computed(() =>
-  gridItems.value
-    .filter((item) => item.type === 'folder' || (item.type === 'site' && !(item as SiteItemUI).pid))
-    .map((item) => item.id)
+  gridItems.value.filter((item) => item.type === 'site').map((item) => item.id)
 )
 
 const hasSelection = computed(() => selectedIds.size > 0)

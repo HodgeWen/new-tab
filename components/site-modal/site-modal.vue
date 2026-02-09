@@ -5,6 +5,10 @@
       <div class="icon-section">
         <n-upload class="icon-upload" :class="{ 'has-icon': form.icon }" @pick="handleIconUpload">
           <img v-if="form.icon" :src="form.icon" class="icon-preview" alt="网站图标" />
+          <div v-else-if="fetchingIcon" class="icon-placeholder icon-loading">
+            <Loader2 :size="24" class="icon-spinner" />
+            <span>获取中</span>
+          </div>
           <div v-else class="icon-placeholder">
             <ImagePlus :size="24" />
             <span>上传图标</span>
@@ -23,7 +27,7 @@
       <!-- 网址 -->
       <div class="form-item">
         <label>网址</label>
-        <n-input v-model="form.url" @change="handleUrlChange" placeholder="https://example.com" clearable>
+        <n-input v-model="form.url" @change="handleUrlChange" placeholder="https://example.com" clearable :status="urlStatus">
           <template #prefix>
             <Globe :size="16" />
           </template>
@@ -49,15 +53,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue'
-import { ImagePlus, Globe } from 'lucide-vue-next'
+import { computed, ref, watch } from 'vue'
+import { ImagePlus, Globe, Loader2 } from 'lucide-vue-next'
 import { NModal } from '@/components/modal'
 import { NInput } from '@/components/input'
 import { NButton } from '@/components/button'
 import { NUpload } from '@/components/upload'
 import { useModal } from '@/hooks/use-modal'
+import { nanoid } from 'nanoid'
 import { components } from '@/store/components'
-import { updateGridItem } from '@/store/grid-items'
+import { addGridItem, updateGridItem } from '@/store/grid-items'
 import type { SiteItemForm, SiteItemUI } from '@/types/ui'
 
 defineOptions({ name: 'NSiteModal' })
@@ -68,13 +73,20 @@ const {
   form,
   open: openModal,
   visible
-} = useModal<SiteItemForm>({ type: 'site', title: '', url: '', icon: '', pid: null })
+} = useModal<SiteItemForm>({ type: 'site', id: null, title: '', url: '', icon: '', pid: null })
 
 const isEdit = computed(() => !!form.id)
+const fetchingIcon = ref(false)
 let latestIconRequestId = 0
 
 const canSave = computed(() => {
-  return form.title.trim() !== '' && form.url.trim() !== ''
+  return form.title.trim() !== '' && form.url.trim() !== '' && urlStatus.value !== 'error'
+})
+
+const urlStatus = computed<'default' | 'error' | 'success'>(() => {
+  const url = form.url.trim()
+  if (!url) return 'default'
+  return parseUrl(normalizeUrl(url)) ? 'success' : 'error'
 })
 
 function open(data?: Partial<SiteItemForm>) {
@@ -98,6 +110,7 @@ watch(visible, (value) => {
   if (value) return
 
   latestIconRequestId += 1
+  fetchingIcon.value = false
 })
 
 async function handleUrlChange(rawUrl: string | number) {
@@ -129,6 +142,7 @@ async function handleUrlChange(rawUrl: string | number) {
   if (hasOriginalIcon) return
 
   const requestId = ++latestIconRequestId
+  fetchingIcon.value = true
 
   try {
     const base64 = await fetchFaviconAsBase64(parsedUrl)
@@ -138,6 +152,10 @@ async function handleUrlChange(rawUrl: string | number) {
     }
   } catch {
     // favicon 获取失败时走首字回退
+  } finally {
+    if (requestId === latestIconRequestId) {
+      fetchingIcon.value = false
+    }
   }
 
   if (!canApplyIconResult(requestId)) return
@@ -318,8 +336,15 @@ function handleSave() {
     updateGridItem({ ...form, id: form.id! } as SiteItemUI)
     components.gridLayout?.updateWidget(form.id!)
   } else {
-    // 创建模式：添加新 widget
-    components.gridLayout?.addWidget({ ...form })
+    // 创建模式
+    if (form.pid) {
+      // 如果是在文件夹内创建
+      const id = nanoid(10)
+      addGridItem({ ...form, id } as SiteItemUI)
+    } else {
+      // 顶级网格创建：通过 GridStack 添加
+      components.gridLayout?.addWidget({ ...form })
+    }
   }
 
   visible.value = false
@@ -384,6 +409,19 @@ defineExpose({ open })
   gap: var(--spacing-xs);
   color: var(--text-muted);
   font-size: var(--text-caption);
+}
+
+.icon-loading {
+  color: var(--color-primary);
+}
+
+.icon-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .remove-icon-btn {
