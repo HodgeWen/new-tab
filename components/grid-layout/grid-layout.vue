@@ -27,6 +27,10 @@ defineExpose({
   min-height: 200px;
 }
 
+.grid-stack-item.ui-draggable-dragging {
+  box-shadow: none !important;
+}
+
 /* widget 内容区域充满整个单元格 */
 .grid-stack-item-content {
   display: flex;
@@ -41,10 +45,10 @@ defineExpose({
 }
 
 /* 拖拽时的占位符样式 */
-.grid-stack-placeholder > .placeholder-content {
+/* .grid-stack-placeholder > .placeholder-content {
   border: 2px dashed var(--glass-border-strong, rgba(255, 255, 255, 0.2));
   border-radius: var(--radius-md, 12px);
   background: var(--glass-bg, rgba(255, 255, 255, 0.08));
   backdrop-filter: blur(8px);
-}
+} */
 </style>

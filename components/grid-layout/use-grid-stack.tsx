@@ -84,11 +84,12 @@ export function useGridStack(ref: string) {
 
     grid = GridStack.init(
       {
-        cellHeight: 92,
-        margin: 8,
+        cellHeight: 64,
+        margin: 4,
+
         animate: false,
         disableResize: true,
-        columnOpts: { columnWidth: 88, columnMax: 12, layout: 'compact' }
+        columnOpts: { columnWidth: 60, columnMax: 24, layout: 'compact' }
       },
       gridContainer.value
     )

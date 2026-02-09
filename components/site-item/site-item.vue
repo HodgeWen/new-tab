@@ -146,8 +146,8 @@ function handleContextMenu(e: MouseEvent) {
 
 /* 网站图标：圆角卡片承载 */
 .site-icon {
-  width: 40px;
-  height: 40px;
+  width: 54px;
+  height: 54px;
   padding: 4px;
   border-radius: var(--radius-md);
   background: var(--glass-bg-hover);
