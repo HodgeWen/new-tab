@@ -1,14 +1,44 @@
 import type { WallpaperProvider } from '@/types/common'
 
+interface PicsumPhoto {
+  id: string
+  author: string
+  url: string
+}
+
+async function fetchPicsumList(page: number, limit: number): Promise<PicsumPhoto[]> {
+  const res = await fetch(`https://picsum.photos/v2/list?page=${page}&limit=${limit}`)
+  if (!res.ok) {
+    throw new Error(`Picsum list request failed: ${res.status}`)
+  }
+
+  const data = await res.json()
+  if (!Array.isArray(data)) {
+    throw new Error('Picsum list response is invalid')
+  }
+
+  return data as PicsumPhoto[]
+}
+
 export const BingWallpaperProvider: WallpaperProvider = {
   name: 'Bing 每日壁纸',
   id: 'bing',
-  getWallpaper: async () => {
+  refreshable: false,
+  getWallpaper: async (options) => {
+    const count = options?.force ? 8 : 1
     const res = await fetch(
-      'https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=zh-CN'
+      `https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=${count}&mkt=zh-CN`
     )
     const data = await res.json()
-    const image = data.images[0]
+    const images = Array.isArray(data.images) ? data.images : []
+    const image =
+      images.find((item) => !options?.excludeId || (item.hsh || item.startdate) !== options.excludeId) ||
+      images[0]
+
+    if (!image) {
+      throw new Error('Bing wallpaper response is empty')
+    }
+
     const baseUrl = 'https://www.bing.com'
 
     // copyright 格式: "描述 (© 作者/来源)"
@@ -29,9 +59,31 @@ export const BingWallpaperProvider: WallpaperProvider = {
 export const PicsumPhotosWallpaperProvider: WallpaperProvider = {
   name: 'Picsum Photos',
   id: 'picsum-photos',
-  getWallpaper: async () => {
-    const res = await fetch('https://picsum.photos/v2/random')
-    const photo = await res.json()
+  refreshable: true,
+  getWallpaper: async (options) => {
+    let photo: PicsumPhoto | undefined
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const page = Math.floor(Math.random() * 50) + 1
+      const list = await fetchPicsumList(page, 1)
+      const candidate = list[0]
+      if (!candidate) continue
+      if (options?.excludeId && candidate.id === options.excludeId) continue
+      photo = candidate
+      break
+    }
+
+    if (!photo) {
+      const fallbackList = await fetchPicsumList(1, 100)
+      const candidates = options?.excludeId
+        ? fallbackList.filter((item) => item.id !== options.excludeId)
+        : fallbackList
+      photo = candidates[Math.floor(Math.random() * candidates.length)] || fallbackList[0]
+    }
+
+    if (!photo) {
+      throw new Error('Picsum wallpaper response is empty')
+    }
 
     return {
       id: photo.id,

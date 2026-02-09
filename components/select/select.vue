@@ -24,15 +24,13 @@ const {
 
 const modelValue = defineModel<any>()
 
-const emits = defineEmits<{
-  change: [value: any]
-}>()
+const emits = defineEmits<{ change: [value: any] }>()
 
 const isOpen = ref(false)
 const containerRef = useTemplateRef<HTMLElement>('containerRef')
 
 const selectedOption = computed(() => {
-  return options.find(opt => opt.value === modelValue.value)
+  return options.find((opt) => opt.value === modelValue.value)
 })
 
 const toggleDropdown = () => {
@@ -54,11 +52,11 @@ const handleClickOutside = (event: MouseEvent) => {
 }
 
 onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
+  document.addEventListener('click', handleClickOutside, true)
 })
 
 onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
+  document.removeEventListener('click', handleClickOutside, true)
 })
 </script>
 
@@ -83,17 +81,12 @@ onUnmounted(() => {
           v-for="option in options"
           :key="String(option.value)"
           class="option-item"
-          :class="{
-            active: modelValue === option.value,
-            disabled: option.disabled
-          }"
+          :class="{ active: modelValue === option.value, disabled: option.disabled }"
           @click="selectOption(option)"
         >
           {{ option.label }}
         </div>
-        <div v-if="options.length === 0" class="no-data">
-          无数据
-        </div>
+        <div v-if="options.length === 0" class="no-data">无数据</div>
       </div>
     </transition>
   </div>
@@ -226,7 +219,9 @@ onUnmounted(() => {
 /* Transition */
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity var(--transition-fast), transform var(--transition-fast);
+  transition:
+    opacity var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 .fade-enter-from,

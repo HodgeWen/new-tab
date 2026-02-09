@@ -1,6 +1,6 @@
 <template>
   <!-- 壁纸背景 -->
-  <transition name="wallpaper-fade">
+  <transition name="wallpaper-fade" mode="in-out">
     <div
       v-if="wallpaperUrl"
       :key="wallpaperUrl"
@@ -115,7 +115,7 @@ function openGlobalContextmenu(event: MouseEvent) {
 
 /* 壁纸淡入淡出 */
 .wallpaper-fade-enter-active {
-  transition: opacity 0.8s ease;
+  transition: opacity 0.4s ease;
 }
 .wallpaper-fade-leave-active {
   transition: opacity 0.4s ease;

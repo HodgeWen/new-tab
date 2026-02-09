@@ -1,6 +1,6 @@
 import { GridStack, type GridStackNode, type GridStackWidget } from 'gridstack'
 import { nanoid } from 'nanoid'
-import { onBeforeUnmount, onMounted, useTemplateRef, render, type VNode, watchEffect } from 'vue'
+import { onBeforeUnmount, onMounted, useTemplateRef, render, type VNode, watch, watchEffect } from 'vue'
 
 import type { ItemType } from '@/types/common'
 import type { FolderItemForm, FolderItemUI, GridItemUI, SiteItemForm, SiteItemUI } from '@/types/ui'
@@ -10,12 +10,14 @@ import { FOLDER_SIZE_MAP } from '@/components/folder-item/shared'
 import { NSiteItem } from '@/components/site-item'
 import {
   addGridItem,
+  batchDeleteGridItems,
   deleteGridItem,
   gridItems,
   gridItemsMap,
   loadGridItems
 } from '@/store/grid-items'
 import { appendToOrder, removeFromOrder, sortByOrder, updateGridOrder } from '@/store/grid-order'
+import { ui } from '@/store/ui'
 
 /**
  * Vue 组件渲染映射表
@@ -156,7 +158,7 @@ export function useGridStack(ref: string) {
   }
 
   /**
-   * 移除 widget
+   * 移除 widget（同时删除数据）
    */
   function removeWidget(id: string) {
     if (!grid) return
@@ -166,6 +168,20 @@ export function useGridStack(ref: string) {
       grid.removeWidget(el as HTMLElement)
       removeFromOrder(id)
       deleteGridItem(id)
+    }
+  }
+
+  /**
+   * 从 GridStack 中分离 widget（仅移除 UI，不删除数据）
+   * 用于将站点移入文件夹等场景
+   */
+  function detachWidget(id: string) {
+    if (!grid) return
+
+    const el = gridContainer.value?.querySelector(`.grid-stack-item[gs-id="${id}"]`)
+    if (el) {
+      grid.removeWidget(el as HTMLElement)
+      removeFromOrder(id)
     }
   }
 
@@ -184,5 +200,33 @@ export function useGridStack(ref: string) {
     render(vnode, el)
   }
 
-  return { addWidget, removeWidget, updateWidget, loadWidgets }
+  /**
+   * 批量移除 widgets（同时删除数据）
+   * 如果包含文件夹，其子站点也会被一并删除
+   */
+  function batchRemoveWidgets(ids: string[]) {
+    if (!grid) return
+
+    grid.batchUpdate(true)
+    ids.forEach((id) => {
+      const el = gridContainer.value?.querySelector(`.grid-stack-item[gs-id="${id}"]`)
+      if (el) {
+        grid!.removeWidget(el as HTMLElement)
+      }
+      removeFromOrder(id)
+    })
+    grid.batchUpdate(false)
+
+    batchDeleteGridItems(ids)
+  }
+
+  // 编辑模式切换时，锁定/解锁网格拖拽
+  watch(
+    () => ui.editing,
+    (editing) => {
+      grid?.setStatic(editing)
+    }
+  )
+
+  return { addWidget, removeWidget, detachWidget, updateWidget, loadWidgets, batchRemoveWidgets }
 }

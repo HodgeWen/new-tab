@@ -1,7 +1,7 @@
 import { readonly, ref } from 'vue'
 
 import type { GridItemRecord } from '@/types/db'
-import type { GridItemUI, SiteItemUI } from '@/types/ui'
+import type { FolderItemUI, GridItemUI, SiteItemUI } from '@/types/ui'
 import { db } from '@/utils/db'
 
 const _gridItems = ref<GridItemUI[]>([])
@@ -72,9 +72,42 @@ export function deleteGridItem(id: string) {
 }
 
 /**
+ * 将站点移入指定文件夹
+ */
+export function moveSiteToFolder(item: SiteItemUI, folderId: string) {
+  const updated: SiteItemUI = { ...item, pid: folderId }
+  updateGridItem(updated)
+}
+
+/**
  * 将站点从文件夹中移出（pid 置为 null）
  */
 export function moveSiteItemOutOfFolder(item: SiteItemUI) {
   const updated: SiteItemUI = { ...item, pid: null }
   updateGridItem(updated)
+}
+
+/**
+ * 批量删除网格项
+ * 如果删除项包含文件夹，其子站点也会被一并删除
+ */
+export function batchDeleteGridItems(ids: string[]) {
+  const idsToDelete = new Set(ids)
+
+  // 对于文件夹，收集其下属站点
+  for (const id of ids) {
+    const item = gridItemsMap.get(id)
+    if (item?.type === 'folder') {
+      for (const [childId, child] of gridItemsMap) {
+        if (child.type === 'site' && (child as SiteItemUI).pid === id) {
+          idsToDelete.add(childId)
+        }
+      }
+    }
+  }
+
+  const allIds = Array.from(idsToDelete)
+  allIds.forEach((id) => gridItemsMap.delete(id))
+  syncList()
+  db.gridItems.bulkDelete(allIds)
 }

@@ -72,8 +72,14 @@ export interface UIState {
   editing: boolean
 }
 
+export interface WallpaperRequestOptions {
+  force?: boolean
+  excludeId?: string
+}
+
 export interface WallpaperProvider {
   name: string
   id: string
-  getWallpaper: () => Promise<WallpaperInfo>
+  refreshable: boolean
+  getWallpaper: (options?: WallpaperRequestOptions) => Promise<WallpaperInfo>
 }
