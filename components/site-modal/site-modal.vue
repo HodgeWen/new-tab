@@ -86,7 +86,7 @@ const canSave = computed(() => {
 const urlStatus = computed<'default' | 'error' | 'success'>(() => {
   const url = form.url.trim()
   if (!url) return 'default'
-  return parseUrl(normalizeUrl(url)) ? 'success' : 'error'
+  return normalizeAndValidate(url) ? 'success' : 'error'
 })
 
 function open(data?: Partial<SiteItemForm>) {
@@ -166,8 +166,25 @@ async function handleUrlChange(rawUrl: string | number) {
   form.icon = generateTextIconBase64(fallbackText, parsedUrl.hostname)
 }
 
-function normalizeUrl(value: string): string {
-  return /^https?:\/\//i.test(value) ? value : `https://${value}`
+/**
+ * Parse and validate URL; only allow http: and https:.
+ * Must parse raw input first — never normalize before protocol check.
+ * "javascript:alert(1)" must be rejected because parsed.protocol is "javascript:".
+ */
+function normalizeAndValidate(urlString: string): string | null {
+  const trimmed = urlString.trim()
+  if (!trimmed) return null
+  let parsed: URL
+  try {
+    parsed = new URL(trimmed)
+  } catch {
+    try {
+      parsed = new URL(`https://${trimmed}`)
+    } catch {
+      return null
+    }
+  }
+  return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? parsed.href : null
 }
 
 function parseUrl(value: string): URL | null {
