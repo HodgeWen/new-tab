@@ -36,6 +36,16 @@
         </div>
       </transition>
 
+      <!-- 备份与恢复 -->
+      <div class="section-header">
+        <div class="section-title">备份与恢复</div>
+        <div class="section-desc">导出/导入网站与布局数据</div>
+      </div>
+
+      <div class="backup-actions">
+        <n-button variant="ghost" @click="handleExport">导出备份</n-button>
+      </div>
+
       <!-- WebDAV -->
       <div class="section-header">
         <div class="section-title">WebDAV 同步</div>
@@ -76,6 +86,7 @@ import { NSelect } from '@/components/select'
 import { useModal } from '@/hooks/use-modal'
 import { setting } from '@/store/setting'
 import { getWallpaperProvider, wallpaperProviders } from '@/utils/wallpaper-providers'
+import { exportBackupData } from '@/utils/backup'
 import type { Setting } from '@/types/common'
 import { computed } from 'vue'
 
@@ -119,6 +130,10 @@ const handleSave = () => {
   visible.value = false
 }
 
+async function handleExport() {
+  await exportBackupData()
+}
+
 defineExpose({ open })
 </script>
 
@@ -138,6 +153,16 @@ defineExpose({ open })
 }
 
 .sub-settings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--glass-bg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+}
+
+.backup-actions {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
