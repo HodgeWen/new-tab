@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { useTemplateRef } from 'vue'
+
 defineOptions({ name: 'NUpload' })
 
-const { accept = 'image/*', sizeLimit, disabled = false } = defineProps<{
+const { accept = 'image/*', multiple = false, sizeLimit, disabled = false } = defineProps<{
   accept?: string
   multiple?: boolean
   /** 文件大小上限（单位：字节） */
@@ -10,6 +12,20 @@ const { accept = 'image/*', sizeLimit, disabled = false } = defineProps<{
 }>()
 
 const emit = defineEmits<{ pick: [file: File] }>()
+const inputRef = useTemplateRef<HTMLInputElement>('inputRef')
+
+function openPicker() {
+  if (disabled) return
+  inputRef.value?.click()
+}
+
+function handleKeydown(event: KeyboardEvent) {
+  if (disabled) return
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault()
+    openPicker()
+  }
+}
 
 function handleChange(event: Event) {
   if (disabled) return
@@ -31,20 +47,32 @@ function handleChange(event: Event) {
 </script>
 
 <template>
-  <label :class="{ disabled }">
+  <div
+    class="upload-trigger"
+    :class="{ disabled }"
+    role="button"
+    :tabindex="disabled ? -1 : 0"
+    @click="openPicker"
+    @keydown="handleKeydown"
+  >
     <slot />
     <input
+      ref="inputRef"
       type="file"
-      hidden
       :accept="accept"
       :multiple="multiple"
       class="hidden-input"
       @change="handleChange"
     />
-  </label>
+  </div>
 </template>
 
 <style scoped>
+.upload-trigger {
+  position: relative;
+  display: inline-flex;
+}
+
 .hidden-input {
   position: absolute;
   width: 0;
@@ -53,7 +81,7 @@ function handleChange(event: Event) {
   pointer-events: none;
 }
 
-label.disabled {
+.upload-trigger.disabled {
   pointer-events: none;
   opacity: 0.6;
   cursor: not-allowed;

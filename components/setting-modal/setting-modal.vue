@@ -98,6 +98,7 @@ import { NButton } from '@/components/button'
 import { NSelect } from '@/components/select'
 import { useModal } from '@/hooks/use-modal'
 import { setting } from '@/store/setting'
+import { components } from '@/store/components'
 import { getWallpaperProvider, wallpaperProviders } from '@/utils/wallpaper-providers'
 import { exportBackupData, importBackupData } from '@/utils/backup'
 import type { ImportBackupResult } from '@/utils/backup'
@@ -156,7 +157,12 @@ async function handleImport(file: File) {
   importResult.value = null
   importing.value = true
   try {
-    importResult.value = await importBackupData(file)
+    const result = await importBackupData(file)
+    importResult.value = result
+
+    if (result.success) {
+      components.gridLayout?.reloadWidgets()
+    }
   } finally {
     importing.value = false
   }

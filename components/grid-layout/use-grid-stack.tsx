@@ -149,6 +149,25 @@ export function useGridStack(ref: string) {
   }
 
   /**
+   * 根据当前 store 数据重建所有 widgets。
+   * 用于备份导入后将内存数据同步到当前视图。
+   */
+  function reloadWidgets() {
+    if (!grid) return
+
+    const nodes = grid.engine.nodes.slice()
+    grid.batchUpdate(true)
+    nodes.forEach((node) => {
+      if (node.el) {
+        grid!.removeWidget(node.el)
+      }
+    })
+    grid.batchUpdate(false)
+
+    loadWidgets()
+  }
+
+  /**
    * 添加新 widget
    */
   function addWidget(item: SiteItemForm | FolderItemForm) {
@@ -257,5 +276,13 @@ export function useGridStack(ref: string) {
     }
   )
 
-  return { addWidget, removeWidget, detachWidget, attachWidget, updateWidget, batchRemoveWidgets }
+  return {
+    addWidget,
+    removeWidget,
+    detachWidget,
+    attachWidget,
+    updateWidget,
+    batchRemoveWidgets,
+    reloadWidgets
+  }
 }
