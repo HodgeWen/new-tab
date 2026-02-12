@@ -1,5 +1,11 @@
 import type { WallpaperProvider } from '@/types/common'
 
+const isDevWeb =
+  import.meta.env.DEV && !window.location.href.startsWith('chrome-extension://')
+const API_BASE = isDevWeb
+  ? { picsum: '/api/picsum', bing: '/api/bing' }
+  : { picsum: 'https://picsum.photos', bing: 'https://www.bing.com' }
+
 interface PicsumPhoto {
   id: string
   author: string
@@ -7,7 +13,7 @@ interface PicsumPhoto {
 }
 
 async function fetchPicsumList(page: number, limit: number): Promise<PicsumPhoto[]> {
-  const res = await fetch(`https://picsum.photos/v2/list?page=${page}&limit=${limit}`)
+  const res = await fetch(`${API_BASE.picsum}/v2/list?page=${page}&limit=${limit}`)
   if (!res.ok) {
     throw new Error(`Picsum list request failed: ${res.status}`)
   }
@@ -27,7 +33,7 @@ export const BingWallpaperProvider: WallpaperProvider = {
   getWallpaper: async (options) => {
     const count = options?.force ? 8 : 1
     const res = await fetch(
-      `https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=${count}&mkt=zh-CN`
+      `${API_BASE.bing}/HPImageArchive.aspx?format=js&idx=0&n=${count}&mkt=zh-CN`
     )
     const data = await res.json()
     const images: any[] = Array.isArray(data.images) ? data.images : []
@@ -40,7 +46,7 @@ export const BingWallpaperProvider: WallpaperProvider = {
       throw new Error('Bing wallpaper response is empty')
     }
 
-    const baseUrl = 'https://www.bing.com'
+    const baseUrl = API_BASE.bing
 
     // copyright 格式: "描述 (© 作者/来源)"
     const authorMatch = image.copyright?.match(/\(©\s*(.+?)\)/)
@@ -88,11 +94,11 @@ export const PicsumPhotosWallpaperProvider: WallpaperProvider = {
 
     return {
       id: photo.id,
-      url: `https://picsum.photos/id/${photo.id}/1920/1080`,
-      thumbUrl: `https://picsum.photos/id/${photo.id}/400/240`,
+      url: `${API_BASE.picsum}/id/${photo.id}/1920/1080`,
+      thumbUrl: `${API_BASE.picsum}/id/${photo.id}/400/240`,
       author: photo.author ?? '',
       authorUrl: photo.url ?? '',
-      downloadUrl: `https://picsum.photos/id/${photo.id}/1920/1080`
+      downloadUrl: `${API_BASE.picsum}/id/${photo.id}/1920/1080`
     }
   }
 }
