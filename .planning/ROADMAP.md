@@ -13,7 +13,7 @@ Prepare the New Tab extension for Chrome Web Store release: address policy compl
 - [x] **Phase 1: Policy Compliance** - Search bar uses chrome.search API; URL scheme validation ✓ (2026-02-12)
 - [x] **Phase 2: Bug Fixes** - #imports fix, JSON parse safety, dead code removal, CORS proxy ✓ (2026-02-12)
 - [x] **Phase 3: Backup & Data Integrity** - Export includes grid order; import validation ✓ (2026-02-12)
-- [ ] **Phase 4: UI Polish** - CSS variables; WebDAV "即将推出" marking
+- [x] **Phase 4: UI Polish** - CSS variables; WebDAV "即将推出" marking ✓ (2026-02-12)
 
 ## Phase Details
 
@@ -69,7 +69,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 04-01: Replace hardcoded styles; mark WebDAV as coming soon
+- [x] 04-01: Replace hardcoded styles; mark WebDAV as coming soon ✓ (2026-02-12)
 
 ## Progress
 
@@ -82,4 +82,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Policy Compliance | 2/2 | ✓ Complete | 2026-02-12 |
 | 2. Bug Fixes | 3/3 | ✓ Complete | 2026-02-12 |
 | 3. Backup & Data Integrity | 2/2 | ✓ Complete | 2026-02-12 |
-| 4. UI Polish | 0/1 | Not started | - |
+| 4. UI Polish | 1/1 | ✓ Complete | 2026-02-12 |
