@@ -11,7 +11,7 @@ Prepare the New Tab extension for Chrome Web Store release: address policy compl
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
 - [x] **Phase 1: Policy Compliance** - Search bar uses chrome.search API; URL scheme validation ✓ (2026-02-12)
-- [ ] **Phase 2: Bug Fixes** - #imports fix, JSON parse safety, dead code removal, CORS proxy
+- [x] **Phase 2: Bug Fixes** - #imports fix, JSON parse safety, dead code removal, CORS proxy ✓ (2026-02-12)
 - [ ] **Phase 3: Backup & Data Integrity** - Export includes grid order; import validation
 - [ ] **Phase 4: UI Polish** - CSS variables; WebDAV "即将推出" marking
 
@@ -42,9 +42,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Verify #imports fix; commit if needed (BUGF-01)
+- [x] 02-01-PLAN.md — Verify #imports fix; commit if needed (BUGF-01) ✓ (2026-02-12)
 - [x] 02-02-PLAN.md — JSON.parse try/catch + remove resizecontent handler (BUGF-02, BUGF-03) ✓ (2026-02-12)
-- [ ] 02-03-PLAN.md — Vite proxy for Bing/Picsum APIs (BUGF-04)
+- [x] 02-03-PLAN.md — Vite proxy for Bing/Picsum APIs (BUGF-04) ✓ (2026-02-12)
 
 ### Phase 3: Backup & Data Integrity
 **Goal**: Backup export/import complete and reliable; restore preserves layout
@@ -80,6 +80,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Policy Compliance | 2/2 | ✓ Complete | 2026-02-12 |
-| 2. Bug Fixes | 0/3 | Not started | - |
+| 2. Bug Fixes | 3/3 | ✓ Complete | 2026-02-12 |
 | 3. Backup & Data Integrity | 0/2 | Not started | - |
 | 4. UI Polish | 0/1 | Not started | - |

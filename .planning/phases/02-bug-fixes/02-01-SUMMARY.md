@@ -51,7 +51,7 @@ completed: 2026-02-12
 
 No code changes made. Fix was already in place and committed in prior work (e.g. `005db0d`). Verification only.
 
-**Plan metadata:** `173914b` (docs: complete BUGF-01 plan)
+**Plan metadata:** `99957da` (docs: complete BUGF-01 plan)
 
 ## Files Created/Modified
 
