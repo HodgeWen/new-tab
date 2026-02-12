@@ -22,7 +22,7 @@ key-files:
 
 key-decisions:
   - "Use disposition: 'CURRENT_TAB' per Chrome Search API"
-  - "Fallback to Google URL for dev:web (no extension context)"
+  - 'Fallback to Google URL for dev:web (no extension context)'
 
 patterns-established:
   - "Pattern: chrome.search guard with typeof chrome !== 'undefined' && chrome.search?.query; fallback for dev"
@@ -56,7 +56,7 @@ Each task was committed atomically:
 
 1. **Task 1: Replace search redirect with chrome.search.query** - `7146449` (feat)
 
-**Plan metadata:** `863fb59` (docs: complete plan)
+**Plan metadata:** `71cbde2` (docs: complete plan)
 
 ## Files Created/Modified
 
@@ -86,8 +86,9 @@ None - no external service configuration required.
 ## Self-Check: PASSED
 
 - 01-01-SUMMARY.md exists
-- Commits `7146449` and `863fb59` present in git log
+- Commits `7146449`, `71cbde2` present in git log
 
 ---
-*Phase: 01-policy-compliance*
-*Completed: 2026-02-12*
+
+_Phase: 01-policy-compliance_
+_Completed: 2026-02-12_

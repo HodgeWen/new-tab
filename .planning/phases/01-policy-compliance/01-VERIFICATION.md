@@ -17,40 +17,40 @@ gaps: []
 
 ### Observable Truths
 
-| #   | Truth   | Status     | Evidence       |
-| --- | ------- | ---------- | -------------- |
-| 1   | User can search via search bar and results use browser's default search engine (chrome.search API) | ✓ VERIFIED | `searcher.vue` L14–17: `chrome.search.query({ text, disposition: 'CURRENT_TAB' })` with guard; wired to `handleSearch` via `@enter` |
+| #   | Truth                                                                                                       | Status     | Evidence                                                                                                                               |
+| --- | ----------------------------------------------------------------------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | User can search via search bar and results use browser's default search engine (chrome.search API)          | ✓ VERIFIED | `searcher.vue` L14–17: `chrome.search.query({ text, disposition: 'CURRENT_TAB' })` with guard; wired to `handleSearch` via `@enter`    |
 | 2   | User cannot add site shortcuts with javascript: or other dangerous URL schemes—invalid schemes are rejected | ✓ VERIFIED | `site-modal.vue` L172–185: `normalizeAndValidate` allow-list (http/https only); L84–88 urlStatus; L342–354 handleSave defense-in-depth |
 
 **Score:** 2/2 truths verified
 
 ### Required Artifacts
 
-| Artifact | Expected | Status | Details |
-| -------- | --------- | ------ | ------- |
-| `components/searcher/searcher.vue` | Search bar with chrome.search.query | ✓ VERIFIED | Exists, substantive (handleSearch calls chrome.search.query), wired (App.vue NSearcher, @enter → handleSearch) |
+| Artifact                               | Expected                                | Status     | Details                                                                                                                  |
+| -------------------------------------- | --------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `components/searcher/searcher.vue`     | Search bar with chrome.search.query     | ✓ VERIFIED | Exists, substantive (handleSearch calls chrome.search.query), wired (App.vue NSearcher, @enter → handleSearch)           |
 | `components/site-modal/site-modal.vue` | URL scheme validation (http/https only) | ✓ VERIFIED | Exists, substantive (normalizeAndValidate, protocol allow-list), wired (urlStatus, handleUrlChange, handleSave, canSave) |
 
 ### Key Link Verification
 
-| From | To | Via | Status | Details |
-| ---- | --- | --- | ------ | ------- |
-| searcher.vue | chrome.search API | handleSearch calling chrome.search.query | ✓ WIRED | L14–15: `chrome.search.query({ text, disposition: 'CURRENT_TAB' })` |
-| site-modal.vue | urlStatus | normalizeAndValidate in computed | ✓ WIRED | L84–88: `urlStatus` uses `normalizeAndValidate(url) ? 'success' : 'error'` |
-| site-modal.vue | handleSave | validate before save, reject if invalid | ✓ WIRED | L350–354: `validatedUrl = normalizeAndValidate(...)`; early return if null; payload uses validatedUrl |
+| From           | To                | Via                                      | Status  | Details                                                                                               |
+| -------------- | ----------------- | ---------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------- |
+| searcher.vue   | chrome.search API | handleSearch calling chrome.search.query | ✓ WIRED | L14–15: `chrome.search.query({ text, disposition: 'CURRENT_TAB' })`                                   |
+| site-modal.vue | urlStatus         | normalizeAndValidate in computed         | ✓ WIRED | L84–88: `urlStatus` uses `normalizeAndValidate(url) ? 'success' : 'error'`                            |
+| site-modal.vue | handleSave        | validate before save, reject if invalid  | ✓ WIRED | L350–354: `validatedUrl = normalizeAndValidate(...)`; early return if null; payload uses validatedUrl |
 
 ### Requirements Coverage
 
-| Requirement | Status | Blocking Issue |
-| ----------- | ------ | -------------- |
-| PLCY-01 (search bar uses chrome.search.query) | ✓ SATISFIED | — |
-| PLCY-02 (URL scheme validation for site shortcuts) | ✓ SATISFIED | — |
+| Requirement                                        | Status      | Blocking Issue |
+| -------------------------------------------------- | ----------- | -------------- |
+| PLCY-01 (search bar uses chrome.search.query)      | ✓ SATISFIED | —              |
+| PLCY-02 (URL scheme validation for site shortcuts) | ✓ SATISFIED | —              |
 
 ### Anti-Patterns Found
 
 | File | Line | Pattern | Severity | Impact |
 | ---- | ---- | ------- | -------- | ------ |
-| — | — | — | — | None |
+| —    | —    | —       | —        | None   |
 
 ### Human Verification Required
 

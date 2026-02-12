@@ -21,11 +21,11 @@ key-files:
   modified: [components/site-modal/site-modal.vue]
 
 key-decisions:
-  - "Allow-list only (http:, https:) — no blacklist approach"
-  - "Parse raw input first; never normalize before protocol check"
+  - 'Allow-list only (http:, https:) — no blacklist approach'
+  - 'Parse raw input first; never normalize before protocol check'
 
 patterns-established:
-  - "Pattern: normalizeAndValidate(urlString): string | null — parse, protocol check, return href or null"
+  - 'Pattern: normalizeAndValidate(urlString): string | null — parse, protocol check, return href or null'
 
 # Metrics
 duration: 8min
@@ -86,5 +86,6 @@ None - no external service configuration required.
 - Malicious schemes blocked at add/edit; no XSS via href
 
 ---
-*Phase: 01-policy-compliance*
-*Completed: 2025-02-12*
+
+_Phase: 01-policy-compliance_
+_Completed: 2025-02-12_

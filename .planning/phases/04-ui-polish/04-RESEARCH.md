@@ -1,7 +1,7 @@
 # Phase 4: UI Polish - Research
 
-**Researched:** 2026-02-12  
-**Domain:** Settings modal design system compliance, WebDAV placeholder UI  
+**Researched:** 2026-02-12
+**Domain:** Settings modal design system compliance, WebDAV placeholder UI
 **Confidence:** HIGH
 
 ## Summary
@@ -15,14 +15,17 @@ Phase 4 聚焦设置模态框与 WebDAV 区域的 UI 抛光，使两者符合项
 ## User Constraints (from project state)
 
 ### Locked Decisions
+
 - v1 不实现 WebDAV 同步，保留 UI 占位并标记「即将推出」
 - 本阶段聚焦 UI 抛光，不做同步逻辑落地
 
 ### Claude's Discretion
+
 - 「即将推出」的视觉呈现方式（徽章 / 标题旁文案 / 说明区）
 - 说明文字的具体措辞
 
 ### Deferred Ideas (OUT OF SCOPE)
+
 - WebDAV 同步逻辑实现
 - 其他组件（modal.vue、input.vue、select.vue 等）中的硬编码 rgba 替换
 
@@ -34,10 +37,10 @@ Phase 4 聚焦设置模态框与 WebDAV 区域的 UI 抛光，使两者符合项
 
 `setting-modal.vue` 中有两处使用 `rgba(0, 0, 0, 0.05)` 作为嵌套区域背景：
 
-| 位置 | 类名 | 行号 | 用途 |
-|------|------|------|------|
-| 壁纸子设置 | `.sub-settings` | 145 | 壁纸源、切换间隔的容器背景 |
-| WebDAV 设置 | `.webdav-settings` | 155 | 服务器地址、用户名、密码的容器背景 |
+| 位置        | 类名               | 行号 | 用途                               |
+| ----------- | ------------------ | ---- | ---------------------------------- |
+| 壁纸子设置  | `.sub-settings`    | 145  | 壁纸源、切换间隔的容器背景         |
+| WebDAV 设置 | `.webdav-settings` | 155  | 服务器地址、用户名、密码的容器背景 |
 
 两者均为嵌套在 `.setting-form` 内的独立区块，需要与主题系统一致。
 
@@ -69,11 +72,12 @@ Phase 4 聚焦设置模态框与 WebDAV 区域的 UI 抛光，使两者符合项
 
 ## 受影响文件
 
-| 文件 | 变更类型 | 说明 |
-|------|----------|------|
-| `components/setting-modal/setting-modal.vue` | 修改 | 唯一需改动的文件 |
+| 文件                                         | 变更类型 | 说明             |
+| -------------------------------------------- | -------- | ---------------- |
+| `components/setting-modal/setting-modal.vue` | 修改     | 唯一需改动的文件 |
 
 **不改动：**
+
 - `entrypoints/newtab/styles/variables.css` — 无需新增变量
 - `components/input/input.vue` — 已有 `disabled`，无需修改
 - `components/modal/modal.vue` — 不在 Phase 4 范围
@@ -105,18 +109,18 @@ Phase 4 聚焦设置模态框与 WebDAV 区域的 UI 抛光，使两者符合项
 
 ## 风险与回归点
 
-| 风险 | 可能性 | 影响 | 缓解 |
-|------|--------|------|------|
-| `--glass-bg` 在浅色壁纸主题下视觉过亮 | 低 | 嵌套区域与主背景对比减弱 | 保持与主模态一致；若不适可后续引入 `--glass-bg-subtle` |
-| 禁用输入后 `formData.webdav` 仍被保存 | 低 | 用户无法编辑，值恒为空，无实际影响 | 可不改保存逻辑；若需更严谨可过滤 webdav |
-| 漏改其他硬编码 | 低 | 不符合设计系统 | 限定 Phase 4 为 setting-modal.vue，不扩散范围 |
+| 风险                                  | 可能性 | 影响                               | 缓解                                                   |
+| ------------------------------------- | ------ | ---------------------------------- | ------------------------------------------------------ |
+| `--glass-bg` 在浅色壁纸主题下视觉过亮 | 低     | 嵌套区域与主背景对比减弱           | 保持与主模态一致；若不适可后续引入 `--glass-bg-subtle` |
+| 禁用输入后 `formData.webdav` 仍被保存 | 低     | 用户无法编辑，值恒为空，无实际影响 | 可不改保存逻辑；若需更严谨可过滤 webdav                |
+| 漏改其他硬编码                        | 低     | 不符合设计系统                     | 限定 Phase 4 为 setting-modal.vue，不扩散范围          |
 
-| 回归点 | 检查项 |
-|--------|--------|
+| 回归点         | 检查项                                                  |
+| -------------- | ------------------------------------------------------- |
 | 壁纸子设置展开 | 启用壁纸后，`.sub-settings` 显示正常，背景使用 CSS 变量 |
-| 主题切换 | `data-theme` 切换时，子区域背景随主题变化 |
-| WebDAV 区域 | 输入不可编辑，说明与「即将推出」可见 |
-| 保存设置 | 搜索栏、壁纸等设置仍可正常保存 |
+| 主题切换       | `data-theme` 切换时，子区域背景随主题变化               |
+| WebDAV 区域    | 输入不可编辑，说明与「即将推出」可见                    |
+| 保存设置       | 搜索栏、壁纸等设置仍可正常保存                          |
 
 ---
 
@@ -180,11 +184,7 @@ Phase 4 聚焦设置模态框与 WebDAV 区域的 UI 抛光，使两者符合项
 ### 禁用输入模式
 
 ```vue
-<n-input
-  v-model="formData.webdav.url"
-  placeholder="https://dav.example.com"
-  disabled
-/>
+<n-input v-model="formData.webdav.url" placeholder="https://dav.example.com" disabled />
 ```
 
 （`disabled` 为 boolean，可直接写 `disabled` 或 `:disabled="true"`）
@@ -193,11 +193,11 @@ Phase 4 聚焦设置模态框与 WebDAV 区域的 UI 抛光，使两者符合项
 
 ## Don't Hand-Roll
 
-| 问题 | 不要做 | 应使用 | 原因 |
-|------|--------|--------|------|
-| 嵌套背景色 | 自定义 rgba | `var(--glass-bg)` | 主题适配、符合 AGENTS.md |
-| 禁用输入 | 自定义 pointer-events | `NInput` 的 `disabled` | 已有实现，语义正确 |
-| 说明文字样式 | 硬编码颜色 | `--text-muted` / `--text-secondary` | 设计系统一致性 |
+| 问题         | 不要做                | 应使用                              | 原因                     |
+| ------------ | --------------------- | ----------------------------------- | ------------------------ |
+| 嵌套背景色   | 自定义 rgba           | `var(--glass-bg)`                   | 主题适配、符合 AGENTS.md |
+| 禁用输入     | 自定义 pointer-events | `NInput` 的 `disabled`              | 已有实现，语义正确       |
+| 说明文字样式 | 硬编码颜色            | `--text-muted` / `--text-secondary` | 设计系统一致性           |
 
 ---
 
@@ -205,17 +205,17 @@ Phase 4 聚焦设置模态框与 WebDAV 区域的 UI 抛光，使两者符合项
 
 ### 1. 禁用写法不一致
 
-**问题**：`disabled="disabled"` 与 `:disabled="true"` 混用  
+**问题**：`disabled="disabled"` 与 `:disabled="true"` 混用
 **建议**：统一使用 `disabled`（Vue 会解析为 true）
 
 ### 2. 遗漏 sub-settings
 
-**问题**：只改 `.webdav-settings`，忽略 `.sub-settings`  
+**问题**：只改 `.webdav-settings`，忽略 `.sub-settings`
 **建议**：两处背景同源，可合并选择器或分别替换
 
 ### 3. 过度设计「即将推出」
 
-**问题**：引入新组件、动画或复杂布局  
+**问题**：引入新组件、动画或复杂布局
 **建议**：保持简洁，文案 + 禁用即可满足需求
 
 ---
@@ -223,12 +223,14 @@ Phase 4 聚焦设置模态框与 WebDAV 区域的 UI 抛光，使两者符合项
 ## Sources
 
 ### Primary (HIGH confidence)
+
 - `components/setting-modal/setting-modal.vue` — 完整源码审查
 - `entrypoints/newtab/styles/variables.css` — 设计令牌
 - `.planning/REQUIREMENTS.md` — UIPL-01、UIPL-02 定义
 - `AGENTS.md` — 主题系统与组件规范
 
 ### Secondary (MEDIUM confidence)
+
 - `components/input/input.vue` — `disabled` 使用方式
 - `.planning/STATE.md`、`.planning/ROADMAP.md` — 已决策与成功标准
 
@@ -237,9 +239,10 @@ Phase 4 聚焦设置模态框与 WebDAV 区域的 UI 抛光，使两者符合项
 ## Metadata
 
 **Confidence breakdown:**
+
 - 现状盘点: HIGH — 源码与需求直接对应
 - 实现路径: HIGH — 单文件、无新依赖
 - 风险与回归: MEDIUM — 基于经验，浅色主题下需人工确认
 
-**Research date:** 2026-02-12  
+**Research date:** 2026-02-12
 **Valid until:** 30 days（主题系统稳定）

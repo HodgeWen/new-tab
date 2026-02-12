@@ -27,7 +27,13 @@
       <!-- 网址 -->
       <div class="form-item">
         <label>网址</label>
-        <n-input v-model="form.url" @change="handleUrlChange" placeholder="https://example.com" clearable :status="urlStatus">
+        <n-input
+          v-model="form.url"
+          @change="handleUrlChange"
+          placeholder="https://example.com"
+          clearable
+          :status="urlStatus"
+        >
           <template #prefix>
             <Globe :size="16" />
           </template>
@@ -201,7 +207,10 @@ function canApplyIconResult(requestId: number) {
 
 /** 从 hostname 中提取主域名名称，如 www.baidu.com.cn → baidu */
 function extractDomainName(hostname: string): string {
-  const cleanHostname = hostname.toLowerCase().replace(/\.+$/, '').replace(/^www\./, '')
+  const cleanHostname = hostname
+    .toLowerCase()
+    .replace(/\.+$/, '')
+    .replace(/^www\./, '')
   const parts = cleanHostname.split('.').filter(Boolean)
 
   if (parts.length === 0) return ''
@@ -442,8 +451,12 @@ defineExpose({ open })
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .remove-icon-btn {

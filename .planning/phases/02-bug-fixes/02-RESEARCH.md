@@ -20,19 +20,19 @@ No CONTEXT.md exists for this phase — no locked decisions, discretion areas, o
 
 ### Core
 
-| Library | Version | Purpose | Why Standard |
-|---------|---------|---------|--------------|
-| Vue | ^3.5.x | UI framework | Project standard; use `import { ... } from 'vue'` for Vue APIs |
-| WXT | ^0.20.13 | Extension framework | Project standard; `#imports` only available when WXT build runs |
-| Vite | ^5.x (via WXT) | Dev server, bundling | Build-in `server.proxy` for CORS bypass; no external proxy needed |
-| GridStack | ^12.4.2 | Grid layout | Event API: `grid.on('eventName', handler)`; remove no-op handlers |
+| Library   | Version        | Purpose              | Why Standard                                                      |
+| --------- | -------------- | -------------------- | ----------------------------------------------------------------- |
+| Vue       | ^3.5.x         | UI framework         | Project standard; use `import { ... } from 'vue'` for Vue APIs    |
+| WXT       | ^0.20.13       | Extension framework  | Project standard; `#imports` only available when WXT build runs   |
+| Vite      | ^5.x (via WXT) | Dev server, bundling | Build-in `server.proxy` for CORS bypass; no external proxy needed |
+| GridStack | ^12.4.2        | Grid layout          | Event API: `grid.on('eventName', handler)`; remove no-op handlers |
 
 ### Don't Change
 
-| Technology | Purpose | Notes |
-|------------|---------|-------|
-| Dexie | IndexedDB | Backup import writes to `db.gridItems`; keep existing API |
-| @cat-kit/core | throttle | Used in use-grid-stack; keep if other handlers use it |
+| Technology    | Purpose   | Notes                                                     |
+| ------------- | --------- | --------------------------------------------------------- |
+| Dexie         | IndexedDB | Backup import writes to `db.gridItems`; keep existing API |
+| @cat-kit/core | throttle  | Used in use-grid-stack; keep if other handlers use it     |
 
 **Installation:** No new packages required for this phase.
 
@@ -150,7 +150,7 @@ const API_BASE = isDevWeb
 
 Then replace hardcoded `https://picsum.photos` and `https://www.bing.com` in `fetchPicsumList`, `BingWallpaperProvider`, and `PicsumPhotosWallpaperProvider` with `API_BASE.picsum` and `API_BASE.bing`.
 
-**Picsum:** list at `{picsum}/v2/list`, image at `{picsum}/id/{id}/1920/1080`.  
+**Picsum:** list at `{picsum}/v2/list`, image at `{picsum}/id/{id}/1920/1080`.
 **Bing:** API at `{bing}/HPImageArchive.aspx`, image at `{bing}{image.url}`.
 
 **Source:** Vite server.proxy docs; `.planning/research/STACK.md`.
@@ -159,11 +159,11 @@ Then replace hardcoded `https://picsum.photos` and `https://www.bing.com` in `fe
 
 ## Don't Hand-Roll
 
-| Problem | Don't Build | Use Instead | Why |
-|---------|-------------|-------------|-----|
-| CORS bypass | Custom proxy server, CORS extension | Vite `server.proxy` | Built-in, same-origin in dev, no extra deps |
-| JSON parse safety | Manual regex validation | try/catch around JSON.parse | Covers all malformed JSON; schema validation is separate (BKUP-02) |
-| Dev vs extension detection | Hardcoded env vars | `import.meta.env.DEV` + `window.location.href` | Reliable, no build-time config needed |
+| Problem                    | Don't Build                         | Use Instead                                    | Why                                                                |
+| -------------------------- | ----------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------ |
+| CORS bypass                | Custom proxy server, CORS extension | Vite `server.proxy`                            | Built-in, same-origin in dev, no extra deps                        |
+| JSON parse safety          | Manual regex validation             | try/catch around JSON.parse                    | Covers all malformed JSON; schema validation is separate (BKUP-02) |
+| Dev vs extension detection | Hardcoded env vars                  | `import.meta.env.DEV` + `window.location.href` | Reliable, no build-time config needed                              |
 
 ---
 
@@ -225,15 +225,15 @@ export default defineConfig({
       '/api/picsum': {
         target: 'https://picsum.photos',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/picsum/, ''),
+        rewrite: (path) => path.replace(/^\/api\/picsum/, '')
       },
       '/api/bing': {
         target: 'https://www.bing.com',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/bing/, ''),
-      },
-    },
-  },
+        rewrite: (path) => path.replace(/^\/api\/bing/, '')
+      }
+    }
+  }
 })
 ```
 
@@ -258,12 +258,13 @@ try {
 
 ## State of the Art
 
-| Old Approach | Current Approach | When Changed | Impact |
-|--------------|------------------|--------------|--------|
-| CORS extension / third-party proxy | Vite server.proxy | Vite 2.x | No extra tools; dev-only |
-| #imports for Vue in WXT | Explicit `from 'vue'` when dev:web | Manual | Cross-mode compatibility |
+| Old Approach                       | Current Approach                   | When Changed | Impact                   |
+| ---------------------------------- | ---------------------------------- | ------------ | ------------------------ |
+| CORS extension / third-party proxy | Vite server.proxy                  | Vite 2.x     | No extra tools; dev-only |
+| #imports for Vue in WXT            | Explicit `from 'vue'` when dev:web | Manual       | Cross-mode compatibility |
 
 **Deprecated/outdated:**
+
 - `#imports` for Vue APIs in dual-mode (WXT + standalone Vite) projects — use `'vue'` imports.
 
 ---
@@ -303,9 +304,10 @@ try {
 ## Metadata
 
 **Confidence breakdown:**
+
 - Standard stack: HIGH — project stack and versions confirmed
 - Architecture: HIGH — patterns from official docs and project research
 - Pitfalls: HIGH — based on codebase and common proxy/CORS issues
 
-**Research date:** 2025-02-12  
+**Research date:** 2025-02-12
 **Valid until:** ~30 days (stable tooling)
