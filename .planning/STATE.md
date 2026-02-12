@@ -9,17 +9,17 @@ See: .planning/PROJECT.md (updated 2025-02-12)
 
 ## Current Position
 
-Phase: 5 of 6 (Backup Flow UI Wiring) — In progress
-Plan: 1/2 complete
-Status: Phase 5 Plan 01 complete; Plan 02 (import UI) pending
-Last activity: 2026-02-12 — Phase 5 Plan 01 execution complete
+Phase: 5 of 6 (Backup Flow UI Wiring) — Complete
+Plan: 2/2 complete
+Status: Phase 5 complete; 05-02-SUMMARY.md created
+Last activity: 2026-02-12 — Phase 5 Plan 02 execution complete
 
-Progress: [████████░░] ~83% (5/6 phases, 9/10 plans)
+Progress: [█████████░] ~92% (5/6 phases, 10/11 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
+- Total plans completed: 10
 - Average duration: ~3.7 min
 - Total execution time: ~30 min
 
@@ -31,9 +31,9 @@ Progress: [████████░░] ~83% (5/6 phases, 9/10 plans)
 | 02-bug-fixes | 3 | ~11 min | ~3.7 min |
 | 03-backup-data-integrity | 2 | ~5 min | ~2.5 min |
 | 04-ui-polish | 1 | ~2 min | ~2 min |
-| 05-backup-flow-ui-wiring | 1 | ~3 min | ~3 min |
+| 05-backup-flow-ui-wiring | 2 | ~8 min | ~4 min |
 
-**Recent Trend:** Phase 5 Plan 01 complete; Plan 02 pending
+**Recent Trend:** Phase 5 complete; 05-02 import UI + deviation fixes
 
 ## Accumulated Context
 
@@ -48,6 +48,7 @@ Progress: [████████░░] ~83% (5/6 phases, 9/10 plans)
 - Schema uses .passthrough() for backward compat with legacy backups
 - Backup functions are currently data-layer complete and not yet wired to UI triggers
 - Export button uses variant=ghost (NButton has no secondary variant)
+- reloadWidgets exposed from use-grid-stack via gridLayout ref for post-import sync
 
 ### Pending Todos
 
@@ -60,5 +61,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-12
-Stopped at: Phase 5 Plan 01 complete; 05-01-SUMMARY.md created
+Stopped at: Phase 5 complete; 05-02-SUMMARY.md created
 Resume file: None

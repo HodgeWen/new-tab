@@ -14,7 +14,7 @@ Prepare the New Tab extension for Chrome Web Store release: address policy compl
 - [x] **Phase 2: Bug Fixes** - #imports fix, JSON parse safety, dead code removal, CORS proxy ✓ (2026-02-12)
 - [x] **Phase 3: Backup & Data Integrity** - Export includes grid order; import validation ✓ (2026-02-12)
 - [x] **Phase 4: UI Polish** - CSS variables; WebDAV "即将推出" marking ✓ (2026-02-12)
-- [ ] **Phase 5: Backup Flow UI Wiring** - Add export/import UI entry points; close BKUP flow gap
+- [x] **Phase 5: Backup Flow UI Wiring** - Add export/import UI entry points; close BKUP flow gap ✓ (2026-02-12)
 - [ ] **Phase 6: Design Token Cleanup (Optional)** - Replace remaining hardcoded rgba tokens in shared components
 
 ## Phase Details
@@ -85,8 +85,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 05-01-PLAN.md — Add backup export UI (export button wired to exportBackupData)
-- [ ] 05-02-PLAN.md — Add import UI with NUpload, success/error feedback, E2E verify
+- [x] 05-01-PLAN.md — Add backup export UI (export button wired to exportBackupData) ✓ (2026-02-12)
+- [x] 05-02-PLAN.md — Add import UI with NUpload, success/error feedback, E2E verify ✓ (2026-02-12)
 
 ### Phase 6: Design Token Cleanup (Optional)
 **Goal**: Remove remaining hardcoded rgba values in shared components to improve design-system consistency
@@ -114,5 +114,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. Bug Fixes | 3/3 | ✓ Complete | 2026-02-12 |
 | 3. Backup & Data Integrity | 2/2 | ✓ Complete | 2026-02-12 |
 | 4. UI Polish | 1/1 | ✓ Complete | 2026-02-12 |
-| 5. Backup Flow UI Wiring | 0/2 | Not started | - |
+| 5. Backup Flow UI Wiring | 2/2 | ✓ Complete | 2026-02-12 |
 | 6. Design Token Cleanup (Optional) | 0/1 | Not started | - |
