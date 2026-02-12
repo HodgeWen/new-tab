@@ -14,6 +14,8 @@ Prepare the New Tab extension for Chrome Web Store release: address policy compl
 - [x] **Phase 2: Bug Fixes** - #imports fix, JSON parse safety, dead code removal, CORS proxy ✓ (2026-02-12)
 - [x] **Phase 3: Backup & Data Integrity** - Export includes grid order; import validation ✓ (2026-02-12)
 - [x] **Phase 4: UI Polish** - CSS variables; WebDAV "即将推出" marking ✓ (2026-02-12)
+- [ ] **Phase 5: Backup Flow UI Wiring** - Add export/import UI entry points; close BKUP flow gap
+- [ ] **Phase 6: Design Token Cleanup (Optional)** - Replace remaining hardcoded rgba tokens in shared components
 
 ## Phase Details
 
@@ -71,11 +73,40 @@ Plans:
 Plans:
 - [x] 04-01: Replace hardcoded styles; mark WebDAV as coming soon ✓ (2026-02-12)
 
+### Phase 5: Backup Flow UI Wiring
+**Goal**: Complete end-user backup export/import flow by wiring existing data-layer logic into UI
+**Depends on**: Phase 3 (uses existing `utils/backup.ts` data-layer implementation)
+**Requirements**: BKUP-01, BKUP-02
+**Gap Closure**: Closes audit gaps from `.planning/v1.1.0-MILESTONE-AUDIT.md` (requirements + integration + flow)
+**Success Criteria** (what must be TRUE):
+  1. User can trigger backup export from UI and download JSON with `gridItems` + `gridOrder`
+  2. User can import backup JSON from UI; invalid/malformed data shows clear error message without DB corruption
+  3. UI is wired to `importBackupData` result object (`success`, `error`) for user feedback
+**Plans**: 2 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — Add backup export/import UI entry points and file selection flow (BKUP-01, BKUP-02)
+- [ ] 05-02-PLAN.md — Wire import error feedback + verify E2E backup flow closure
+
+### Phase 6: Design Token Cleanup (Optional)
+**Goal**: Remove remaining hardcoded rgba values in shared components to improve design-system consistency
+**Depends on**: Phase 4
+**Requirements**: Tech debt cleanup (from milestone audit)
+**Gap Closure**: Addresses non-critical tech debt from `.planning/v1.1.0-MILESTONE-AUDIT.md`
+**Success Criteria** (what must be TRUE):
+  1. `components/input/input.vue` no longer uses hardcoded rgba tokens
+  2. `components/context-menu/context-menu.vue` no longer uses hardcoded rgba tokens
+  3. Components continue to render correctly across theme variants
+**Plans**: 1 plan
+
+Plans:
+- [ ] 06-01-PLAN.md — Replace hardcoded rgba with CSS variables; run visual regression checks
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4
-(Phases 2–4 can be parallelized if desired; Phase 1 is highest priority.)
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
+(Phases 2–4 can be parallelized if desired; Phase 5 closes blocking milestone gaps; Phase 6 is optional cleanup.)
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -83,3 +114,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 2. Bug Fixes | 3/3 | ✓ Complete | 2026-02-12 |
 | 3. Backup & Data Integrity | 2/2 | ✓ Complete | 2026-02-12 |
 | 4. UI Polish | 1/1 | ✓ Complete | 2026-02-12 |
+| 5. Backup Flow UI Wiring | 0/2 | Not started | - |
+| 6. Design Token Cleanup (Optional) | 0/1 | Not started | - |
