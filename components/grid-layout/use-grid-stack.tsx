@@ -1,4 +1,3 @@
-import { throttle } from '@cat-kit/core'
 import { GridStack, type GridStackNode, type GridStackWidget } from 'gridstack'
 import { nanoid } from 'nanoid'
 import { onBeforeUnmount, onMounted, useTemplateRef, render, type VNode, watch } from 'vue'
@@ -115,11 +114,6 @@ export function useGridStack(ref: string) {
       const ids = nodes.map((node) => node.id).filter(Boolean) as string[]
       updateGridOrder(ids)
     })
-
-    grid.on(
-      'resizecontent',
-      throttle((ev, items) => {}, 300)
-    )
 
     // 等待数据就绪后一次性加载 widgets
     await gridItemsReady
