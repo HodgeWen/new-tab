@@ -85,8 +85,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 05-01-PLAN.md — Add backup export/import UI entry points and file selection flow (BKUP-01, BKUP-02)
-- [ ] 05-02-PLAN.md — Wire import error feedback + verify E2E backup flow closure
+- [ ] 05-01-PLAN.md — Add backup export UI (export button wired to exportBackupData)
+- [ ] 05-02-PLAN.md — Add import UI with NUpload, success/error feedback, E2E verify
 
 ### Phase 6: Design Token Cleanup (Optional)
 **Goal**: Remove remaining hardcoded rgba values in shared components to improve design-system consistency
