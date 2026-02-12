@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2025-02-12)
 
 ## Current Position
 
-Phase: 1 of 4 (Policy Compliance) — ✓ COMPLETE
-Plan: 2/2 complete
-Status: Phase 1 verified and complete
-Last activity: 2026-02-12 — Phase 1 execution + verification passed
+Phase: 2 of 4 (Bug Fixes) — In progress
+Plan: 02-02 complete (02-01, 02-03 pending)
+Status: BUGF-02, BUGF-03 resolved
+Last activity: 2026-02-12 — 02-02 plan execution complete
 
 Progress: [██░░░░░░░░] 25% (1/4 phases)
 
@@ -38,6 +38,7 @@ Progress: [██░░░░░░░░] 25% (1/4 phases)
 - v1 不实现 WebDAV 同步 — 保留 UI 占位，标记"即将推出"
 - 壁纸 CORS 用 Vite proxy 解决 — 仅 dev:web 模式
 - 存储保持双轨 — 本次不迁移，BKUP-01 从 localStorage 读取 grid order 导出
+- JSON.parse try/catch 不做 schema 校验 — 留给 Phase 3 BKUP-02
 
 ### Pending Todos
 
@@ -50,5 +51,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-12
-Stopped at: Phase 1 execution complete, verified, roadmap updated
+Stopped at: Completed 02-02-PLAN.md (BUGF-02, BUGF-03)
 Resume file: None

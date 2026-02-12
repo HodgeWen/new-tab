@@ -43,7 +43,7 @@ Plans:
 
 Plans:
 - [ ] 02-01-PLAN.md — Verify #imports fix; commit if needed (BUGF-01)
-- [ ] 02-02-PLAN.md — JSON.parse try/catch + remove resizecontent handler (BUGF-02, BUGF-03)
+- [x] 02-02-PLAN.md — JSON.parse try/catch + remove resizecontent handler (BUGF-02, BUGF-03) ✓ (2026-02-12)
 - [ ] 02-03-PLAN.md — Vite proxy for Bing/Picsum APIs (BUGF-04)
 
 ### Phase 3: Backup & Data Integrity
