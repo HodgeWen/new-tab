@@ -10,7 +10,7 @@ Prepare the New Tab extension for Chrome Web Store release: address policy compl
 - Integer phases (1, 2, 3, 4): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
-- [ ] **Phase 1: Policy Compliance** - Search bar uses chrome.search API; URL scheme validation
+- [x] **Phase 1: Policy Compliance** - Search bar uses chrome.search API; URL scheme validation ✓ (2026-02-12)
 - [ ] **Phase 2: Bug Fixes** - #imports fix, JSON parse safety, dead code removal, CORS proxy
 - [ ] **Phase 3: Backup & Data Integrity** - Export includes grid order; import validation
 - [ ] **Phase 4: UI Polish** - CSS variables; WebDAV "即将推出" marking
@@ -27,8 +27,8 @@ Prepare the New Tab extension for Chrome Web Store release: address policy compl
 **Plans**: 2 plans
 
 Plans:
-- [ ] 01-01: Implement chrome.search.query() for search bar
-- [ ] 01-02: Add URL scheme validation for href attributes (http/https only)
+- [x] 01-01: Implement chrome.search.query() for search bar
+- [x] 01-02: Add URL scheme validation for href attributes (http/https only)
 
 ### Phase 2: Bug Fixes
 **Goal**: All known bugs resolved; dev tooling works in dev:web mode
@@ -79,7 +79,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Policy Compliance | 0/2 | Not started | - |
+| 1. Policy Compliance | 2/2 | ✓ Complete | 2026-02-12 |
 | 2. Bug Fixes | 0/3 | Not started | - |
 | 3. Backup & Data Integrity | 0/2 | Not started | - |
 | 4. UI Polish | 0/1 | Not started | - |
