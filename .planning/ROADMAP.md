@@ -39,12 +39,12 @@ Plans:
   2. Importing malformed JSON backup shows error instead of crashing
   3. Grid resize operations work without errors (no dead handler)
   4. Wallpaper loads in dev:web mode without CORS errors
-**Plans**: 2–3 plans
+**Plans**: 3 plans
 
 Plans:
-- [ ] 02-01: Fix #imports in setting-modal (BUGF-01; may already be fixed, commit)
-- [ ] 02-02: Try/catch JSON.parse and dead code cleanup (BUGF-02, BUGF-03)
-- [ ] 02-03: Vite proxy for Bing/Picsum APIs (BUGF-04)
+- [ ] 02-01-PLAN.md — Verify #imports fix; commit if needed (BUGF-01)
+- [ ] 02-02-PLAN.md — JSON.parse try/catch + remove resizecontent handler (BUGF-02, BUGF-03)
+- [ ] 02-03-PLAN.md — Vite proxy for Bing/Picsum APIs (BUGF-04)
 
 ### Phase 3: Backup & Data Integrity
 **Goal**: Backup export/import complete and reliable; restore preserves layout
