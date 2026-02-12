@@ -1,5 +1,6 @@
 import type { BackupData } from '@/types/db'
 
+import { gridOrder } from '@/store/grid-order'
 import { db } from './db'
 
 function saveFile(blob: Blob) {
@@ -16,7 +17,7 @@ function saveFile(blob: Blob) {
  */
 export async function exportBackupData(): Promise<void> {
   const gridItems = await db.gridItems.toArray()
-  const data = { gridItems }
+  const data = { gridItems, gridOrder: gridOrder.value }
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
 
   saveFile(blob)
