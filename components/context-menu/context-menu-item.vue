@@ -111,7 +111,7 @@ const handleClick = () => {
   margin-left: 4px;
   min-width: 160px;
   padding: 4px;
-  background: rgba(30, 30, 30, 0.95);
+  background: var(--glass-bg-elevated);
   backdrop-filter: blur(var(--glass-blur-strong));
   -webkit-backdrop-filter: blur(var(--glass-blur-strong));
   border: 1px solid var(--glass-border);

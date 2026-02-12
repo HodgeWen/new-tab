@@ -128,7 +128,7 @@ defineExpose({
 .input-wrapper.disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--glass-bg-disabled);
 }
 
 .input-wrapper.status-error {
@@ -186,7 +186,7 @@ defineExpose({
 }
 
 .clear-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--glass-bg-hover);
   color: var(--text-primary);
 }
 </style>
