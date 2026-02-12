@@ -77,7 +77,7 @@ import { useModal } from '@/hooks/use-modal'
 import { setting } from '@/store/setting'
 import { getWallpaperProvider, wallpaperProviders } from '@/utils/wallpaper-providers'
 import type { Setting } from '@/types/common'
-import { computed } from '#imports'
+import { computed } from 'vue'
 
 defineOptions({ name: 'NSettingModal' })
 
