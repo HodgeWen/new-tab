@@ -59,21 +59,21 @@ Deferred to future release. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PLCY-01 | — | Pending |
-| PLCY-02 | — | Pending |
-| BUGF-01 | — | Pending |
-| BUGF-02 | — | Pending |
-| BUGF-03 | — | Pending |
-| BUGF-04 | — | Pending |
-| BKUP-01 | — | Pending |
-| BKUP-02 | — | Pending |
-| UIPL-01 | — | Pending |
-| UIPL-02 | — | Pending |
+| PLCY-01 | Phase 1 | Pending |
+| PLCY-02 | Phase 1 | Pending |
+| BUGF-01 | Phase 2 | Pending |
+| BUGF-02 | Phase 2 | Pending |
+| BUGF-03 | Phase 2 | Pending |
+| BUGF-04 | Phase 2 | Pending |
+| BKUP-01 | Phase 3 | Pending |
+| BKUP-02 | Phase 3 | Pending |
+| UIPL-01 | Phase 4 | Pending |
+| UIPL-02 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 10 total
-- Mapped to phases: 0
-- Unmapped: 10 ⚠️
+- Mapped to phases: 10
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2025-02-12*
