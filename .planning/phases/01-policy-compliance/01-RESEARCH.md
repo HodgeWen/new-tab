@@ -20,21 +20,21 @@ Phase 1 addresses two policy requirements for Chrome Web Store NTP extensions: (
 
 ### Core
 
-| Library | Version | Purpose | Why Standard |
-|---------|---------|---------|--------------|
+| Library           | Version    | Purpose                                  | Why Standard                                 |
+| ----------------- | ---------- | ---------------------------------------- | -------------------------------------------- |
 | chrome.search API | Chrome 87+ | Execute search via user's default engine | Required by Chrome Web Store; no alternative |
-| URL constructor | Native | Parse and validate scheme | Built-in; no dependency needed |
+| URL constructor   | Native     | Parse and validate scheme                | Built-in; no dependency needed               |
 
 ### Supporting
 
-| Library | Version | Purpose | When to Use |
-|---------|---------|----------|-------------|
-| (none) | — | URL validation | Native `URL` + protocol check is sufficient; no lib needed |
+| Library | Version | Purpose        | When to Use                                                |
+| ------- | ------- | -------------- | ---------------------------------------------------------- |
+| (none)  | —       | URL validation | Native `URL` + protocol check is sufficient; no lib needed |
 
 ### Alternatives Considered
 
-| Instead of | Could Use | Tradeoff |
-|------------|-----------|----------|
+| Instead of                  | Could Use                   | Tradeoff                               |
+| --------------------------- | --------------------------- | -------------------------------------- |
 | Native URL + protocol check | url-sanitizer, validator.js | Native is sufficient; avoid extra deps |
 
 **Installation:** No new packages required.
@@ -71,11 +71,11 @@ utils/
 
 function handleSearch() {
   if (!query.value.trim()) return
-  
+
   if (typeof chrome !== 'undefined' && chrome.search?.query) {
     chrome.search.query({
       text: query.value.trim(),
-      disposition: 'CURRENT_TAB'  // or 'NEW_TAB'
+      disposition: 'CURRENT_TAB' // or 'NEW_TAB'
     })
   } else {
     // Fallback for dev:web (no extension context)
@@ -126,10 +126,10 @@ function normalizeAndValidate(urlString: string): string | null {
 
 ## Don't Hand-Roll
 
-| Problem | Don't Build | Use Instead | Why |
-|---------|-------------|--------------|-----|
-| Search execution | Manual redirect to Google/Bing | `chrome.search.query()` | Policy violation; ignores user preference |
-| URL scheme validation | Regex blacklist | `new URL()` + protocol allow-list | Blacklist misses edge cases; native URL is robust |
+| Problem               | Don't Build                    | Use Instead                       | Why                                               |
+| --------------------- | ------------------------------ | --------------------------------- | ------------------------------------------------- |
+| Search execution      | Manual redirect to Google/Bing | `chrome.search.query()`           | Policy violation; ignores user preference         |
+| URL scheme validation | Regex blacklist                | `new URL()` + protocol allow-list | Blacklist misses edge cases; native URL is robust |
 
 **Key insight:** Chrome Search API is the only compliant way to perform search from an NTP extension. Custom URL validation is trivial enough with native URL; no library needed.
 
@@ -198,7 +198,7 @@ function handleSearch() {
 ```typescript
 // site-modal.vue - use normalizeAndValidate for urlStatus and before handleSave
 
-const validatedUrl = normalizeAndValidate(form.url)  // null if invalid
+const validatedUrl = normalizeAndValidate(form.url) // null if invalid
 // urlStatus: 'error' when validatedUrl is null (and url non-empty)
 // handleSave: reject if validatedUrl is null
 ```
@@ -207,12 +207,13 @@ const validatedUrl = normalizeAndValidate(form.url)  // null if invalid
 
 ## State of the Art
 
-| Old Approach | Current Approach | When Changed | Impact |
-|--------------|------------------|---------------|--------|
-| Hardcoded Google search URL | chrome.search.query() | Policy since 2017+ | NTP extensions must use Search API |
-| No URL validation | Allow-list http/https | Security best practice | Prevents XSS via javascript: href |
+| Old Approach                | Current Approach      | When Changed           | Impact                             |
+| --------------------------- | --------------------- | ---------------------- | ---------------------------------- |
+| Hardcoded Google search URL | chrome.search.query() | Policy since 2017+     | NTP extensions must use Search API |
+| No URL validation           | Allow-list http/https | Security best practice | Prevents XSS via javascript: href  |
 
 **Deprecated/outdated:**
+
 - Direct `window.location` to fixed search engine: Violates policy; use chrome.search.
 
 ---
@@ -253,6 +254,7 @@ const validatedUrl = normalizeAndValidate(form.url)  // null if invalid
 ## Metadata
 
 **Confidence breakdown:**
+
 - Standard stack: HIGH — Official Chrome docs; no third-party stack
 - Architecture: HIGH — Simple two-file changes; patterns from existing codebase
 - Pitfalls: HIGH — Documented in Chrome policy and codebase CONCERNS.md
