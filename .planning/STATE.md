@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2025-02-12)
 ## Current Position
 
 Phase: 2 of 4 (Bug Fixes) — In progress
-Plan: 02-02 complete (02-01, 02-03 pending)
-Status: BUGF-02, BUGF-03 resolved
-Last activity: 2026-02-12 — 02-02 plan execution complete
+Plan: 02-01, 02-02 complete (02-03 pending)
+Status: BUGF-01, BUGF-02, BUGF-03 resolved
+Last activity: 2026-02-12 — 02-01 plan execution (BUGF-01 verified)
 
 Progress: [██░░░░░░░░] 25% (1/4 phases)
 
@@ -39,6 +39,7 @@ Progress: [██░░░░░░░░] 25% (1/4 phases)
 - 壁纸 CORS 用 Vite proxy 解决 — 仅 dev:web 模式
 - 存储保持双轨 — 本次不迁移，BKUP-01 从 localStorage 读取 grid order 导出
 - JSON.parse try/catch 不做 schema 校验 — 留给 Phase 3 BKUP-02
+- BUGF-01 fix pre-existing: setting-modal already uses `from 'vue'` not #imports
 
 ### Pending Todos
 
@@ -51,5 +52,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-12
-Stopped at: Completed 02-02-PLAN.md (BUGF-02, BUGF-03)
+Stopped at: Completed 02-01-PLAN.md (BUGF-01 verified)
 Resume file: None
