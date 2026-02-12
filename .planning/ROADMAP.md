@@ -56,8 +56,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 03-01: Include grid order in backup export (read from localStorage)
-- [ ] 03-02: Add schema validation on import (reject invalid data)
+- [ ] 03-01-PLAN.md — Include grid order in backup export (read from store); restore on import
+- [ ] 03-02-PLAN.md — Add Zod schema validation on import (reject invalid data before DB write)
 
 ### Phase 4: UI Polish
 **Goal**: Settings modal and WebDAV area follow design system
