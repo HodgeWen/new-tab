@@ -8,5 +8,20 @@ export default defineConfig({
   plugins: [vue(), vueJsx()],
   root: 'entrypoints/newtab',
   resolve: { alias: { '@': resolve(__dirname), '~': resolve(__dirname) } },
-  server: { port: 5173, open: false }
+  server: {
+    port: 5173,
+    open: false,
+    proxy: {
+      '/api/picsum': {
+        target: 'https://picsum.photos',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/picsum/, '')
+      },
+      '/api/bing': {
+        target: 'https://www.bing.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/bing/, '')
+      }
+    }
+  }
 })
