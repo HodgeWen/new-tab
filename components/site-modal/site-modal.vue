@@ -122,17 +122,17 @@ async function handleUrlChange(rawUrl: string | number) {
     return
   }
 
+  const validatedUrl = normalizeAndValidate(inputUrl)
+  if (!validatedUrl) return
+
   const hasOriginalTitle = form.title.trim() !== ''
   const hasOriginalIcon = form.icon.trim() !== ''
 
-  const normalizedUrl = normalizeUrl(inputUrl)
-  if (!normalizedUrl) return
-
-  if (form.url !== normalizedUrl) {
-    form.url = normalizedUrl
+  if (form.url !== validatedUrl) {
+    form.url = validatedUrl
   }
 
-  const parsedUrl = parseUrl(normalizedUrl)
+  const parsedUrl = parseUrl(validatedUrl)
   if (!parsedUrl) return
 
   if (!hasOriginalTitle) {
@@ -348,19 +348,24 @@ function colorFromSeed(seed: string): string {
 function handleSave() {
   if (!canSave.value) return
 
+  const validatedUrl = normalizeAndValidate(form.url.trim())
+  if (!validatedUrl) return
+
+  const payload = { ...form, url: validatedUrl }
+
   if (isEdit.value) {
     // 编辑模式：先更新 store 数据，再重新渲染
-    updateGridItem({ ...form, id: form.id! } as SiteItemUI)
+    updateGridItem({ ...payload, id: form.id! } as SiteItemUI)
     components.gridLayout?.updateWidget(form.id!)
   } else {
     // 创建模式
     if (form.pid) {
       // 如果是在文件夹内创建
       const id = nanoid(10)
-      addGridItem({ ...form, id } as SiteItemUI)
+      addGridItem({ ...payload, id } as SiteItemUI)
     } else {
       // 顶级网格创建：通过 GridStack 添加
-      components.gridLayout?.addWidget({ ...form })
+      components.gridLayout?.addWidget({ ...payload })
     }
   }
 
