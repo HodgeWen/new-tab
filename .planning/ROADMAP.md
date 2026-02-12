@@ -15,7 +15,7 @@ Prepare the New Tab extension for Chrome Web Store release: address policy compl
 - [x] **Phase 3: Backup & Data Integrity** - Export includes grid order; import validation ✓ (2026-02-12)
 - [x] **Phase 4: UI Polish** - CSS variables; WebDAV "即将推出" marking ✓ (2026-02-12)
 - [x] **Phase 5: Backup Flow UI Wiring** - Add export/import UI entry points; close BKUP flow gap ✓ (2026-02-12)
-- [ ] **Phase 6: Design Token Cleanup (Optional)** - Replace remaining hardcoded rgba tokens in shared components
+- [x] **Phase 6: Design Token Cleanup (Optional)** - Replace remaining hardcoded rgba tokens in shared components ✓ (2026-02-12)
 
 ## Phase Details
 
@@ -100,7 +100,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 06-01-PLAN.md — Replace hardcoded rgba with CSS variables; run visual regression checks
+- [x] 06-01-PLAN.md — Replace hardcoded rgba with CSS variables; run visual regression checks ✓ (2026-02-12)
 
 ## Progress
 
@@ -115,4 +115,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 3. Backup & Data Integrity | 2/2 | ✓ Complete | 2026-02-12 |
 | 4. UI Polish | 1/1 | ✓ Complete | 2026-02-12 |
 | 5. Backup Flow UI Wiring | 2/2 | ✓ Complete | 2026-02-12 |
-| 6. Design Token Cleanup (Optional) | 0/1 | Not started | - |
+| 6. Design Token Cleanup (Optional) | 1/1 | ✓ Complete | 2026-02-12 |
