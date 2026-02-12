@@ -142,7 +142,7 @@ defineExpose({ open })
   flex-direction: column;
   gap: var(--spacing-md);
   padding: var(--spacing-md);
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--glass-bg);
   border-radius: var(--radius-md);
   border: 1px solid var(--glass-border);
 }
@@ -152,7 +152,7 @@ defineExpose({ open })
   flex-direction: column;
   gap: var(--spacing-md);
   padding: var(--spacing-md);
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--glass-bg);
   border-radius: var(--radius-md);
   border: 1px solid var(--glass-border);
 }
