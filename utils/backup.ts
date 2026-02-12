@@ -1,6 +1,7 @@
 import type { BackupData } from '@/types/db'
 
-import { gridOrder } from '@/store/grid-order'
+import { gridOrder, updateGridOrder } from '@/store/grid-order'
+import { loadGridItems } from '@/store/grid-items'
 import { db } from './db'
 
 function saveFile(blob: Blob) {
@@ -42,6 +43,12 @@ export async function importBackupData(file: File): Promise<boolean> {
       await db.gridItems.clear()
       await db.gridItems.bulkAdd(data.gridItems)
     }
+    if (data.gridOrder?.length) {
+      updateGridOrder(data.gridOrder)
+    } else if (data.gridItems?.length) {
+      updateGridOrder(data.gridItems.map((i) => i.id))
+    }
+    await loadGridItems()
   } catch (error) {
     console.error('[备份]: 失败', error)
     return false

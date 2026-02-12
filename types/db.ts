@@ -23,4 +23,6 @@ export interface WallpaperRecord {
 export interface BackupData {
   gridItems: GridItemRecord[]
   wallpapers: WallpaperRecord[]
+  /** Optional: grid order (IDs); from localStorage, preserved for restore */
+  gridOrder?: string[]
 }
