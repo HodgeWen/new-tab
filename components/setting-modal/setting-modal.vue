@@ -39,21 +39,21 @@
       <!-- WebDAV -->
       <div class="section-header">
         <div class="section-title">WebDAV 同步</div>
-        <div class="section-desc">配置 WebDAV 以同步你的数据</div>
+        <div class="section-desc">即将推出，敬请期待</div>
       </div>
 
       <div class="webdav-settings">
         <div class="form-item">
           <label>服务器地址</label>
-          <n-input v-model="formData.webdav.url" placeholder="https://dav.example.com" />
+          <n-input v-model="formData.webdav.url" placeholder="https://dav.example.com" disabled />
         </div>
         <div class="form-item">
           <label>用户名</label>
-          <n-input v-model="formData.webdav.username" placeholder="Username" />
+          <n-input v-model="formData.webdav.username" placeholder="Username" disabled />
         </div>
         <div class="form-item">
           <label>密码</label>
-          <n-input type="password" v-model="formData.webdav.password" placeholder="Password" />
+          <n-input type="password" v-model="formData.webdav.password" placeholder="Password" disabled />
         </div>
       </div>
     </div>
