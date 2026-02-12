@@ -1,16 +1,18 @@
 <script setup lang="ts">
 defineOptions({ name: 'NUpload' })
 
-const { accept = 'image/*', sizeLimit } = defineProps<{
+const { accept = 'image/*', sizeLimit, disabled = false } = defineProps<{
   accept?: string
   multiple?: boolean
   /** 文件大小上限（单位：字节） */
   sizeLimit?: number
+  disabled?: boolean
 }>()
 
 const emit = defineEmits<{ pick: [file: File] }>()
 
 function handleChange(event: Event) {
+  if (disabled) return
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
   if (!file) return
@@ -29,7 +31,7 @@ function handleChange(event: Event) {
 </script>
 
 <template>
-  <label>
+  <label :class="{ disabled }">
     <slot />
     <input
       type="file"
@@ -49,5 +51,11 @@ function handleChange(event: Event) {
   height: 0;
   opacity: 0;
   pointer-events: none;
+}
+
+label.disabled {
+  pointer-events: none;
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>

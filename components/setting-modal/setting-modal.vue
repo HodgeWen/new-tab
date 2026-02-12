@@ -44,6 +44,19 @@
 
       <div class="backup-actions">
         <n-button variant="ghost" @click="handleExport">导出备份</n-button>
+        <n-upload
+          accept=".json,application/json"
+          :disabled="importing"
+          @pick="handleImport"
+        >
+          <n-button variant="ghost" :loading="importing">选择备份文件</n-button>
+        </n-upload>
+      </div>
+      <div
+        v-if="importResult"
+        :class="importResult.success ? 'import-success' : 'import-error'"
+      >
+        {{ importResult.success ? '导入成功' : importResult.error }}
       </div>
 
       <!-- WebDAV -->
@@ -86,9 +99,11 @@ import { NSelect } from '@/components/select'
 import { useModal } from '@/hooks/use-modal'
 import { setting } from '@/store/setting'
 import { getWallpaperProvider, wallpaperProviders } from '@/utils/wallpaper-providers'
-import { exportBackupData } from '@/utils/backup'
+import { exportBackupData, importBackupData } from '@/utils/backup'
+import type { ImportBackupResult } from '@/utils/backup'
 import type { Setting } from '@/types/common'
-import { computed } from 'vue'
+import { NUpload } from '@/components/upload'
+import { computed, ref } from 'vue'
 
 defineOptions({ name: 'NSettingModal' })
 
@@ -134,6 +149,19 @@ async function handleExport() {
   await exportBackupData()
 }
 
+const importResult = ref<ImportBackupResult | null>(null)
+const importing = ref(false)
+
+async function handleImport(file: File) {
+  importResult.value = null
+  importing.value = true
+  try {
+    importResult.value = await importBackupData(file)
+  } finally {
+    importing.value = false
+  }
+}
+
 defineExpose({ open })
 </script>
 
@@ -164,12 +192,23 @@ defineExpose({ open })
 
 .backup-actions {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: var(--spacing-md);
   padding: var(--spacing-md);
   background: var(--glass-bg);
   border-radius: var(--radius-md);
   border: 1px solid var(--glass-border);
+}
+
+.import-success {
+  color: var(--color-success);
+  font-size: var(--text-caption);
+}
+
+.import-error {
+  color: var(--color-danger);
+  font-size: var(--text-caption);
 }
 
 .webdav-settings {
