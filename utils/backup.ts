@@ -29,11 +29,17 @@ export async function exportBackupData(): Promise<void> {
  */
 export async function importBackupData(file: File): Promise<boolean> {
   const text = await file.text()
-  const { gridItems } = JSON.parse(text) as BackupData
+  let data: BackupData
   try {
-    if (gridItems) {
+    data = JSON.parse(text) as BackupData
+  } catch {
+    console.error('[备份]: JSON 解析失败', text.slice(0, 100))
+    return false
+  }
+  try {
+    if (data.gridItems) {
       await db.gridItems.clear()
-      await db.gridItems.bulkAdd(gridItems)
+      await db.gridItems.bulkAdd(data.gridItems)
     }
   } catch (error) {
     console.error('[备份]: 失败', error)
