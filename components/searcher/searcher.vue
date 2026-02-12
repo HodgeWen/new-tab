@@ -9,8 +9,13 @@ const query = ref('')
 
 function handleSearch() {
   if (!query.value.trim()) return
-  // 使用谷歌搜索
-  window.location.href = `https://www.google.com/search?q=${encodeURIComponent(query.value)}`
+  const text = query.value.trim()
+  if (typeof chrome !== 'undefined' && chrome.search?.query) {
+    chrome.search.query({ text, disposition: 'CURRENT_TAB' })
+  } else {
+    // dev:web fallback (no extension context)
+    window.location.href = `https://www.google.com/search?q=${encodeURIComponent(text)}`
+  }
 }
 </script>
 
