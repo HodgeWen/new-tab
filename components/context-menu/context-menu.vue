@@ -111,7 +111,7 @@ onUnmounted(() => {
 }
 
 .context-menu-content {
-  padding: 4px;
+  padding: var(--spacing-xs);
   background: var(--glass-bg-elevated);
   backdrop-filter: blur(var(--glass-blur-strong));
   -webkit-backdrop-filter: blur(var(--glass-blur-strong));

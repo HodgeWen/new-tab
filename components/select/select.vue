@@ -105,7 +105,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  height: 40px;
+  height: var(--size-input-height);
   padding: 0 var(--spacing-md);
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
@@ -165,7 +165,7 @@ onUnmounted(() => {
   width: 100%;
   max-height: 200px;
   overflow-y: auto;
-  background: rgba(30, 30, 30, 0.95); /* Better readability for dropdown */
+  background: var(--glass-bg-elevated);
   backdrop-filter: blur(var(--glass-blur-strong));
   -webkit-backdrop-filter: blur(var(--glass-blur-strong));
   border: 1px solid var(--glass-border);
@@ -173,6 +173,7 @@ onUnmounted(() => {
   box-shadow: var(--glass-shadow-elevated);
   z-index: 100;
   padding: var(--spacing-xs);
+  --select-scrollbar-thumb: rgba(255, 255, 255, 0.2);
 }
 
 /* Scrollbar */
@@ -180,7 +181,7 @@ onUnmounted(() => {
   width: 6px;
 }
 .options-dropdown::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--select-scrollbar-thumb);
   border-radius: 3px;
 }
 
@@ -194,7 +195,7 @@ onUnmounted(() => {
 }
 
 .option-item:hover:not(.disabled) {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--glass-bg-subtle);
   color: var(--text-primary);
 }
 

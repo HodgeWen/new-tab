@@ -77,7 +77,7 @@ const handleClick = () => {
 
 .item-content:hover {
   background: var(--color-primary);
-  color: #ffffff;
+  color: var(--color-on-primary);
 }
 
 .item-content:hover .icon,
@@ -86,8 +86,8 @@ const handleClick = () => {
 }
 
 .icon {
-  width: 16px;
-  height: 16px;
+  width: var(--size-icon-sm);
+  height: var(--size-icon-sm);
   margin-right: var(--spacing-sm);
   opacity: 0.8;
 }
@@ -108,9 +108,9 @@ const handleClick = () => {
   position: absolute;
   top: 0;
   left: 100%;
-  margin-left: 4px;
+  margin-left: var(--spacing-xs);
   min-width: 160px;
-  padding: 4px;
+  padding: var(--spacing-xs);
   background: var(--glass-bg-elevated);
   backdrop-filter: blur(var(--glass-blur-strong));
   -webkit-backdrop-filter: blur(var(--glass-blur-strong));
