@@ -11,7 +11,7 @@
 
 - [x] **VSTL-01**: 所有组件中的硬编码 rgba 颜色值替换为 CSS 变量（Modal overlay、ContextMenuItem 等）
 - [x] **VSTL-02**: 所有组件中的硬编码像素间距（gap/padding/margin）替换为 --spacing-* CSS 变量
-- [ ] **VSTL-03**: 所有组件中的硬编码字号替换为 --text-* CSS 变量或新增适当 token
+- [x] **VSTL-03**: 所有组件中的硬编码字号替换为 --text-* CSS 变量或新增适当 token
 - [x] **VSTL-04**: 新增必要的 CSS 设计 token（如 --size-icon-sm/md/lg）覆盖常见尺寸场景
 - [x] **VSTL-05**: 清理 grid-layout.vue 中注释掉的死样式代码
 
@@ -24,8 +24,8 @@
 
 ### 文件夹 (Folder)
 
-- [ ] **FLDR-01**: folder-item.vue 中所有硬编码样式值（gap/padding/font-size）替换为 CSS 变量
-- [ ] **FLDR-02**: folder-view.vue 中硬编码尺寸（80px/60px/10px）替换为 CSS 变量或提取为配置常量
+- [x] **FLDR-01**: folder-item.vue 中所有硬编码样式值（gap/padding/font-size）替换为 CSS 变量
+- [x] **FLDR-02**: folder-view.vue 中硬编码尺寸（80px/60px/10px）替换为 CSS 变量或提取为配置常量
 - [ ] **FLDR-03**: folder-view.vue 中 FolderItemUI 类型断言改为类型安全的方式
 - [ ] **FLDR-04**: 提取文件夹预览网格展示逻辑为 FolderPreview 子组件
 
@@ -70,15 +70,15 @@ _(本里程碑为纯优化，无延迟功能)_
 |-------------|-------|--------|
 | VSTL-01 | Phase 7 | Complete |
 | VSTL-02 | Phase 7 | Complete |
-| VSTL-03 | Phase 7 | Pending |
+| VSTL-03 | Phase 7 | Complete |
 | VSTL-04 | Phase 7 | Complete |
 | VSTL-05 | Phase 7 | Complete |
 | GRID-01 | Phase 7 | Complete |
 | GRID-02 | Phase 9 | Pending |
 | GRID-03 | Phase 9 | Pending |
 | GRID-04 | Phase 9 | Pending |
-| FLDR-01 | Phase 7 | Pending |
-| FLDR-02 | Phase 7 | Pending |
+| FLDR-01 | Phase 7 | Complete |
+| FLDR-02 | Phase 7 | Complete |
 | FLDR-03 | Phase 8 | Pending |
 | FLDR-04 | Phase 9 | Pending |
 | COMP-01 | Phase 7 | Complete |
