@@ -52,12 +52,4 @@ defineExpose({
   width: 100%;
   height: 100%;
 }
-
-/* 拖拽时的占位符样式 */
-/* .grid-stack-placeholder > .placeholder-content {
-  border: 2px dashed var(--glass-border-strong, rgba(255, 255, 255, 0.2));
-  border-radius: var(--radius-md, 12px);
-  background: var(--glass-bg, rgba(255, 255, 255, 0.08));
-  backdrop-filter: blur(8px);
-} */
 </style>

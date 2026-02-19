@@ -18,6 +18,11 @@ import {
 import { appendToOrder, removeFromOrder, sortByOrder, updateGridOrder } from '@/store/grid-order'
 import { ui } from '@/store/ui'
 
+const GRID_CELL_HEIGHT = 64
+const GRID_MARGIN = 4
+const GRID_COLUMN_WIDTH = 60
+const GRID_COLUMN_MAX = 24
+
 /** 判断是否为顶层项（文件夹 或 无 pid 的站点） */
 function isTopLevel(item: GridItemUI): boolean {
   return item.type !== 'site' || !(item as SiteItemUI).pid
@@ -83,12 +88,11 @@ export function useGridStack(ref: string) {
 
     grid = GridStack.init(
       {
-        cellHeight: 64,
-        margin: 4,
-
+        cellHeight: GRID_CELL_HEIGHT,
+        margin: GRID_MARGIN,
         animate: false,
         disableResize: true,
-        columnOpts: { columnWidth: 60, columnMax: 24, layout: 'compact' }
+        columnOpts: { columnWidth: GRID_COLUMN_WIDTH, columnMax: GRID_COLUMN_MAX, layout: 'compact' }
       },
       gridContainer.value
     )
