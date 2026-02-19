@@ -23,7 +23,7 @@
 
 **Milestone Goal:** 全面优化 UI 视觉和交互体验，重构冗余代码，提升代码质量和可维护性
 
-- [ ] **Phase 7: Design Token & CSS Variable Foundation** - Replace all hardcoded visual values with design tokens across the codebase
+- [x] **Phase 7: Design Token & CSS Variable Foundation** - Replace all hardcoded visual values with design tokens across the codebase (completed 2026-02-19)
 - [ ] **Phase 8: TypeScript Type Safety** - Eliminate type-unsafe patterns (any, type assertions) with proper generics and type guards
 - [ ] **Phase 9: Grid & Component Structure** - Restructure grid composable and folder component for maintainability
 - [ ] **Phase 10: Code Refactoring** - Decompose large modules and align naming with community conventions
@@ -40,7 +40,7 @@
   3. New size tokens (`--size-icon-sm/md/lg`) exist in `variables.css` and are applied where applicable
   4. GridStack configuration values (cellHeight, margin, columnWidth) are defined as named constants, not magic numbers
   5. `grid-layout.vue` contains no commented-out dead style code
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 Plans:
 - [ ] 07-01-PLAN.md — Design token foundation + GridStack constants + dead code cleanup
 - [ ] 07-02-PLAN.md — Base component tokenization (Modal, Switch, Select, ContextMenu, Button, Input)
@@ -90,7 +90,7 @@ Plans:
 | 4. UI Polish | v1.1.0 | 1/1 | ✓ Complete | 2026-02-12 |
 | 5. Backup Flow UI Wiring | v1.1.0 | 2/2 | ✓ Complete | 2026-02-12 |
 | 6. Design Token Cleanup | v1.1.0 | 1/1 | ✓ Complete | 2026-02-12 |
-| 7. Design Token & CSS Variable Foundation | v1.2.0 | 0/3 | Planning complete | - |
+| 7. Design Token & CSS Variable Foundation | 3/3 | Complete   | 2026-02-19 | - |
 | 8. TypeScript Type Safety | v1.2.0 | 0/? | Not started | - |
 | 9. Grid & Component Structure | v1.2.0 | 0/? | Not started | - |
 | 10. Code Refactoring | v1.2.0 | 0/? | Not started | - |
