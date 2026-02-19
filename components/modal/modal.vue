@@ -92,7 +92,7 @@ const handleOverlayClick = () => {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--overlay-bg);
   backdrop-filter: blur(4px);
   z-index: 1000;
   display: flex;
@@ -135,7 +135,7 @@ const handleOverlayClick = () => {
   border: none;
   color: var(--text-secondary);
   cursor: pointer;
-  padding: 4px;
+  padding: var(--spacing-xs);
   border-radius: var(--radius-sm);
   transition: all var(--transition-fast);
   display: flex;
@@ -144,7 +144,7 @@ const handleOverlayClick = () => {
 }
 
 .close-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--glass-bg-subtle);
   color: var(--text-primary);
 }
 
@@ -161,7 +161,8 @@ const handleOverlayClick = () => {
   align-items: center;
   justify-content: flex-end;
   gap: var(--spacing-md);
-  background: rgba(0, 0, 0, 0.1);
+  --modal-footer-bg: rgba(0, 0, 0, 0.1);
+  background: var(--modal-footer-bg);
 }
 
 /* Animations */

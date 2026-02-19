@@ -59,7 +59,7 @@ const handleClick = (event: MouseEvent) => {
   align-items: center;
   justify-content: center;
   gap: var(--spacing-sm);
-  height: 40px;
+  height: var(--size-input-height);
   padding: 0 var(--spacing-lg);
   border: 1px solid transparent;
   outline: none;
@@ -85,7 +85,7 @@ const handleClick = (event: MouseEvent) => {
 
 /* Square variant (icon-only) */
 .is-square {
-  width: 40px;
+  width: var(--size-input-height);
   padding: 0;
   border-radius: var(--radius-md);
 }

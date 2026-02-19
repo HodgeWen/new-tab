@@ -51,9 +51,10 @@ const toggle = () => {
   border-radius: var(--radius-full);
   cursor: pointer;
   transition: all var(--transition-fast);
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--glass-bg-subtle);
   border: 1px solid var(--glass-border);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  --switch-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--switch-shadow);
   
   /* Default size (previously md) */
   width: 44px;
@@ -83,7 +84,8 @@ const toggle = () => {
   justify-content: center;
   border-radius: 50%;
   background: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  --switch-handle-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--switch-handle-shadow);
   transition: transform var(--transition-spring);
   
   /* Default size (previously md) */

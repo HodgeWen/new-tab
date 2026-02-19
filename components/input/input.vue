@@ -176,8 +176,8 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: var(--size-icon-md);
+  height: var(--size-icon-md);
   margin-left: var(--spacing-sm);
   color: var(--text-muted);
   cursor: pointer;
