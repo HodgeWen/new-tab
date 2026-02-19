@@ -40,7 +40,11 @@
   3. New size tokens (`--size-icon-sm/md/lg`) exist in `variables.css` and are applied where applicable
   4. GridStack configuration values (cellHeight, margin, columnWidth) are defined as named constants, not magic numbers
   5. `grid-layout.vue` contains no commented-out dead style code
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 07-01-PLAN.md — Design token foundation + GridStack constants + dead code cleanup
+- [ ] 07-02-PLAN.md — Base component tokenization (Modal, Switch, Select, ContextMenu, Button, Input)
+- [ ] 07-03-PLAN.md — Layout component tokenization (folder-item, folder-view, site-item, App.vue)
 
 ### Phase 8: TypeScript Type Safety
 **Goal**: All `any` types and unsafe type assertions replaced with proper TypeScript patterns — the compiler catches real bugs
@@ -86,7 +90,7 @@
 | 4. UI Polish | v1.1.0 | 1/1 | ✓ Complete | 2026-02-12 |
 | 5. Backup Flow UI Wiring | v1.1.0 | 2/2 | ✓ Complete | 2026-02-12 |
 | 6. Design Token Cleanup | v1.1.0 | 1/1 | ✓ Complete | 2026-02-12 |
-| 7. Design Token & CSS Variable Foundation | v1.2.0 | 0/? | Not started | - |
+| 7. Design Token & CSS Variable Foundation | v1.2.0 | 0/3 | Planning complete | - |
 | 8. TypeScript Type Safety | v1.2.0 | 0/? | Not started | - |
 | 9. Grid & Component Structure | v1.2.0 | 0/? | Not started | - |
 | 10. Code Refactoring | v1.2.0 | 0/? | Not started | - |
