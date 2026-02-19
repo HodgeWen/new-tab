@@ -81,7 +81,7 @@ function handleContextMenu(e: MouseEvent) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px; /* Gap between folder and title */
+  gap: var(--spacing-sm);
 }
 
 .folder-content {
@@ -95,7 +95,8 @@ function handleContextMenu(e: MouseEvent) {
   -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
-  padding: 12px;
+  --folder-content-padding: 12px;
+  padding: var(--folder-content-padding);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -112,7 +113,7 @@ function handleContextMenu(e: MouseEvent) {
 
 .folder-grid {
   display: grid;
-  gap: 8px; /* Space between icons */
+  gap: var(--spacing-sm);
   width: 100%;
   height: 100%;
   /* Ensure grid cells are square if possible, or fit container */
@@ -152,18 +153,19 @@ function handleContextMenu(e: MouseEvent) {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px; /* Small font for preview */
+  font-size: var(--text-caption);
 }
 
 .folder-title {
-  font-size: 13px;
+  --folder-title-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  font-size: var(--text-body);
   color: var(--text-primary);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  text-shadow: var(--folder-title-shadow);
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
-  padding: 0 4px;
+  padding: 0 var(--spacing-xs);
 }
 </style>

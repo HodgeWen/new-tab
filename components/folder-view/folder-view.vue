@@ -70,6 +70,8 @@ defineExpose({ open, close })
 
 <style scoped>
 .folder-view-content {
+  --folder-grid-item-size: 80px;
+  --folder-add-btn-size: 60px;
   min-height: 200px;
   padding: var(--spacing-sm);
 }
@@ -90,19 +92,19 @@ defineExpose({ open, close })
 
 .sites-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(var(--folder-grid-item-size), 1fr));
   gap: var(--spacing-lg);
   justify-items: center;
 }
 
 .folder-site-item {
-  width: 80px;
-  height: 80px;
+  width: var(--folder-grid-item-size);
+  height: var(--folder-grid-item-size);
 }
 
 .add-site-btn {
-  width: 60px; /* Match icon size in site-item approximately */
-  height: 60px;
+  width: var(--folder-add-btn-size);
+  height: var(--folder-add-btn-size);
   border-radius: var(--radius-md);
   border: 1px dashed var(--glass-border-strong);
   background: var(--glass-bg);
@@ -112,7 +114,7 @@ defineExpose({ open, close })
   justify-content: center;
   cursor: pointer;
   transition: all var(--transition-fast);
-  margin-top: 10px; /* Align visually with icons */
+  margin-top: var(--spacing-sm);
 }
 
 .add-site-btn:hover {
