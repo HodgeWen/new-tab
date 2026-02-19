@@ -113,7 +113,7 @@ function handleContextMenu(e: MouseEvent) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: var(--spacing-sm);
   width: 100%;
   height: 100%;
   text-decoration: none;
@@ -148,7 +148,7 @@ function handleContextMenu(e: MouseEvent) {
 .site-icon {
   width: 54px;
   height: 54px;
-  padding: 4px;
+  padding: var(--spacing-xs);
   border-radius: var(--radius-md);
   background: var(--glass-bg-hover);
   object-fit: contain;
@@ -169,7 +169,7 @@ function handleContextMenu(e: MouseEvent) {
   padding: 0;
   background: var(--color-primary-subtle);
   color: var(--color-primary);
-  font-size: 18px;
+  font-size: var(--text-title);
   font-weight: var(--font-medium);
 }
 
@@ -177,7 +177,7 @@ function handleContextMenu(e: MouseEvent) {
 .site-title {
   max-width: 100%;
   padding: 0 2px;
-  font-size: 11px;
+  font-size: var(--text-caption);
   line-height: 1;
   text-align: center;
   color: var(--text-muted);
@@ -213,7 +213,7 @@ function handleContextMenu(e: MouseEvent) {
   left: 50%;
   width: 4px;
   height: 7px;
-  border: solid #fff;
+  border: solid var(--color-on-primary);
   border-width: 0 1.5px 1.5px 0;
   transform: translate(-50%, -60%) rotate(45deg);
 }

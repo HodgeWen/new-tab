@@ -106,7 +106,9 @@ function openGlobalContextmenu(event: MouseEvent) {
 .main {
   width: 100%;
   height: 100%;
-  padding: 60px 40px;
+  --app-padding-y: 60px;
+  --app-padding-x: 40px;
+  padding: var(--app-padding-y) var(--app-padding-x);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
