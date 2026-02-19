@@ -6,6 +6,7 @@
   --glass-bg: rgba(255, 255, 255, 0.08);
   --glass-bg-hover: rgba(255, 255, 255, 0.12);
   --glass-bg-active: rgba(255, 255, 255, 0.16);
+  --glass-bg-subtle: rgba(255, 255, 255, 0.1);
   --glass-bg-disabled: rgba(0, 0, 0, 0.05);
   --glass-bg-elevated: rgba(30, 30, 30, 0.95);
   --glass-border: rgba(255, 255, 255, 0.15);
@@ -46,9 +47,7 @@
   --color-danger: #f43f5e;         /* Rose - 比纯红更柔和 */
   --color-danger-subtle: rgba(244, 63, 94, 0.15);
   --color-success: #10b981;        /* Emerald - 清新自然 */
-  --color-success-subtle: rgba(16, 185, 129, 0.15);
-  --color-warning: #f59e0b;        /* Amber - 保留 */
-  --color-warning-subtle: rgba(245, 158, 11, 0.15);
+  --color-on-primary: #ffffff;
 
   /* === 渐变 / Gradients ===
    * 微妙的渐变为界面增加高级感
@@ -58,13 +57,9 @@
     rgba(255, 255, 255, 0.1) 0%,
     rgba(255, 255, 255, 0.05) 100%
   );
-  --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  --gradient-shimmer: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.1) 50%,
-    rgba(255, 255, 255, 0) 100%
-  );
+
+  /* === 覆盖层 / Overlay === */
+  --overlay-bg: rgba(0, 0, 0, 0.4);
 
   /* === 间距 / Spacing === */
   --spacing-xs: 4px;
@@ -85,17 +80,21 @@
    * cubic-bezier: 自定义弹性效果
    */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
   --transition-fast: 120ms var(--ease-out);
   --transition-normal: 200ms var(--ease-out);
-  --transition-slow: 350ms var(--ease-in-out);
   --transition-spring: 400ms var(--ease-spring);
 
   /* === 字重 / Font Weights === */
   --font-regular: 400;
   --font-medium: 500;
+
+  /* === 尺寸 / Sizes === */
+  --size-icon-sm: 16px;
+  --size-icon-md: 20px;
+  --size-icon-lg: 24px;
+  --size-input-height: 40px;
 }
 
 /* === 深色壁纸模式 (默认) ===
@@ -105,6 +104,7 @@
   --glass-bg: rgba(0, 0, 0, 0.25);
   --glass-bg-hover: rgba(0, 0, 0, 0.35);
   --glass-bg-active: rgba(0, 0, 0, 0.45);
+  --glass-bg-subtle: rgba(0, 0, 0, 0.30);
   --glass-bg-disabled: rgba(0, 0, 0, 0.15);
   --glass-bg-elevated: rgba(20, 20, 20, 0.98);
   --glass-border: rgba(255, 255, 255, 0.08);
@@ -118,6 +118,7 @@
   --glass-bg: rgba(255, 255, 255, 0.6);
   --glass-bg-hover: rgba(255, 255, 255, 0.7);
   --glass-bg-active: rgba(255, 255, 255, 0.8);
+  --glass-bg-subtle: rgba(255, 255, 255, 0.65);
   --glass-bg-disabled: rgba(0, 0, 0, 0.06);
   --glass-bg-elevated: rgba(255, 255, 255, 0.98);
   --glass-border: rgba(0, 0, 0, 0.08);
