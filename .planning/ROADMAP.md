@@ -55,7 +55,11 @@ Plans:
   2. `isSiteItem` / `isFolderItem` type guard functions exist and replace scattered `as` assertions
   3. Bing API responses have proper TypeScript interfaces — no `any[]` in wallpaper-providers.ts
   4. `use-grid-stack.tsx` compiles without explicit type assertions (`as HTMLElement`, `as string[]`)
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 08-01-PLAN.md — Type guards (isSiteItem/isFolderItem) + Bing API interface
+- [ ] 08-02-PLAN.md — Generic ContextMenu internals + Select component generics
+- [ ] 08-03-PLAN.md — Grid stack & folder-view type assertion elimination
 
 ### Phase 9: Grid & Component Structure
 **Goal**: Grid composable and folder component restructured into focused, maintainable modules
