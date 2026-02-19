@@ -66,16 +66,40 @@ _(本里程碑为纯优化，无延迟功能)_
 
 ## Traceability
 
-_(由 roadmap 创建时填充)_
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
+| VSTL-01 | Phase 7 | Pending |
+| VSTL-02 | Phase 7 | Pending |
+| VSTL-03 | Phase 7 | Pending |
+| VSTL-04 | Phase 7 | Pending |
+| VSTL-05 | Phase 7 | Pending |
+| GRID-01 | Phase 7 | Pending |
+| GRID-02 | Phase 9 | Pending |
+| GRID-03 | Phase 9 | Pending |
+| GRID-04 | Phase 9 | Pending |
+| FLDR-01 | Phase 7 | Pending |
+| FLDR-02 | Phase 7 | Pending |
+| FLDR-03 | Phase 8 | Pending |
+| FLDR-04 | Phase 9 | Pending |
+| COMP-01 | Phase 7 | Pending |
+| COMP-02 | Phase 7 | Pending |
+| COMP-03 | Phase 7 | Pending |
+| COMP-04 | Phase 8 | Pending |
+| TYPE-01 | Phase 8 | Pending |
+| TYPE-02 | Phase 8 | Pending |
+| TYPE-03 | Phase 8 | Pending |
+| TYPE-04 | Phase 8 | Pending |
+| RFAC-01 | Phase 10 | Pending |
+| RFAC-02 | Phase 10 | Pending |
+| RFAC-03 | Phase 10 | Pending |
+| RFAC-04 | Phase 10 | Pending |
+| RFAC-05 | Phase 10 | Pending |
 
 **Coverage:**
-- v1.2.0 requirements: 23 total
-- Mapped to phases: 0
-- Unmapped: 23 ⚠️
+- v1.2.0 requirements: 26 total
+- Mapped to phases: 26
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-02-19*
-*Last updated: 2026-02-19 after initial definition*
+*Last updated: 2026-02-19 — traceability filled by roadmap creation*
