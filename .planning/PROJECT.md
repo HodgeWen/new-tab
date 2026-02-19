@@ -36,7 +36,20 @@
 
 ### Active
 
-_(无 — 下个里程碑通过 /gsd:new-milestone 定义)_
+## Current Milestone: v1.2.0 UI全面优化和代码精简
+
+**Goal:** 全面优化 UI 视觉和交互体验，重构冗余代码，提升代码质量和可维护性——不新增功能，专注打磨现有体验。
+
+**重点区域：**
+- 网格布局（拖拽、网格项外观）
+- 文件夹（展开、内容展示）
+
+**优化方向：**
+- 视觉打磨：动画、过渡、间距、颜色精调
+- 组件重构：统一基础组件 API、提取复用逻辑
+- 布局优化：网格系统、空间利用
+- 交互体验：拖拽手感、反馈、加载状态
+- 代码精简：清理死代码、重构冗余逻辑、完善 TypeScript 类型、性能优化
 
 ### Out of Scope
 
@@ -71,4 +84,4 @@ _(无 — 下个里程碑通过 /gsd:new-milestone 定义)_
 | 新增 --glass-bg-disabled/elevated token | 系统化管理禁用和提升状态的视觉效果 | ✓ Good — 组件主题适配更一致 |
 
 ---
-*Last updated: 2026-02-12 after v1.1.0 milestone*
+*Last updated: 2026-02-19 after v1.2.0 milestone started*
