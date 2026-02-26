@@ -2,6 +2,7 @@ import { readonly, ref } from 'vue'
 
 import type { GridItemRecord } from '@/types/db'
 import type { FolderItemUI, GridItemUI, SiteItemUI } from '@/types/ui'
+import { isFolderItem, isSiteItem } from '@/types/ui'
 
 import { db } from '@/utils/db'
 
@@ -17,26 +18,35 @@ export const gridItemsMap = new Map<string, GridItemUI>()
 function syncList() {
   // 清除所有文件夹的 sites
   for (const item of gridItemsMap.values()) {
-    if (item.type === 'folder') (item as FolderItemUI).sites = []
+    if (isFolderItem(item)) item.sites = []
   }
   // 根据 pid 将站点分配到对应文件夹
   for (const item of gridItemsMap.values()) {
-    if (item.type === 'site' && (item as SiteItemUI).pid) {
-      const folder = gridItemsMap.get((item as SiteItemUI).pid!)
-      if (folder?.type === 'folder') (folder as FolderItemUI).sites!.push(item as SiteItemUI)
+    if (isSiteItem(item) && item.pid) {
+      const folder = gridItemsMap.get(item.pid)
+      if (folder && isFolderItem(folder)) {
+        if (!folder.sites) folder.sites = []
+        folder.sites.push(item)
+      }
     }
   }
   // 仅保留顶层项（文件夹 + 无 pid 的站点），有 pid 的站点通过文件夹渲染
-  _gridItems.value = Array.from(gridItemsMap.values()).filter(
-    (item) => item.type !== 'site' || !(item as SiteItemUI).pid
-  )
+  _gridItems.value = Array.from(gridItemsMap.values()).filter((item) => !isSiteItem(item) || !item.pid)
+}
+
+function toPersistedItemData(item: GridItemUI): SiteItemUI | Omit<FolderItemUI, 'sites'> {
+  if (isFolderItem(item)) {
+    const { sites: _sites, ...folderData } = item
+    return folderData
+  }
+  return item
 }
 
 /** 将 UI 数据转换为数据库记录（剥离运行时计算的 sites 字段） */
 function toRecord(item: GridItemUI, createdAt?: number): GridItemRecord {
   const now = Date.now()
-  const { sites: _, ...data } = item as FolderItemUI
-  return { ...data, createdAt: createdAt ?? now, updatedAt: now } as GridItemRecord
+  const data = toPersistedItemData(item)
+  return { ...data, createdAt: createdAt ?? now, updatedAt: now }
 }
 
 /**
@@ -48,12 +58,8 @@ export async function loadGridItems(): Promise<void> {
   gridItemsMap.clear()
   for (const record of records) {
     // 剥离数据库字段，保留 UI 所需数据
-    const {
-      createdAt: _,
-      updatedAt: __,
-      ...rest
-    } = record as GridItemRecord & { createdAt: number; updatedAt: number }
-    gridItemsMap.set(record.id, rest as GridItemUI)
+    const { createdAt: _createdAt, updatedAt: _updatedAt, ...item } = record
+    gridItemsMap.set(record.id, item)
   }
   syncList()
 }
@@ -76,7 +82,7 @@ export function updateGridItem(item: GridItemUI) {
   gridItemsMap.set(item.id, item)
   syncList()
   // 使用 update 仅更新变更字段，保留 createdAt；剥离运行时 sites 字段
-  const { sites: _, ...data } = item as FolderItemUI
+  const data = toPersistedItemData(item)
   db.gridItems.update(item.id, { ...data, updatedAt: Date.now() })
 }
 
@@ -117,7 +123,7 @@ export function batchDeleteGridItems(ids: string[]) {
     const item = gridItemsMap.get(id)
     if (item?.type === 'folder') {
       for (const [childId, child] of gridItemsMap) {
-        if (child.type === 'site' && (child as SiteItemUI).pid === id) {
+        if (isSiteItem(child) && child.pid === id) {
           idsToDelete.add(childId)
         }
       }
