@@ -14,7 +14,7 @@
           :in-folder="true"
           class="folder-site-item"
         />
-        <!-- Add button as the last item in the grid -->
+        <!-- Add button in final grid slot -->
         <button class="add-site-btn" @click="handleAddSite">
           <plus :size="24" />
         </button>
@@ -31,7 +31,7 @@ import { NButton } from '@/components/button'
 import { NSiteItem } from '@/components/site-item'
 import { gridItems } from '@/store/grid-items'
 import { components } from '@/store/components'
-import type { FolderItemUI } from '@/types/ui'
+import { isFolderItem } from '@/types/ui'
 
 defineOptions({ name: 'NFolderView' })
 
@@ -41,7 +41,8 @@ const folderId = ref<string | null>(null)
 /** 从响应式 gridItems 中查找文件夹，确保 sites 更新时自动响应 */
 const folder = computed(() => {
   if (!folderId.value) return null
-  return gridItems.value.find((i) => i.id === folderId.value) as FolderItemUI | undefined
+  const item = gridItems.value.find((i) => i.id === folderId.value)
+  return item && isFolderItem(item) ? item : undefined
 })
 
 /** 文件夹子站点直接从 folder.sites 获取（syncList 已填充） */

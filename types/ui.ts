@@ -8,11 +8,13 @@ export interface FolderItemUI extends FolderItem {
 
 export type GridItemUI = SiteItemUI | FolderItemUI
 
-export function isSiteItem(item: GridItemUI): item is SiteItemUI {
+type ItemWithType = { type: string }
+
+export function isSiteItem<T extends ItemWithType>(item: T): item is Extract<T, { type: 'site' }> {
   return item.type === 'site'
 }
 
-export function isFolderItem(item: GridItemUI): item is FolderItemUI {
+export function isFolderItem<T extends ItemWithType>(item: T): item is Extract<T, { type: 'folder' }> {
   return item.type === 'folder'
 }
 
