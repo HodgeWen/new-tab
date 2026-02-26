@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 ## Current Position
 
 Phase: 8 of 10 (TypeScript Type Safety)
-Plan: 08-02 complete (phase in progress)
+Plan: 08-01 and 08-02 complete (phase in progress)
 Status: In Progress
-Last activity: 2026-02-26 — Completed 08-02 (Generic ContextMenu internals + Select component generics)
+Last activity: 2026-02-26 — Completed 08-01 (Type guards + Bing API typed response)
 
-Progress: [███░░░░░░░] 33% (1/3 plans with execution summaries in phase 8)
+Progress: [███████░░░] 67% (2/3 plans with execution summaries in phase 8)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 15
-- Average duration: ~3.2 min
-- Total execution time: ~48 min
+- Total plans completed: 16
+- Average duration: ~3.4 min
+- Total execution time: ~55 min
 
 **By Phase (v1.1.0):**
 
@@ -36,6 +36,7 @@ Progress: [███░░░░░░░] 33% (1/3 plans with execution summari
 | Phase 07 P02 | 2min | 2 tasks | 7 files |
 | Phase 07 P03 | 2min | 2 tasks | 4 files |
 | Phase 08-typescript-type-safety P02 | 2min | 2 tasks | 4 files |
+| Phase 08 P01 | 7min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -47,6 +48,8 @@ Progress: [███░░░░░░░] 33% (1/3 plans with execution summari
 - Non-scale values extracted to component-local CSS variables for naming and maintainability
 - [Phase 08-typescript-type-safety]: Kept ContextMenu public API unchanged and tightened only internal SFC prop types with unknown.
 - [Phase 08-typescript-type-safety]: Adopted generic Select typing with V extends string | number plus labelKey/valueKey for flexible option schemas.
+- [Phase 08]: Use exported isSiteItem/isFolderItem type guards in grid item store paths to eliminate assertion-based narrowing.
+- [Phase 08]: Keep Bing API payload types file-local and enforce non-undefined wallpaper id fallback via hsh/startdate/urlbase/url.
 
 ### Pending Todos
 
@@ -59,5 +62,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: Completed 08-02-PLAN.md
+Stopped at: Completed 08-01-PLAN.md
 Resume file: .planning/phases/08-typescript-type-safety/08-03-PLAN.md

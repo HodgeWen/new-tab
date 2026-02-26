@@ -39,8 +39,8 @@
 ### TypeScript 类型安全 (Type Safety)
 
 - [x] **TYPE-01**: ContextMenu 组件的 context?: any 改为泛型类型参数
-- [ ] **TYPE-02**: 创建 isSiteItem / isFolderItem 类型守卫函数，替代散落的 as 断言
-- [ ] **TYPE-03**: wallpaper-providers.ts 中 Bing API 响应定义正式接口替代 any[]
+- [x] **TYPE-02**: 创建 isSiteItem / isFolderItem 类型守卫函数，替代散落的 as 断言
+- [x] **TYPE-03**: wallpaper-providers.ts 中 Bing API 响应定义正式接口替代 any[]
 - [ ] **TYPE-04**: use-grid-stack.tsx 中的类型断言（as HTMLElement、as string[]）通过更好的类型推导消除
 
 ### 代码重构 (Refactoring)
@@ -86,8 +86,8 @@ _(本里程碑为纯优化，无延迟功能)_
 | COMP-03 | Phase 7 | Complete |
 | COMP-04 | Phase 8 | Complete |
 | TYPE-01 | Phase 8 | Complete |
-| TYPE-02 | Phase 8 | Pending |
-| TYPE-03 | Phase 8 | Pending |
+| TYPE-02 | Phase 8 | Complete |
+| TYPE-03 | Phase 8 | Complete |
 | TYPE-04 | Phase 8 | Pending |
 | RFAC-01 | Phase 10 | Pending |
 | RFAC-02 | Phase 10 | Pending |
