@@ -34,11 +34,11 @@
 - [x] **COMP-01**: Modal 组件硬编码 rgba 背景色、max-height/max-width 替换为 CSS 变量
 - [x] **COMP-02**: ContextMenu 组件硬编码尺寸和颜色（min-width、padding、#ffffff）替换为 CSS 变量
 - [x] **COMP-03**: Button 和 Input 组件中硬编码像素值统一为 CSS 变量
-- [ ] **COMP-04**: Select 组件 Option.value 的 any 类型改为泛型参数
+- [x] **COMP-04**: Select 组件 Option.value 的 any 类型改为泛型参数
 
 ### TypeScript 类型安全 (Type Safety)
 
-- [ ] **TYPE-01**: ContextMenu 组件的 context?: any 改为泛型类型参数
+- [x] **TYPE-01**: ContextMenu 组件的 context?: any 改为泛型类型参数
 - [ ] **TYPE-02**: 创建 isSiteItem / isFolderItem 类型守卫函数，替代散落的 as 断言
 - [ ] **TYPE-03**: wallpaper-providers.ts 中 Bing API 响应定义正式接口替代 any[]
 - [ ] **TYPE-04**: use-grid-stack.tsx 中的类型断言（as HTMLElement、as string[]）通过更好的类型推导消除
@@ -84,8 +84,8 @@ _(本里程碑为纯优化，无延迟功能)_
 | COMP-01 | Phase 7 | Complete |
 | COMP-02 | Phase 7 | Complete |
 | COMP-03 | Phase 7 | Complete |
-| COMP-04 | Phase 8 | Pending |
-| TYPE-01 | Phase 8 | Pending |
+| COMP-04 | Phase 8 | Complete |
+| TYPE-01 | Phase 8 | Complete |
 | TYPE-02 | Phase 8 | Pending |
 | TYPE-03 | Phase 8 | Pending |
 | TYPE-04 | Phase 8 | Pending |
