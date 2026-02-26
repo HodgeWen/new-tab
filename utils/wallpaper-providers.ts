@@ -12,6 +12,19 @@ interface PicsumPhoto {
   url: string
 }
 
+interface BingImage {
+  url: string
+  urlbase: string
+  copyright?: string
+  copyrightlink?: string
+  hsh?: string
+  startdate?: string
+}
+
+interface BingImageArchiveResponse {
+  images?: BingImage[]
+}
+
 async function fetchPicsumList(page: number, limit: number): Promise<PicsumPhoto[]> {
   const res = await fetch(`${API_BASE.picsum}/v2/list?page=${page}&limit=${limit}`)
   if (!res.ok) {
@@ -35,8 +48,8 @@ export const BingWallpaperProvider: WallpaperProvider = {
     const res = await fetch(
       `${API_BASE.bing}/HPImageArchive.aspx?format=js&idx=0&n=${count}&mkt=zh-CN`
     )
-    const data = await res.json()
-    const images: any[] = Array.isArray(data.images) ? data.images : []
+    const data: BingImageArchiveResponse = await res.json()
+    const images: BingImage[] = Array.isArray(data.images) ? data.images : []
     const image =
       images.find(
         (item) => !options?.excludeId || (item.hsh || item.startdate) !== options.excludeId
@@ -51,9 +64,10 @@ export const BingWallpaperProvider: WallpaperProvider = {
     // copyright 格式: "描述 (© 作者/来源)"
     const authorMatch = image.copyright?.match(/\(©\s*(.+?)\)/)
     const author = authorMatch ? authorMatch[1] : (image.copyright ?? '')
+    const imageId = image.hsh ?? image.startdate ?? image.urlbase ?? image.url
 
     return {
-      id: image.hsh || image.startdate,
+      id: imageId,
       url: `${baseUrl}${image.url}`,
       thumbUrl: `${baseUrl}${image.urlbase}_400x240.jpg`,
       author,
