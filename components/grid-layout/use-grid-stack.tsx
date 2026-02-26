@@ -2,8 +2,7 @@ import { GridStack, type GridStackNode, type GridStackWidget } from 'gridstack'
 import { nanoid } from 'nanoid'
 import { onBeforeUnmount, onMounted, useTemplateRef, render, type VNode, watch } from 'vue'
 
-import type { ItemType } from '@/types/common'
-import type { FolderItemForm, FolderItemUI, GridItemUI, SiteItemForm, SiteItemUI } from '@/types/ui'
+import { isFolderItem, isSiteItem, type FolderItemForm, type GridItemUI, type SiteItemForm } from '@/types/ui'
 
 import { NFolderItem } from '@/components/folder-item'
 import { FOLDER_SIZE_MAP } from '@/components/folder-item/shared'
@@ -25,17 +24,16 @@ const GRID_COLUMN_MAX = 24
 
 /** 判断是否为顶层项（文件夹 或 无 pid 的站点） */
 function isTopLevel(item: GridItemUI): boolean {
-  return item.type !== 'site' || !(item as SiteItemUI).pid
+  if (isFolderItem(item)) return true
+  return !item.pid
 }
 
 /**
- * Vue 组件渲染映射表
+ * 渲染单个 widget
  */
-const renderMap: Record<ItemType, (item: GridItemUI) => VNode> = {
-  site: (item) => {
-    return <NSiteItem item={item as SiteItemUI} />
-  },
-  folder: (item) => <NFolderItem item={item as FolderItemUI} />
+function renderWidget(item: GridItemUI): VNode {
+  if (isSiteItem(item)) return <NSiteItem item={item} />
+  return <NFolderItem item={item} />
 }
 
 /**
@@ -44,10 +42,8 @@ const renderMap: Record<ItemType, (item: GridItemUI) => VNode> = {
  * - folder: 根据 size 预设从 FOLDER_SIZE_MAP 获取
  */
 function getWidgetSize(item: GridItemUI): { w: number; h: number } {
-  if (item.type === 'site') {
-    return { w: 1, h: 1 }
-  }
-  return FOLDER_SIZE_MAP[(item as FolderItemUI).size] ?? { w: 2, h: 2 }
+  if (isSiteItem(item)) return { w: 1, h: 1 }
+  return FOLDER_SIZE_MAP[item.size] ?? { w: 2, h: 2 }
 }
 
 /** 存储 Promise，在 onMounted 中 await 确保数据就绪 */
@@ -66,7 +62,8 @@ export function useGridStack(ref: string) {
    * 使用 grid.engine.nodes 替代 DOM querySelector，更可靠
    */
   function findWidgetEl(id: string): HTMLElement | undefined {
-    return grid?.engine.nodes.find((n) => n.id === id)?.el as HTMLElement | undefined
+    const el = grid?.engine.nodes.find((n) => n.id === id)?.el
+    return el instanceof HTMLElement ? el : undefined
   }
 
   // 设置渲染回调（必须在 init 之前）
@@ -75,8 +72,7 @@ export function useGridStack(ref: string) {
 
     if (!item) return
 
-    const createVNode = renderMap[item.type]
-    const vnode = createVNode(item)
+    const vnode = renderWidget(item)
     if (vnode) {
       shadowDom[item.id] = el
       render(vnode, el)
@@ -115,7 +111,7 @@ export function useGridStack(ref: string) {
         if (a.y !== b.y) return a.y! - b.y!
         return a.x! - b.x!
       })
-      const ids = nodes.map((node) => node.id).filter(Boolean) as string[]
+      const ids = nodes.map((node) => node.id).filter((id): id is string => id != null)
       updateGridOrder(ids)
     })
 
@@ -178,7 +174,12 @@ export function useGridStack(ref: string) {
     if (!grid) return
 
     const id = nanoid(10)
-    const newItem = { ...item, id } as GridItemUI
+    let newItem: GridItemUI
+    if (item.type === 'site') {
+      newItem = { ...item, id }
+    } else {
+      newItem = { ...item, id }
+    }
     addGridItem(newItem)
     appendToOrder(id)
 
@@ -247,8 +248,7 @@ export function useGridStack(ref: string) {
       grid!.update(widgetEl, { w, h })
     }
 
-    const createVNode = renderMap[item.type]
-    const vnode = createVNode(item)
+    const vnode = renderWidget(item)
     render(vnode, el)
   }
 
