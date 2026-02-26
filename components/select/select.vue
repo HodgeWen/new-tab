@@ -1,36 +1,38 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="V extends string | number">
 import { ref, computed, onMounted, onUnmounted, useTemplateRef } from 'vue'
 import { ChevronDown } from 'lucide-vue-next'
 
 defineOptions({ name: 'NSelect' })
 
-interface Option {
-  label: string
-  value: any
-  disabled?: boolean
-}
-
 const {
   options = [],
+  labelKey = 'label',
+  valueKey = 'value',
   placeholder = '请选择',
   disabled = false,
   width
 } = defineProps<{
-  options?: Option[]
+  options?: Record<string, unknown>[]
+  labelKey?: string
+  valueKey?: string
   placeholder?: string
   disabled?: boolean
   width?: string | number
 }>()
 
-const modelValue = defineModel<any>()
+const modelValue = defineModel<V>()
 
-const emits = defineEmits<{ change: [value: any] }>()
+const emits = defineEmits<{ change: [value: V] }>()
 
 const isOpen = ref(false)
 const containerRef = useTemplateRef<HTMLElement>('containerRef')
 
+const getLabel = (opt: Record<string, unknown>) => String(opt[labelKey] ?? '')
+const getValue = (opt: Record<string, unknown>) => opt[valueKey] as V
+const isDisabled = (opt: Record<string, unknown>) => Boolean(opt.disabled)
+
 const selectedOption = computed(() => {
-  return options.find((opt) => opt.value === modelValue.value)
+  return options.find((opt) => getValue(opt) === modelValue.value)
 })
 
 const toggleDropdown = () => {
@@ -38,10 +40,11 @@ const toggleDropdown = () => {
   isOpen.value = !isOpen.value
 }
 
-const selectOption = (option: Option) => {
-  if (option.disabled) return
-  modelValue.value = option.value
-  emits('change', option.value)
+const selectOption = (option: Record<string, unknown>) => {
+  if (isDisabled(option)) return
+  const val = getValue(option)
+  modelValue.value = val
+  emits('change', val)
   isOpen.value = false
 }
 
@@ -68,7 +71,7 @@ onUnmounted(() => {
     :style="{ width: typeof width === 'number' ? `${width}px` : width }"
   >
     <div class="select-trigger" @click="toggleDropdown">
-      <span v-if="selectedOption" class="selected-label">{{ selectedOption.label }}</span>
+      <span v-if="selectedOption" class="selected-label">{{ getLabel(selectedOption) }}</span>
       <span v-else class="placeholder">{{ placeholder }}</span>
       <div class="arrow" :class="{ up: isOpen }">
         <ChevronDown :size="16" />
@@ -79,12 +82,12 @@ onUnmounted(() => {
       <div v-if="isOpen" class="options-dropdown">
         <div
           v-for="option in options"
-          :key="String(option.value)"
+          :key="String(getValue(option))"
           class="option-item"
-          :class="{ active: modelValue === option.value, disabled: option.disabled }"
+          :class="{ active: modelValue === getValue(option), disabled: isDisabled(option) }"
           @click="selectOption(option)"
         >
-          {{ option.label }}
+          {{ getLabel(option) }}
         </div>
         <div v-if="options.length === 0" class="no-data">无数据</div>
       </div>
