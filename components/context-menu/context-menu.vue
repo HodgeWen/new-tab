@@ -8,8 +8,8 @@ defineOptions({ name: 'NContextMenu' })
 const { x, y, context, items } = defineProps<{
   x: number
   y: number
-  context?: any
-  items: ContextmenuItem<any>[]
+  context?: unknown
+  items: ContextmenuItem<unknown>[]
 }>()
 
 const emit = defineEmits<{ close: [] }>()

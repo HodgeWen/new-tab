@@ -6,8 +6,8 @@ import type { ContextmenuItem } from './types'
 defineOptions({ name: 'NContextMenuItem' })
 
 const { item, context } = defineProps<{
-  item: ContextmenuItem<any>
-  context?: any
+  item: ContextmenuItem<unknown>
+  context?: unknown
 }>()
 
 const emit = defineEmits<{
