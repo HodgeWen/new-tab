@@ -26,7 +26,7 @@
 
 - [x] **FLDR-01**: folder-item.vue 中所有硬编码样式值（gap/padding/font-size）替换为 CSS 变量
 - [x] **FLDR-02**: folder-view.vue 中硬编码尺寸（80px/60px/10px）替换为 CSS 变量或提取为配置常量
-- [ ] **FLDR-03**: folder-view.vue 中 FolderItemUI 类型断言改为类型安全的方式
+- [x] **FLDR-03**: folder-view.vue 中 FolderItemUI 类型断言改为类型安全的方式
 - [ ] **FLDR-04**: 提取文件夹预览网格展示逻辑为 FolderPreview 子组件
 
 ### 基础组件 (Components)
@@ -41,7 +41,7 @@
 - [x] **TYPE-01**: ContextMenu 组件的 context?: any 改为泛型类型参数
 - [x] **TYPE-02**: 创建 isSiteItem / isFolderItem 类型守卫函数，替代散落的 as 断言
 - [x] **TYPE-03**: wallpaper-providers.ts 中 Bing API 响应定义正式接口替代 any[]
-- [ ] **TYPE-04**: use-grid-stack.tsx 中的类型断言（as HTMLElement、as string[]）通过更好的类型推导消除
+- [x] **TYPE-04**: use-grid-stack.tsx 中的类型断言（as HTMLElement、as string[]）通过更好的类型推导消除
 
 ### 代码重构 (Refactoring)
 
@@ -79,7 +79,7 @@ _(本里程碑为纯优化，无延迟功能)_
 | GRID-04 | Phase 9 | Pending |
 | FLDR-01 | Phase 7 | Complete |
 | FLDR-02 | Phase 7 | Complete |
-| FLDR-03 | Phase 8 | Pending |
+| FLDR-03 | Phase 8 | Complete |
 | FLDR-04 | Phase 9 | Pending |
 | COMP-01 | Phase 7 | Complete |
 | COMP-02 | Phase 7 | Complete |
@@ -88,7 +88,7 @@ _(本里程碑为纯优化，无延迟功能)_
 | TYPE-01 | Phase 8 | Complete |
 | TYPE-02 | Phase 8 | Complete |
 | TYPE-03 | Phase 8 | Complete |
-| TYPE-04 | Phase 8 | Pending |
+| TYPE-04 | Phase 8 | Complete |
 | RFAC-01 | Phase 10 | Pending |
 | RFAC-02 | Phase 10 | Pending |
 | RFAC-03 | Phase 10 | Pending |

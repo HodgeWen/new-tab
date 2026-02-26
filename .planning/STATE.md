@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 ## Current Position
 
 Phase: 8 of 10 (TypeScript Type Safety)
-Plan: 08-01 and 08-02 complete (phase in progress)
-Status: In Progress
-Last activity: 2026-02-26 — Completed 08-01 (Type guards + Bing API typed response)
+Plan: 08-01, 08-02, and 08-03 complete (phase complete)
+Status: Complete
+Last activity: 2026-02-26 — Completed 08-03 (Assertion-free grid/folder type narrowing)
 
-Progress: [███████░░░] 67% (2/3 plans with execution summaries in phase 8)
+Progress: [██████████] 100% (3/3 plans with execution summaries in phase 8)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 16
+- Total plans completed: 17
 - Average duration: ~3.4 min
-- Total execution time: ~55 min
+- Total execution time: ~58 min
 
 **By Phase (v1.1.0):**
 
@@ -37,6 +37,7 @@ Progress: [███████░░░] 67% (2/3 plans with execution summari
 | Phase 07 P03 | 2min | 2 tasks | 4 files |
 | Phase 08-typescript-type-safety P02 | 2min | 2 tasks | 4 files |
 | Phase 08 P01 | 7min | 2 tasks | 3 files |
+| Phase 08-typescript-type-safety P03 | 3min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -50,6 +51,8 @@ Progress: [███████░░░] 67% (2/3 plans with execution summari
 - [Phase 08-typescript-type-safety]: Adopted generic Select typing with V extends string | number plus labelKey/valueKey for flexible option schemas.
 - [Phase 08]: Use exported isSiteItem/isFolderItem type guards in grid item store paths to eliminate assertion-based narrowing.
 - [Phase 08]: Keep Bing API payload types file-local and enforce non-undefined wallpaper id fallback via hsh/startdate/urlbase/url.
+- [Phase 08-typescript-type-safety]: Replaced renderMap dispatch with renderWidget to preserve discriminated-union narrowing in grid rendering paths.
+- [Phase 08-typescript-type-safety]: Generalized isSiteItem/isFolderItem to Extract-based predicates so readonly reactive unions narrow without assertions.
 
 ### Pending Todos
 
@@ -62,5 +65,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: Completed 08-01-PLAN.md
-Resume file: .planning/phases/08-typescript-type-safety/08-03-PLAN.md
+Stopped at: Completed 08-03-PLAN.md
+Resume file: .planning/ROADMAP.md
