@@ -20,13 +20,13 @@ import { computed } from 'vue'
 import { FolderInput, FolderOutput, Pencil, Trash2 } from 'lucide-vue-next'
 
 import type { ContextmenuItem } from '@/components/context-menu/types'
-import type { FolderItemUI, SiteItemUI } from '@/types/ui'
+import type { SiteItemUI } from '@/types/ui'
 
 import { showContextmenu } from '@/components/context-menu'
 import { components } from '@/store/components'
 import {
   deleteGridItem,
-  gridItemsMap,
+  getFolderCandidates,
   moveSiteItemOutOfFolder,
   moveSiteToFolder
 } from '@/store/grid-items'
@@ -60,9 +60,7 @@ function handleContextMenu(e: MouseEvent) {
 
   // 移入分组（仅顶层 grid-stack 中）
   if (!inFolder) {
-    const folders = Array.from(gridItemsMap.values()).filter(
-      (i): i is FolderItemUI => i.type === 'folder'
-    )
+    const folders = getFolderCandidates()
     if (folders.length > 0) {
       menuItems.push({
         icon: FolderInput,
