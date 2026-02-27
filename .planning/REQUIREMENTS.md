@@ -18,16 +18,16 @@
 ### 网格布局 (Grid Layout)
 
 - [x] **GRID-01**: GridStack 硬编码配置值（cellHeight: 64, margin: 4, columnWidth: 60）提取为命名常量或 CSS 变量
-- [ ] **GRID-02**: use-grid-stack.tsx 中的 renderCB 全局副作用移入 composable 初始化流程
-- [ ] **GRID-03**: use-grid-stack.tsx 拆分为核心网格管理和渲染逻辑两个模块（~288 行 → 各 ~150 行）
-- [ ] **GRID-04**: 拖拽停止时的排序操作添加必要的性能保护（避免频繁触发）
+- [x] **GRID-02**: use-grid-stack.tsx 中的 renderCB 全局副作用移入 composable 初始化流程
+- [x] **GRID-03**: use-grid-stack.tsx 拆分为核心网格管理和渲染逻辑两个模块（~288 行 → 各 ~150 行）
+- [x] **GRID-04**: 拖拽停止时的排序操作添加必要的性能保护（避免频繁触发）
 
 ### 文件夹 (Folder)
 
 - [x] **FLDR-01**: folder-item.vue 中所有硬编码样式值（gap/padding/font-size）替换为 CSS 变量
 - [x] **FLDR-02**: folder-view.vue 中硬编码尺寸（80px/60px/10px）替换为 CSS 变量或提取为配置常量
 - [x] **FLDR-03**: folder-view.vue 中 FolderItemUI 类型断言改为类型安全的方式
-- [ ] **FLDR-04**: 提取文件夹预览网格展示逻辑为 FolderPreview 子组件
+- [x] **FLDR-04**: 提取文件夹预览网格展示逻辑为 FolderPreview 子组件
 
 ### 基础组件 (Components)
 
@@ -74,13 +74,13 @@ _(本里程碑为纯优化，无延迟功能)_
 | VSTL-04 | Phase 7 | Complete |
 | VSTL-05 | Phase 7 | Complete |
 | GRID-01 | Phase 7 | Complete |
-| GRID-02 | Phase 9 | Pending |
-| GRID-03 | Phase 9 | Pending |
-| GRID-04 | Phase 9 | Pending |
+| GRID-02 | Phase 9 | Complete |
+| GRID-03 | Phase 9 | Complete |
+| GRID-04 | Phase 9 | Complete |
 | FLDR-01 | Phase 7 | Complete |
 | FLDR-02 | Phase 7 | Complete |
 | FLDR-03 | Phase 8 | Complete |
-| FLDR-04 | Phase 9 | Pending |
+| FLDR-04 | Phase 9 | Complete |
 | COMP-01 | Phase 7 | Complete |
 | COMP-02 | Phase 7 | Complete |
 | COMP-03 | Phase 7 | Complete |
@@ -102,4 +102,4 @@ _(本里程碑为纯优化，无延迟功能)_
 
 ---
 *Requirements defined: 2026-02-19*
-*Last updated: 2026-02-19 — traceability filled by roadmap creation*
+*Last updated: 2026-02-27 — Phase 9 requirements (GRID-02/03/04, FLDR-04) marked complete*

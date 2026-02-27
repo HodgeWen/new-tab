@@ -25,7 +25,7 @@
 
 - [x] **Phase 7: Design Token & CSS Variable Foundation** - Replace all hardcoded visual values with design tokens across the codebase (completed 2026-02-19)
 - [x] **Phase 8: TypeScript Type Safety** - Eliminate type-unsafe patterns (any, type assertions) with proper generics and type guards (completed 2026-02-26)
-- [ ] **Phase 9: Grid & Component Structure** - Restructure grid composable and folder component for maintainability
+- [x] **Phase 9: Grid & Component Structure** - Restructure grid composable and folder component for maintainability (completed 2026-02-27)
 - [ ] **Phase 10: Code Refactoring** - Decompose large modules and align naming with community conventions
 
 ## Phase Details
@@ -70,7 +70,11 @@ Plans:
   2. `renderCB` global side-effect is encapsulated within composable initialization — no global scope pollution
   3. Drag-stop sorting has performance protection (debounce/guard) preventing redundant triggers
   4. `FolderPreview` is an independent component with its own template, reusable in isolation
-**Plans**: TBD
+**Plans**: 3/3 plans complete
+Plans:
+- [x] 09-01-PLAN.md — GridStack renderer/core module split and facade wiring
+- [x] 09-02-PLAN.md — Drag-stop persistence debounce and idempotency guard
+- [x] 09-03-PLAN.md — FolderPreview extraction and folder-item delegation
 
 ### Phase 10: Code Refactoring
 **Goal**: Large modules decomposed, directory naming aligned with Vue community conventions, external dependency removed
@@ -94,7 +98,7 @@ Plans:
 | 4. UI Polish | v1.1.0 | 1/1 | ✓ Complete | 2026-02-12 |
 | 5. Backup Flow UI Wiring | v1.1.0 | 2/2 | ✓ Complete | 2026-02-12 |
 | 6. Design Token Cleanup | v1.1.0 | 1/1 | ✓ Complete | 2026-02-12 |
-| 7. Design Token & CSS Variable Foundation | 3/3 | Complete   | 2026-02-19 | - |
+| 7. Design Token & CSS Variable Foundation | v1.2.0 | 3/3 | ✓ Complete | 2026-02-19 |
 | 8. TypeScript Type Safety | v1.2.0 | 3/3 | ✓ Complete | 2026-02-26 |
-| 9. Grid & Component Structure | v1.2.0 | 0/? | Not started | - |
+| 9. Grid & Component Structure | v1.2.0 | 3/3 | ✓ Complete | 2026-02-27 |
 | 10. Code Refactoring | v1.2.0 | 0/? | Not started | - |
