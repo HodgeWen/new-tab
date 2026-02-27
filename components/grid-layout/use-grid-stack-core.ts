@@ -1,18 +1,17 @@
 import { GridStack, type GridStackNode } from 'gridstack'
 import { nanoid } from 'nanoid'
 import { watch, type WatchStopHandle } from 'vue'
-
 import type { FolderItemForm, GridItemUI, SiteItemForm } from '@/types/ui'
 import { addGridItem, batchDeleteGridItems, deleteGridItem, gridItemsMap, loadGridItems } from '@/store/grid-items'
 import { appendToOrder, removeFromOrder, sortByOrder, updateGridOrder } from '@/store/grid-order'
 import { ui } from '@/store/ui'
-
 import type { GridStackRenderer } from './use-grid-stack-renderer'
 
 const GRID_CELL_HEIGHT = 64
 const GRID_MARGIN = 4
 const GRID_COLUMN_WIDTH = 60
 const GRID_COLUMN_MAX = 24
+const DRAGSTOP_DEBOUNCE_MS = 140
 const gridItemsReady = loadGridItems()
 
 type ElementRef = Readonly<{ value: HTMLElement | null | undefined }>
@@ -26,14 +25,18 @@ type CoreOptions = {
 export function createGridStackCore(options: CoreOptions) {
   let grid: GridStack | null = null
   let stopEditingWatch: WatchStopHandle | null = null
-
+  let dragstopTimer: ReturnType<typeof setTimeout> | null = null
   const findGridWidgetEl = (id: string): HTMLElement | undefined => {
     const el = grid?.engine.nodes.find((node) => node.id === id)?.el
     return el instanceof HTMLElement ? el : undefined
   }
   const findWidgetEl = (id: string) => options.renderer.findWidgetEl(id) ?? findGridWidgetEl(id)
-
-  const syncOrder = () => {
+  const clearDragstopTimer = () => {
+    if (!dragstopTimer) return
+    clearTimeout(dragstopTimer)
+    dragstopTimer = null
+  }
+  const commitOrder = () => {
     if (!grid) return
     const ids = grid.engine.nodes
       .slice()
@@ -42,11 +45,18 @@ export function createGridStackCore(options: CoreOptions) {
       .filter((id): id is string => id != null)
     updateGridOrder(ids)
   }
+  const scheduleOrderCommit = () => {
+    clearDragstopTimer()
+    dragstopTimer = setTimeout(() => {
+      dragstopTimer = null
+      commitOrder()
+    }, DRAGSTOP_DEBOUNCE_MS)
+  }
 
   function loadWidgets() {
     if (!grid) return
     const items = sortByOrder(Array.from(gridItemsMap.values()).filter(options.isTopLevel))
-    if (items.length === 0) return
+    if (!items.length) return
     grid.batchUpdate(true)
     items.forEach((item) => {
       const { w, h } = options.getWidgetSize(item)
@@ -57,6 +67,7 @@ export function createGridStackCore(options: CoreOptions) {
 
   function reloadWidgets() {
     if (!grid) return
+    clearDragstopTimer()
     grid.batchUpdate(true)
     grid.engine.nodes.slice().forEach((node) => node.el && grid!.removeWidget(node.el))
     grid.batchUpdate(false)
@@ -125,19 +136,21 @@ export function createGridStackCore(options: CoreOptions) {
   async function mount() {
     const container = options.gridContainer.value
     if (!container) return
+    clearDragstopTimer()
     grid = GridStack.init(
       { cellHeight: GRID_CELL_HEIGHT, margin: GRID_MARGIN, animate: false, disableResize: true,
         columnOpts: { columnWidth: GRID_COLUMN_WIDTH, columnMax: GRID_COLUMN_MAX, layout: 'compact' } },
       container
     )
     grid.on('removed', (_event: Event, items: GridStackNode[]) => options.renderer.cleanupRemoved(items))
-    grid.on('dragstop', syncOrder)
+    grid.on('dragstop', scheduleOrderCommit)
     stopEditingWatch = watch(() => ui.editing, (editing) => grid?.setStatic(editing), { immediate: true })
     await gridItemsReady
     loadWidgets()
   }
 
   function unmount() {
+    clearDragstopTimer()
     stopEditingWatch?.()
     stopEditingWatch = null
     grid?.destroy(false)
