@@ -3,7 +3,7 @@ import { nanoid } from 'nanoid'
 import { watch, type WatchStopHandle } from 'vue'
 import type { FolderItemForm, GridItemUI, SiteItemForm } from '@/types/ui'
 import { addGridItem, batchDeleteGridItems, deleteGridItem, gridItemsMap, loadGridItems } from '@/store/grid-items'
-import { appendToOrder, removeFromOrder, sortByOrder, updateGridOrder } from '@/store/grid-order'
+import { appendToOrder, gridOrder, removeFromOrder, sortByOrder, updateGridOrder } from '@/store/grid-order'
 import { ui } from '@/store/ui'
 import type { GridStackRenderer } from './use-grid-stack-renderer'
 
@@ -26,6 +26,7 @@ export function createGridStackCore(options: CoreOptions) {
   let grid: GridStack | null = null
   let stopEditingWatch: WatchStopHandle | null = null
   let dragstopTimer: ReturnType<typeof setTimeout> | null = null
+  let lastCommittedOrderSignature = gridOrder.value.join('|')
   const findGridWidgetEl = (id: string): HTMLElement | undefined => {
     const el = grid?.engine.nodes.find((node) => node.id === id)?.el
     return el instanceof HTMLElement ? el : undefined
@@ -36,20 +37,24 @@ export function createGridStackCore(options: CoreOptions) {
     clearTimeout(dragstopTimer)
     dragstopTimer = null
   }
-  const commitOrder = () => {
+  const commitOrderIfChanged = () => {
     if (!grid) return
     const ids = grid.engine.nodes
       .slice()
       .sort((a, b) => (a.y === b.y ? (a.x ?? 0) - (b.x ?? 0) : (a.y ?? 0) - (b.y ?? 0)))
       .map((node) => node.id)
       .filter((id): id is string => id != null)
+    const signature = ids.join('|')
+    const storeSignature = gridOrder.value.join('|')
+    if (!signature || signature === storeSignature || signature === lastCommittedOrderSignature) return
     updateGridOrder(ids)
+    lastCommittedOrderSignature = signature
   }
   const scheduleOrderCommit = () => {
     clearDragstopTimer()
     dragstopTimer = setTimeout(() => {
       dragstopTimer = null
-      commitOrder()
+      commitOrderIfChanged()
     }, DRAGSTOP_DEBOUNCE_MS)
   }
 
@@ -63,6 +68,7 @@ export function createGridStackCore(options: CoreOptions) {
       grid!.addWidget({ id: item.id, w, h })
     })
     grid.batchUpdate(false)
+    lastCommittedOrderSignature = gridOrder.value.join('|')
   }
 
   function reloadWidgets() {
@@ -80,6 +86,7 @@ export function createGridStackCore(options: CoreOptions) {
     const newItem: GridItemUI = item.type === 'site' ? { ...item, id } : { ...item, id }
     addGridItem(newItem)
     appendToOrder(id)
+    lastCommittedOrderSignature = gridOrder.value.join('|')
     const { w, h } = options.getWidgetSize(newItem)
     grid.addWidget({ id, w, h })
   }
@@ -91,6 +98,7 @@ export function createGridStackCore(options: CoreOptions) {
     grid.removeWidget(el)
     removeFromOrder(id)
     deleteGridItem(id)
+    lastCommittedOrderSignature = gridOrder.value.join('|')
   }
 
   function detachWidget(id: string) {
@@ -99,6 +107,7 @@ export function createGridStackCore(options: CoreOptions) {
     if (!el) return
     grid.removeWidget(el)
     removeFromOrder(id)
+    lastCommittedOrderSignature = gridOrder.value.join('|')
   }
 
   function attachWidget(id: string) {
@@ -107,6 +116,7 @@ export function createGridStackCore(options: CoreOptions) {
     if (!item) return
     const { w, h } = options.getWidgetSize(item)
     appendToOrder(id)
+    lastCommittedOrderSignature = gridOrder.value.join('|')
     grid.addWidget({ id, w, h })
   }
 
@@ -131,6 +141,7 @@ export function createGridStackCore(options: CoreOptions) {
     })
     grid.batchUpdate(false)
     batchDeleteGridItems(ids)
+    lastCommittedOrderSignature = gridOrder.value.join('|')
   }
 
   async function mount() {
@@ -155,6 +166,7 @@ export function createGridStackCore(options: CoreOptions) {
     stopEditingWatch = null
     grid?.destroy(false)
     grid = null
+    lastCommittedOrderSignature = gridOrder.value.join('|')
   }
 
   return { mount, unmount, reloadWidgets, addWidget, removeWidget, detachWidget, attachWidget, updateWidget, batchRemoveWidgets }
