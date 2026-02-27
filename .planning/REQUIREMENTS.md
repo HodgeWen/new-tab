@@ -45,11 +45,11 @@
 
 ### 代码重构 (Refactoring)
 
-- [ ] **RFAC-01**: site-modal.vue 中图标获取/生成逻辑提取为 use-site-icon composable（~488 行大组件瘦身）
-- [ ] **RFAC-02**: use-wallpaper.ts 拆分为状态管理和获取逻辑两个模块（~171 行）
-- [ ] **RFAC-03**: site-item.vue 中文件夹过滤逻辑提取为共享 computed 或 store 方法
-- [ ] **RFAC-04**: hooks/ 目录重命名为 composables/ 对齐 Vue 社区约定
-- [ ] **RFAC-05**: use-modal.ts 中 @cat-kit/core 依赖替换为原生深拷贝实现
+- [x] **RFAC-01**: site-modal.vue 中图标获取/生成逻辑提取为 use-site-icon composable（~488 行大组件瘦身）
+- [x] **RFAC-02**: use-wallpaper.ts 拆分为状态管理和获取逻辑两个模块（~171 行）
+- [x] **RFAC-03**: site-item.vue 中文件夹过滤逻辑提取为共享 computed 或 store 方法
+- [x] **RFAC-04**: hooks/ 目录重命名为 composables/ 对齐 Vue 社区约定
+- [x] **RFAC-05**: use-modal.ts 中 @cat-kit/core 依赖替换为原生深拷贝实现
 
 ## Future Requirements
 
@@ -89,11 +89,11 @@ _(本里程碑为纯优化，无延迟功能)_
 | TYPE-02 | Phase 8 | Complete |
 | TYPE-03 | Phase 8 | Complete |
 | TYPE-04 | Phase 8 | Complete |
-| RFAC-01 | Phase 10 | Pending |
-| RFAC-02 | Phase 10 | Pending |
-| RFAC-03 | Phase 10 | Pending |
-| RFAC-04 | Phase 10 | Pending |
-| RFAC-05 | Phase 10 | Pending |
+| RFAC-01 | Phase 10 | Complete |
+| RFAC-02 | Phase 10 | Complete |
+| RFAC-03 | Phase 10 | Complete |
+| RFAC-04 | Phase 10 | Complete |
+| RFAC-05 | Phase 10 | Complete |
 
 **Coverage:**
 - v1.2.0 requirements: 26 total
@@ -102,4 +102,4 @@ _(本里程碑为纯优化，无延迟功能)_
 
 ---
 *Requirements defined: 2026-02-19*
-*Last updated: 2026-02-27 — Phase 9 requirements (GRID-02/03/04, FLDR-04) marked complete*
+*Last updated: 2026-02-27 — Phase 10 requirements (RFAC-01/02/03/04/05) marked complete*

@@ -19,14 +19,14 @@
 
 </details>
 
-### 🚧 v1.2.0 UI Optimization (In Progress)
+### ✅ v1.2.0 UI Optimization (All Phases Complete)
 
 **Milestone Goal:** 全面优化 UI 视觉和交互体验，重构冗余代码，提升代码质量和可维护性
 
 - [x] **Phase 7: Design Token & CSS Variable Foundation** - Replace all hardcoded visual values with design tokens across the codebase (completed 2026-02-19)
 - [x] **Phase 8: TypeScript Type Safety** - Eliminate type-unsafe patterns (any, type assertions) with proper generics and type guards (completed 2026-02-26)
 - [x] **Phase 9: Grid & Component Structure** - Restructure grid composable and folder component for maintainability (completed 2026-02-27)
-- [ ] **Phase 10: Code Refactoring** - Decompose large modules and align naming with community conventions
+- [x] **Phase 10: Code Refactoring** - Decompose large modules and align naming with community conventions (completed 2026-02-27)
 
 ## Phase Details
 
@@ -86,7 +86,12 @@ Plans:
   3. `hooks/` directory is renamed to `composables/` with all imports updated and working
   4. `@cat-kit/core` dependency is removed from package.json — replaced by native implementation
   5. Folder filtering logic is extracted from `site-item.vue` into a shared computed or store method
-**Plans**: TBD
+**Plans**: 4/4 plans complete
+Plans:
+- [x] 10-01-PLAN.md — Extract site icon workflow from site-modal into dedicated composable
+- [x] 10-02-PLAN.md — Split wallpaper composable modules and remove @cat-kit/core modal dependency
+- [x] 10-03-PLAN.md — Migrate hooks directory to composables and update imports
+- [x] 10-04-PLAN.md — Extract site-item folder filtering into shared store selector
 
 ## Progress
 
@@ -101,4 +106,4 @@ Plans:
 | 7. Design Token & CSS Variable Foundation | v1.2.0 | 3/3 | ✓ Complete | 2026-02-19 |
 | 8. TypeScript Type Safety | v1.2.0 | 3/3 | ✓ Complete | 2026-02-26 |
 | 9. Grid & Component Structure | v1.2.0 | 3/3 | ✓ Complete | 2026-02-27 |
-| 10. Code Refactoring | v1.2.0 | 0/? | Not started | - |
+| 10. Code Refactoring | v1.2.0 | 4/4 | ✓ Complete | 2026-02-27 |
