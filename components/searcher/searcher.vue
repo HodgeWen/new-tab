@@ -10,8 +10,12 @@ const query = ref('')
 function handleSearch() {
   if (!query.value.trim()) return
   const text = query.value.trim()
-  if (typeof chrome !== 'undefined' && chrome.search?.query) {
-    chrome.search.query({ text, disposition: 'CURRENT_TAB' })
+  const chromeApi = globalThis as typeof globalThis & {
+    chrome?: { search?: { query?: (options: { text: string; disposition: 'CURRENT_TAB' }) => void } }
+  }
+
+  if (chromeApi.chrome?.search?.query) {
+    chromeApi.chrome.search.query({ text, disposition: 'CURRENT_TAB' })
   } else {
     // dev:web fallback (no extension context)
     window.location.href = `https://www.google.com/search?q=${encodeURIComponent(text)}`

@@ -151,7 +151,10 @@ function extractDomainName(hostname: string): string {
  */
 export async function fetchFaviconAsBase64(url: URL, size = 64): Promise<string> {
   const faviconPath = `/_favicon/?pageUrl=${encodeURIComponent(url.href)}&size=${size}`
-  const faviconUrl = globalThis.chrome?.runtime?.getURL?.(faviconPath)
+  const chromeApi = globalThis as typeof globalThis & {
+    chrome?: { runtime?: { getURL?: (path: string) => string } }
+  }
+  const faviconUrl = chromeApi.chrome?.runtime?.getURL?.(faviconPath)
 
   if (!faviconUrl) {
     throw new Error('Browser favicon API is unavailable')
