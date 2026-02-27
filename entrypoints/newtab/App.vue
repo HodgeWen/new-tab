@@ -38,7 +38,7 @@ import { connectComponents } from '@/store/components'
 import { NActions } from '@/components/actions'
 import { showContextmenu } from '@/components/context-menu'
 import { setting } from '@/store/setting'
-import { useWallpaper } from '@/hooks/use-wallpaper'
+import { useWallpaper } from '@/composables/use-wallpaper'
 
 const { wallpaperUrl } = useWallpaper()
 

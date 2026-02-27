@@ -44,7 +44,7 @@ import { gridItems } from '@/store/grid-items'
 import { components } from '@/store/components'
 import { setting } from '@/store/setting'
 import { clearSelection, enterEditMode, exitEditMode, selectedIds, ui } from '@/store/ui'
-import { useWallpaper } from '@/hooks/use-wallpaper'
+import { useWallpaper } from '@/composables/use-wallpaper'
 
 defineOptions({ name: 'NActions' })
 
