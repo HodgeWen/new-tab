@@ -5,7 +5,6 @@
     "": {
       "name": "wxt-vue-starter",
       "dependencies": {
-        "@cat-kit/core": "^1.0.0",
         "dexie": "^4.3.0",
         "gridstack": "^12.4.2",
         "lucide-vue-next": "^0.563.0",
@@ -83,8 +82,6 @@
     "@babel/types": ["@babel/types@7.29.0", "", { "dependencies": { "@babel/helper-string-parser": "^7.27.1", "@babel/helper-validator-identifier": "^7.28.5" } }, "sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A=="],
 
     "@buttercup/fetch": ["@buttercup/fetch@0.2.1", "", { "optionalDependencies": { "node-fetch": "^3.3.0" } }, "sha512-sCgECOx8wiqY8NN1xN22BqqKzXYIG2AicNLlakOAI4f0WgyLVUbAigMf8CZhBtJxdudTcB1gD5lciqi44jwJvg=="],
-
-    "@cat-kit/core": ["@cat-kit/core@1.0.0", "", {}, "sha512-ih9Yi+D7wU04bBbXJnHfxN6iS+EAP45xH3iymYq0SY5mYRRzcs9+aa7jodnOSlH7LUNumushmmCEbgu6pzt3wA=="],
 
     "@cat-kit/tsconfig": ["@cat-kit/tsconfig@1.0.0", "", { "peerDependencies": { "@types/bun": "*", "@types/node": "*", "typescript": ">=5.5.0" }, "optionalPeers": ["@types/bun", "@types/node", "typescript"] }, "sha512-E99azwJqqyd5bjCS5C+N1UoW5TOz3Zw6HfLAv+QnWSpKwWcsACfO8a9L5ICK+mbsjREYkSvk36JO6RB2+o5v/w=="],
 

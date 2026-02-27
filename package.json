@@ -20,7 +20,6 @@
     "zip": "wxt zip"
   },
   "dependencies": {
-    "@cat-kit/core": "^1.0.0",
     "dexie": "^4.3.0",
     "gridstack": "^12.4.2",
     "lucide-vue-next": "^0.563.0",
