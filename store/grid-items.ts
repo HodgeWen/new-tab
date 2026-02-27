@@ -104,6 +104,16 @@ export function moveSiteToFolder(item: SiteItemUI, folderId: string) {
 }
 
 /**
+ * 获取可用于“移入分组”的文件夹候选列表
+ * 仅读取运行时状态，不产生副作用
+ */
+export function getFolderCandidates(options?: { excludeFolderId?: string }): FolderItemUI[] {
+  return Array.from(gridItemsMap.values()).filter(
+    (item): item is FolderItemUI => isFolderItem(item) && item.id !== options?.excludeFolderId
+  )
+}
+
+/**
  * 将站点从文件夹中移出（pid 置为 null）
  */
 export function moveSiteItemOutOfFolder(item: SiteItemUI) {
