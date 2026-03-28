@@ -17,6 +17,6 @@ export default defineConfig({
   publicDir: path.resolve(rootDir, "public"),
   server: {
     port: 5173,
-    open: true,
+    open: false,
   },
 });

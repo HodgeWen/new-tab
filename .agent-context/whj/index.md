@@ -1,0 +1,4 @@
+- [x] [项目脚手架与基础设施](./done/plan-1-20260328/plan.md)
+- [ ] [网站管理与网格布局](./plan-2/plan.md)
+- [ ] [网站分组（文件夹）](./preparing/plan-3/plan.md)
+- [ ] [壁纸、搜索栏与设置](./preparing/plan-4/plan.md)
