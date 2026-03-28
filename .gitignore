@@ -1,0 +1,9 @@
+node_modules
+.env
+.npmrc
+.output
+.wxt
+dist
+*.zip
+coverage
+.DS_Store

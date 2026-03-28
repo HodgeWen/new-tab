@@ -1,6 +1,6 @@
 # 项目脚手架与基础设施
 
-> 状态: 未执行
+> 状态: 已执行
 
 ## 目标
 
@@ -56,7 +56,7 @@
 
 | 脚本 | 命令 | 用途 |
 |------|------|------|
-| `dev` | `wxt dev` | WXT 开发模式（启动新浏览器实例加载扩展，HMR） |
+| `dev` | `wxt` | WXT 开发模式（启动新浏览器实例加载扩展，HMR）；勿用 `wxt dev`，否则根目录被解析为 `dev/` |
 | `dev:vite` | `vite` | 纯 Vite 开发服务器（无浏览器实例，UI 开发调试用） |
 | `build` | `wxt build` | WXT 生产构建 → `.output/chrome-mv3/` |
 | `zip` | `wxt zip` | 打包扩展为 `.zip`（发布用） |
@@ -154,11 +154,27 @@
 
 - `bun run build` 成功，产物在 `.output/chrome-mv3/`
 - Chrome 加载扩展，新标签页显示基础布局
-- `bun run dev` 打开新 Chrome 实例，HMR 正常
+- `bun run dev`（`wxt`）打开新 Chrome 实例，HMR 正常
 - `bun run dev:vite` 在 localhost 渲染 UI 正常
 - `bun run lint` 零错误
 - 数据服务单元测试通过
 
 ## 影响范围
 
+- `package.json`、`bun.lock`
+- `wxt.config.ts`、`vite.config.ts`、`tsconfig.json`、`vitest.config.ts`、`vitest.setup.ts`、`oxlintrc.json`
+- `.gitignore`
+- `AGENTS.md`
+- `design-system/MASTER.md`
+- `public/icons/icon16.png`、`public/icons/icon48.png`、`public/icons/icon128.png`
+- `src/assets/.gitkeep`、`src/hooks/.gitkeep`、`src/stores/.gitkeep`、`src/utils/.gitkeep`
+- `src/components/app.tsx`、`src/components/grid.tsx`
+- `src/entrypoints/newtab/index.html`、`src/entrypoints/newtab/main.tsx`
+- `src/services/db.ts`、`src/services/db.test.ts`、`src/services/local-storage.ts`、`src/services/local-storage.test.ts`
+- `src/styles/main.css`
+- `src/types/db-schema.ts`、`src/types/persistence.ts`
+
 ## 历史补丁
+
+- patch-1: 修复 WXT dev 脚本与网格可见示例
+
