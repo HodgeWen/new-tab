@@ -1,6 +1,6 @@
 # 项目脚手架与基础设施
 
-> 状态: 已执行
+> 状态: 未执行
 
 ## 目标
 
@@ -10,22 +10,22 @@
 
 ### 技术栈（全部最新版本，2026-03-28 验证）
 
-| 类别 | 技术 | 版本 |
-|------|------|------|
-| 扩展框架 | WXT | ^0.20.20 |
-| UI 框架 | Preact | ^10.29.0 |
-| 状态管理 | @preact/signals | ^2.9.0 |
-| 构建工具 | Vite（直接声明，覆盖 WXT 内置） | ^8.x（最新） |
-| CSS | Tailwind CSS | ^4.2.2 |
-| Tailwind Vite 插件 | @tailwindcss/vite | ^4.2.2 |
-| Preact Vite 预设 | @preact/preset-vite | ^2.10.5 |
-| 语言 | TypeScript | ^6.0.2 |
-| 格式化 | oxfmt | ^0.42.0 |
-| 代码检查 | oxlint | ^1.57.0 |
-| 测试 | Vitest | ^4.1.2 |
-| 持久化 | IndexedDB (idb ^8.0.3) + localStorage | - |
-| 扩展规范 | Chrome Extension Manifest V3（WXT 自动生成） | - |
-| 包管理 | bun | ^1.3.x |
+| 类别               | 技术                                         | 版本         |
+| ------------------ | -------------------------------------------- | ------------ |
+| 扩展框架           | WXT                                          | ^0.20.20     |
+| UI 框架            | Preact                                       | ^10.29.0     |
+| 状态管理           | @preact/signals                              | ^2.9.0       |
+| 构建工具           | Vite（直接声明，覆盖 WXT 内置）              | ^8.x（最新） |
+| CSS                | Tailwind CSS                                 | ^4.2.2       |
+| Tailwind Vite 插件 | @tailwindcss/vite                            | ^4.2.2       |
+| Preact Vite 预设   | @preact/preset-vite                          | ^2.10.5      |
+| 语言               | TypeScript                                   | ^6.0.2       |
+| 格式化             | oxfmt                                        | ^0.42.0      |
+| 代码检查           | oxlint                                       | ^1.57.0      |
+| 测试               | Vitest                                       | ^4.1.2       |
+| 持久化             | IndexedDB (idb ^8.0.3) + localStorage        | -            |
+| 扩展规范           | Chrome Extension Manifest V3（WXT 自动生成） | -            |
+| 包管理             | bun                                          | ^1.3.x       |
 
 ## 内容
 
@@ -54,17 +54,18 @@
 
 添加以下 bun scripts：
 
-| 脚本 | 命令 | 用途 |
-|------|------|------|
-| `dev` | `wxt` | WXT 开发模式（启动新浏览器实例加载扩展，HMR）；勿用 `wxt dev`，否则根目录被解析为 `dev/` |
-| `dev:vite` | `vite` | 纯 Vite 开发服务器（无浏览器实例，UI 开发调试用） |
-| `build` | `wxt build` | WXT 生产构建 → `.output/chrome-mv3/` |
-| `zip` | `wxt zip` | 打包扩展为 `.zip`（发布用） |
-| `lint` | `oxlint src` | 代码检查 |
-| `format` | `oxfmt src` | 代码格式化 |
-| `test` | `vitest` | 单元测试 |
+| 脚本       | 命令         | 用途                                                                                     |
+| ---------- | ------------ | ---------------------------------------------------------------------------------------- |
+| `dev`      | `wxt`        | WXT 开发模式（启动新浏览器实例加载扩展，HMR）；勿用 `wxt dev`，否则根目录被解析为 `dev/` |
+| `dev:vite` | `vite`       | 纯 Vite 开发服务器（无浏览器实例，UI 开发调试用）                                        |
+| `build`    | `wxt build`  | WXT 生产构建 → `.output/chrome-mv3/`                                                     |
+| `zip`      | `wxt zip`    | 打包扩展为 `.zip`（发布用）                                                              |
+| `lint`     | `oxlint src` | 代码检查                                                                                 |
+| `format`   | `oxfmt src`  | 代码格式化                                                                               |
+| `test`     | `vitest`     | 单元测试                                                                                 |
 
 `dev:vite` 与 `dev` 的区别：
+
 - `dev`（WXT）：启动一个全新的 Chrome 实例并加载扩展，适合测试扩展完整行为
 - `dev:vite`：仅启动 Vite 开发服务器，通过 `localhost` 访问 UI 页面，适合快速 UI 迭代，无需每次切换浏览器窗口
 
@@ -161,21 +162,4 @@
 
 ## 影响范围
 
-- `package.json`、`bun.lock`
-- `wxt.config.ts`、`vite.config.ts`、`tsconfig.json`、`vitest.config.ts`、`vitest.setup.ts`、`oxlintrc.json`
-- `.gitignore`
-- `AGENTS.md`
-- `design-system/MASTER.md`
-- `public/icons/icon16.png`、`public/icons/icon48.png`、`public/icons/icon128.png`
-- `src/assets/.gitkeep`、`src/hooks/.gitkeep`、`src/stores/.gitkeep`、`src/utils/.gitkeep`
-- `src/components/app.tsx`、`src/components/grid.tsx`
-- `src/entrypoints/newtab/index.html`、`src/entrypoints/newtab/main.tsx`
-- `src/services/db.ts`、`src/services/db.test.ts`、`src/services/local-storage.ts`、`src/services/local-storage.test.ts`
-- `src/styles/main.css`
-- `src/types/db-schema.ts`、`src/types/persistence.ts`
-
 ## 历史补丁
-
-- patch-1: 修复 WXT dev 脚本与网格可见示例
-- patch-2: 优化布局居中与响应式美化
-
